@@ -39,9 +39,7 @@ export function mondayOfWeekCalendarDay(
   const today = calendarDayInTimezone(reference, timeZone);
   const dow = dayOfWeekInTimezone(reference, timeZone);
   const daysFromMonday = dow === 0 ? 6 : dow - 1;
-  const anchor = new Date(`${today}T12:00:00+05:30`);
-  anchor.setDate(anchor.getDate() - daysFromMonday);
-  return calendarDayInTimezone(anchor, timeZone);
+  return addCalendarDays(today, -daysFromMonday, timeZone);
 }
 
 export function isCalendarDayOnOrAfter(
@@ -51,10 +49,15 @@ export function isCalendarDayOnOrAfter(
   return day >= startDay;
 }
 
-function addCalendarDays(day: string, days: number, timeZone = SALON_TIMEZONE): string {
-  const anchor = new Date(`${day}T12:00:00+05:30`);
-  anchor.setDate(anchor.getDate() + days);
-  return calendarDayInTimezone(anchor, timeZone);
+/** Add calendar days without using local-time setDate (safe on any server TZ). */
+export function addCalendarDays(
+  day: string,
+  days: number,
+  timeZone = SALON_TIMEZONE
+): string {
+  const [year, month, dayNum] = day.split("-").map(Number);
+  const noonIstUtc = Date.UTC(year, month - 1, dayNum + days, 6, 30, 0);
+  return calendarDayInTimezone(new Date(noonIstUtc), timeZone);
 }
 
 /** Inclusive start and exclusive end for filtering paid_at in Supabase (IST day) */

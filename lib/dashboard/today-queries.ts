@@ -115,7 +115,7 @@ export async function getTodayDashboardData(): Promise<{
       .eq("business_id", businessId),
   ]);
 
-  const paymentTotals = await getTodayPaymentTotals();
+  const paymentTotals = await getTodayPaymentTotals(businessId);
 
   const today = todayAppointments ?? [];
   const activeToday = today.filter(

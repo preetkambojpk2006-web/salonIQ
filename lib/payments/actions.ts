@@ -4,41 +4,51 @@ import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending"];
 
-export async function recordAppointmentPayment(formData: FormData) {
+export type RecordPaymentResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function recordAppointmentPayment(
+  formData: FormData
+): Promise<RecordPaymentResult> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) {
+    return { ok: false, error: "Please sign in again." };
+  }
 
   const businessId = await getOwnerBusinessId();
   if (!businessId) {
-    redirect("/dashboard/calendar?error=Set up your salon first");
+    return { ok: false, error: "Set up your salon first." };
   }
 
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   const method = (formData.get("method") as string)?.trim() as PaymentMethod;
 
   if (!appointmentId || !VALID_METHODS.includes(method)) {
-    redirect("/dashboard/calendar?error=Could not save payment");
+    return { ok: false, error: "Invalid payment request." };
   }
 
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
-    .select(
-      "id, business_id, total_amount, customer_id, customers ( name )"
-    )
+    .select("id, business_id, total_amount, customer_id, customers ( name )")
     .eq("id", appointmentId)
     .eq("business_id", businessId)
     .maybeSingle();
 
-  if (fetchError || !appointment) {
-    redirect("/dashboard/calendar?error=Booking not found");
+  if (fetchError) {
+    console.error("recordAppointmentPayment fetch:", fetchError.message);
+    return { ok: false, error: fetchError.message };
+  }
+
+  if (!appointment) {
+    return { ok: false, error: "Booking not found." };
   }
 
   const customers = appointment.customers as
@@ -54,7 +64,7 @@ export async function recordAppointmentPayment(formData: FormData) {
   const now = new Date().toISOString();
   const rowBusinessId = appointment.business_id as string;
 
-  const { data: existingPayment } = await supabase
+  const { data: existingPayment, error: existingError } = await supabase
     .from("payments")
     .select("id")
     .eq("appointment_id", appointmentId)
@@ -63,31 +73,40 @@ export async function recordAppointmentPayment(formData: FormData) {
     .limit(1)
     .maybeSingle();
 
+  if (existingError) {
+    console.error("recordAppointmentPayment lookup:", existingError.message);
+    return { ok: false, error: existingError.message };
+  }
+
   const paymentPayload = {
     business_id: rowBusinessId,
     appointment_id: appointmentId,
     customer_name: customerName,
     amount: amount >= 0 ? amount : 0,
     method,
-    status: isPaid ? "paid" : "unpaid",
+    status: isPaid ? ("paid" as const) : ("unpaid" as const),
     paid_at: isPaid ? now : null,
   };
 
-  const paymentError = existingPayment
-    ? (
-        await supabase
-          .from("payments")
-          .update(paymentPayload)
-          .eq("id", existingPayment.id)
-          .eq("business_id", rowBusinessId)
-      ).error
-    : (await supabase.from("payments").insert(paymentPayload)).error;
+  console.log("recordAppointmentPayment payload:", paymentPayload);
+
+  let paymentError: { message: string } | null = null;
+
+  if (existingPayment?.id) {
+    const { error } = await supabase
+      .from("payments")
+      .update(paymentPayload)
+      .eq("id", existingPayment.id)
+      .eq("business_id", rowBusinessId);
+    paymentError = error;
+  } else {
+    const { error } = await supabase.from("payments").insert(paymentPayload);
+    paymentError = error;
+  }
 
   if (paymentError) {
-    console.error("recordAppointmentPayment:", paymentError.message);
-    redirect(
-      `/dashboard/calendar?error=${encodeURIComponent(paymentError.message)}`
-    );
+    console.error("recordAppointmentPayment insert:", paymentError.message);
+    return { ok: false, error: paymentError.message };
   }
 
   const { error: updateError } = await supabase
@@ -101,13 +120,12 @@ export async function recordAppointmentPayment(formData: FormData) {
 
   if (updateError) {
     console.error("recordAppointmentPayment appointment:", updateError.message);
-    redirect(
-      `/dashboard/calendar?error=${encodeURIComponent(updateError.message)}`
-    );
+    return { ok: false, error: updateError.message };
   }
 
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard/money");
   revalidatePath("/dashboard");
-  redirect("/dashboard/calendar?paid=1");
+
+  return { ok: true };
 }

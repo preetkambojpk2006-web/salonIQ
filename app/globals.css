@@ -1206,18 +1206,28 @@
   }
 
   /* Toast */
-  .toast-success {
+  .toast-success,
+  .toast-error {
     position: fixed;
     right: 22px;
     bottom: 88px;
     z-index: 100;
     padding: 13px 15px;
     border-radius: 8px;
-    background: var(--charcoal);
-    color: #fff;
     font-size: 14px;
     font-weight: 800;
     box-shadow: var(--shadow);
+    max-width: min(360px, calc(100vw - 44px));
+  }
+
+  .toast-success {
+    background: var(--charcoal);
+    color: #fff;
+  }
+
+  .toast-error {
+    background: var(--coral);
+    color: #fff;
   }
 
   .stack-6 {

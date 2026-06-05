@@ -4,6 +4,10 @@ import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { AppointmentStatus } from "@/lib/appointments/types";
 import { listAppointments } from "@/lib/appointments/queries";
 import { getOwnerBranches } from "@/lib/onboarding/queries";
+import {
+  recordAppointmentPayment,
+  type RecordPaymentResult,
+} from "@/lib/payments/actions";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -237,4 +241,11 @@ export async function updateAppointmentStatus(formData: FormData) {
 
   revalidatePath("/dashboard/calendar");
   redirect("/dashboard/calendar");
+}
+
+/** Complete appointment + record payment (delegates to payments action). */
+export async function completeAppointmentPayment(
+  formData: FormData
+): Promise<RecordPaymentResult> {
+  return recordAppointmentPayment(formData);
 }

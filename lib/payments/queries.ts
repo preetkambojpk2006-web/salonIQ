@@ -1,7 +1,9 @@
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import {
+  calendarDayInTimezone,
   getDayBoundsIso,
   mondayOfWeekCalendarDay,
+  todayCalendarDay,
 } from "@/lib/payments/date-utils";
 import type { MoneyDashboardStats, Payment } from "@/lib/payments/types";
 import { createClient } from "@/lib/supabase/server";
@@ -12,9 +14,43 @@ function sumAmounts(rows: { amount: number | string }[] | null): number {
 
 async function sumPaidToday(businessId: string): Promise<number> {
   const supabase = createClient();
-  const { startIso, endIsoExclusive } = getDayBoundsIso();
+  const today = todayCalendarDay();
+
+  const { data: rpcTotal, error: rpcError } = await supabase.rpc(
+    "sum_paid_payments_today",
+    { p_business_id: businessId }
+  );
+
+  if (!rpcError && rpcTotal !== null && rpcTotal !== undefined) {
+    return Number(rpcTotal);
+  }
+
+  if (rpcError) {
+    console.error("sumPaidToday rpc:", rpcError.message);
+  }
 
   const { data, error } = await supabase
+    .from("payments")
+    .select("amount, paid_at")
+    .eq("business_id", businessId)
+    .eq("status", "paid")
+    .not("paid_at", "is", null);
+
+  if (error) {
+    console.error("sumPaidToday:", error.message);
+    return 0;
+  }
+
+  const todayRows = (data ?? []).filter(
+    (row) => row.paid_at && calendarDayInTimezone(row.paid_at) === today
+  );
+
+  if (todayRows.length > 0) {
+    return sumAmounts(todayRows);
+  }
+
+  const { startIso, endIsoExclusive } = getDayBoundsIso(today);
+  const { data: ranged, error: rangeError } = await supabase
     .from("payments")
     .select("amount")
     .eq("business_id", businessId)
@@ -23,12 +59,12 @@ async function sumPaidToday(businessId: string): Promise<number> {
     .gte("paid_at", startIso)
     .lt("paid_at", endIsoExclusive);
 
-  if (error) {
-    console.error("sumPaidToday:", error.message);
+  if (rangeError) {
+    console.error("sumPaidToday range:", rangeError.message);
     return 0;
   }
 
-  return sumAmounts(data);
+  return sumAmounts(ranged);
 }
 
 async function sumPaidSinceWeekStart(businessId: string): Promise<number> {
@@ -136,19 +172,21 @@ export async function getMoneyDashboardStats(): Promise<MoneyDashboardStats> {
   };
 }
 
-export async function getTodayPaymentTotals(): Promise<{
+export async function getTodayPaymentTotals(
+  businessId?: string | null
+): Promise<{
   revenueToday: number;
   pendingAmount: number;
   pendingCount: number;
 }> {
-  const businessId = await getOwnerBusinessId();
-  if (!businessId) {
+  const resolvedId = businessId ?? (await getOwnerBusinessId());
+  if (!resolvedId) {
     return { revenueToday: 0, pendingAmount: 0, pendingCount: 0 };
   }
 
   const [revenueToday, unpaid] = await Promise.all([
-    sumPaidToday(businessId),
-    sumUnpaid(businessId),
+    sumPaidToday(resolvedId),
+    sumUnpaid(resolvedId),
   ]);
 
   return {

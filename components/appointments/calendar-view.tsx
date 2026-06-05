@@ -222,6 +222,9 @@ export function CalendarView({
   const [payAppointment, setPayAppointment] = useState<Appointment | null>(null);
   const [bookingToast, setBookingToast] = useState(showAddedToast);
   const [paymentToast, setPaymentToast] = useState(showPaymentToast);
+  const [paymentErrorToast, setPaymentErrorToast] = useState<string | null>(
+    null
+  );
   const [copyToast, setCopyToast] = useState(false);
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
 
@@ -258,6 +261,15 @@ export function CalendarView({
   }, []);
 
   const handleCopied = useCallback(() => setCopyToast(true), []);
+
+  const handlePaymentSuccess = useCallback(() => {
+    setPaymentToast(true);
+    router.refresh();
+  }, [router]);
+
+  const handlePaymentError = useCallback((message: string) => {
+    setPaymentErrorToast(message);
+  }, []);
 
   const renderGridBlock = useCallback(
     (appointment: Appointment, onPay: () => void) => (
@@ -364,6 +376,8 @@ export function CalendarView({
         <PaymentModal
           appointment={payAppointment}
           onClose={() => setPayAppointment(null)}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
         />
       ) : null}
 
@@ -373,9 +387,16 @@ export function CalendarView({
         onDismiss={() => setBookingToast(false)}
       />
       <Toast
-        message="Payment saved!"
+        message="Payment saved! ✅"
         show={paymentToast}
         onDismiss={() => setPaymentToast(false)}
+      />
+      <Toast
+        message={paymentErrorToast ?? ""}
+        show={paymentErrorToast !== null}
+        variant="error"
+        durationMs={5000}
+        onDismiss={() => setPaymentErrorToast(null)}
       />
       <Toast
         message="Copied!"
