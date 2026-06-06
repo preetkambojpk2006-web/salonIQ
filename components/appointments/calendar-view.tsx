@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
 import { PaymentModal } from "@/components/appointments/payment-modal";
+import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import { WhatsAppCopyButtons } from "@/components/appointments/whatsapp-copy-buttons";
@@ -21,6 +22,7 @@ type CalendarViewProps = {
   openBooking?: boolean;
   error?: string;
   showAddedToast?: boolean;
+  addedAppointmentId?: string;
   showPaymentToast?: boolean;
 };
 
@@ -215,11 +217,13 @@ export function CalendarView({
   openBooking = false,
   error,
   showAddedToast = false,
+  addedAppointmentId,
   showPaymentToast = false,
 }: CalendarViewProps) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(openBooking);
   const [payAppointment, setPayAppointment] = useState<Appointment | null>(null);
+  const [whatsappBooking, setWhatsappBooking] = useState<Appointment | null>(null);
   const [bookingToast, setBookingToast] = useState(showAddedToast);
   const [paymentToast, setPaymentToast] = useState(showPaymentToast);
   const [paymentErrorToast, setPaymentErrorToast] = useState<string | null>(
@@ -235,13 +239,20 @@ export function CalendarView({
   useEffect(() => {
     if (!showAddedToast) return;
     setBookingToast(true);
+
+    if (addedAppointmentId) {
+      const match = appointments.find((a) => a.id === addedAppointmentId);
+      if (match) setWhatsappBooking(match);
+    }
+
     const params = new URLSearchParams(window.location.search);
     params.delete("added");
+    params.delete("appointment_id");
     const qs = params.toString();
     router.replace(qs ? `/dashboard/calendar?${qs}` : "/dashboard/calendar", {
       scroll: false,
     });
-  }, [showAddedToast, router]);
+  }, [showAddedToast, addedAppointmentId, appointments, router]);
 
   useEffect(() => {
     if (!showPaymentToast) return;
@@ -378,6 +389,14 @@ export function CalendarView({
           onClose={() => setPayAppointment(null)}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
+        />
+      ) : null}
+
+      {whatsappBooking ? (
+        <BookingWhatsAppModal
+          appointment={whatsappBooking}
+          businessName={businessName}
+          onClose={() => setWhatsappBooking(null)}
         />
       ) : null}
 

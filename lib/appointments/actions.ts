@@ -109,20 +109,24 @@ export async function createAppointment(formData: FormData) {
   const branches = await getOwnerBranches(businessId);
   const branchId = branches[0]?.id ?? null;
 
-  const { error } = await supabase.from("appointments").insert({
-    business_id: businessId,
-    branch_id: branchId,
-    customer_id: customerId,
-    staff_name: staffName,
-    service_name: serviceName,
-    start_time: startTime,
-    end_time: defaultEndTime(startTime),
-    status: "pending",
-    notes,
-    total_amount: totalAmount >= 0 ? totalAmount : 0,
-    payment_status: "unpaid",
-    source: "manual",
-  });
+  const { data: created, error } = await supabase
+    .from("appointments")
+    .insert({
+      business_id: businessId,
+      branch_id: branchId,
+      customer_id: customerId,
+      staff_name: staffName,
+      service_name: serviceName,
+      start_time: startTime,
+      end_time: defaultEndTime(startTime),
+      status: "pending",
+      notes,
+      total_amount: totalAmount >= 0 ? totalAmount : 0,
+      payment_status: "unpaid",
+      source: "manual",
+    })
+    .select("id")
+    .single();
 
   if (error) {
     redirect(
@@ -131,7 +135,7 @@ export async function createAppointment(formData: FormData) {
   }
 
   revalidatePath("/dashboard/calendar");
-  redirect("/dashboard/calendar?added=1");
+  redirect(`/dashboard/calendar?added=1&appointment_id=${created.id}`);
 }
 
 const VALID_STATUSES: AppointmentStatus[] = [

@@ -29,7 +29,8 @@ type AppointmentRow = {
   payment_status: string;
   source: string;
   created_at: string;
-  customers: { name: string } | { name: string }[] | null;
+  customers: { name: string; phone: string | null } | { name: string; phone: string | null }[] | null;
+  branches: { address: string | null } | { address: string | null }[] | null;
   payments: PaymentJoin | PaymentJoin[] | null;
 };
 
@@ -63,6 +64,14 @@ function mapRow(row: AppointmentRow): Appointment {
   const customerName = Array.isArray(customer)
     ? customer[0]?.name ?? null
     : customer?.name ?? null;
+  const customerPhone = Array.isArray(customer)
+    ? customer[0]?.phone ?? null
+    : customer?.phone ?? null;
+
+  const branch = row.branches;
+  const branchAddress = Array.isArray(branch)
+    ? branch[0]?.address ?? null
+    : branch?.address ?? null;
 
   return {
     id: row.id,
@@ -80,6 +89,8 @@ function mapRow(row: AppointmentRow): Appointment {
     source: row.source,
     created_at: row.created_at,
     customer_name: customerName,
+    customer_phone: customerPhone,
+    branch_address: branchAddress,
     payment_method: latestPaymentMethod(row.payments),
   };
 }
@@ -97,7 +108,8 @@ export async function listAppointments(): Promise<Appointment[]> {
     .select(
       `
       *,
-      customers ( name ),
+      customers ( name, phone ),
+      branches ( address ),
       payments ( method, status, amount, paid_at, created_at )
     `
     )

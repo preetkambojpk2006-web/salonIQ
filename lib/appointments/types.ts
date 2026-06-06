@@ -25,6 +25,8 @@ export type Appointment = {
   source: string;
   created_at: string;
   customer_name: string | null;
+  customer_phone: string | null;
+  branch_address: string | null;
   payment_method: AppointmentPaymentMethod | null;
 };
 

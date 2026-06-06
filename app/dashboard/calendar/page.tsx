@@ -9,6 +9,7 @@ type CalendarPageProps = {
     booking?: string;
     error?: string;
     added?: string;
+    appointment_id?: string;
     paid?: string;
   };
 };
@@ -26,6 +27,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       openBooking={searchParams?.booking === "new"}
       error={searchParams?.error}
       showAddedToast={searchParams?.added === "1"}
+      addedAppointmentId={searchParams?.appointment_id}
       showPaymentToast={searchParams?.paid === "1"}
     />
   );
