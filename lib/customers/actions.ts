@@ -4,6 +4,10 @@ import {
   getOwnerBusinessId,
   listCustomers,
 } from "@/lib/customers/queries";
+import {
+  isValidIndianPhone,
+  normalizeIndianPhone,
+} from "@/lib/customers/validatePhone";
 import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/customers/types";
 import { revalidatePath } from "next/cache";
@@ -29,13 +33,21 @@ export async function createCustomer(formData: FormData) {
   }
 
   const name = (formData.get("name") as string)?.trim();
-  const phone = (formData.get("phone") as string)?.trim() || null;
+  const phoneRaw = (formData.get("phone") as string)?.trim() ?? "";
   const gender = (formData.get("gender") as string)?.trim() || null;
   const notes = (formData.get("notes") as string)?.trim() || null;
 
   if (!name) {
     redirect("/dashboard/customers?error=Please enter a customer name");
   }
+
+  if (!phoneRaw || !isValidIndianPhone(phoneRaw)) {
+    redirect(
+      `/dashboard/customers?error=${encodeURIComponent("Sahi 10-digit mobile number daalein")}`
+    );
+  }
+
+  const phone = normalizeIndianPhone(phoneRaw);
 
   const { error } = await supabase.from("customers").insert({
     business_id: businessId,

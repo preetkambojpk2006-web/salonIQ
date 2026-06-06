@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createCustomer } from "@/lib/customers/actions";
-import { useFormStatus } from "react-dom";
+import {
+  isValidIndianPhone,
+  normalizeIndianPhone,
+} from "@/lib/customers/validatePhone";
 
 type AddCustomerFormProps = {
   onClose: () => void;
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" className="btn-dark flex-1" disabled={pending}>
-      {pending ? "Saving…" : "Save customer"}
-    </button>
-  );
-}
+const PHONE_ERROR = "Sahi 10-digit mobile number daalein";
 
 export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -26,13 +24,31 @@ export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
     if (!dialog.open) dialog.showModal();
   }, []);
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const phoneRaw = (formData.get("phone") as string)?.trim() ?? "";
+
+    if (!phoneRaw || !isValidIndianPhone(phoneRaw)) {
+      setPhoneError(PHONE_ERROR);
+      return;
+    }
+
+    setPhoneError(null);
+    formData.set("phone", normalizeIndianPhone(phoneRaw));
+
+    startTransition(() => {
+      createCustomer(formData);
+    });
+  };
+
   return (
     <dialog
       ref={dialogRef}
       className="w-[min(100%,28rem)] max-h-[90vh] overflow-y-auto rounded-2xl border border-line bg-panel p-0 shadow-os backdrop:bg-ink/40"
       onClose={onClose}
     >
-      <form action={createCustomer} className="p-5">
+      <form onSubmit={handleSubmit} className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-eyebrow">New customer</p>
@@ -64,15 +80,28 @@ export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
 
           <div>
             <label htmlFor="customer-phone" className="field-label">
-              Phone
+              Phone <span className="text-coral">*</span>
             </label>
             <input
               id="customer-phone"
               name="phone"
               type="tel"
+              required
+              inputMode="numeric"
+              autoComplete="tel"
               className="input-field"
-              placeholder="+91 98765 43210"
+              placeholder="98765 43210"
+              aria-invalid={phoneError !== null}
+              aria-describedby={phoneError ? "customer-phone-error" : undefined}
+              onChange={() => {
+                if (phoneError) setPhoneError(null);
+              }}
             />
+            {phoneError ? (
+              <p id="customer-phone-error" className="alert-danger mt-2" role="alert">
+                {phoneError}
+              </p>
+            ) : null}
           </div>
 
           <div>
@@ -105,7 +134,9 @@ export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
           <button type="button" onClick={onClose} className="btn-ghost-os flex-1">
             Cancel
           </button>
-          <SubmitButton />
+          <button type="submit" className="btn-dark flex-1" disabled={isPending}>
+            {isPending ? "Saving…" : "Save customer"}
+          </button>
         </div>
       </form>
     </dialog>
