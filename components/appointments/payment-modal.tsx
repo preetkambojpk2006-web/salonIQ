@@ -51,8 +51,8 @@ export function PaymentModal({
         return;
       }
 
-      dialogRef.current?.close();
       onSuccess(method);
+      dialogRef.current?.close();
       onClose();
     } catch (err) {
       const message =

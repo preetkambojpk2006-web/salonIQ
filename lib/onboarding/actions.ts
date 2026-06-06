@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 async function requireUser() {
@@ -194,9 +195,11 @@ export async function createService(formData: FormData) {
     );
   }
 
+  revalidatePath("/dashboard");
   redirect("/dashboard");
 }
 
 export async function skipServices() {
+  revalidatePath("/dashboard");
   redirect("/dashboard");
 }

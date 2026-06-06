@@ -13,11 +13,17 @@ import type { Customer } from "@/lib/customers/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+export type CreateCustomerResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
 export async function searchCustomers(query: string): Promise<Customer[]> {
   return listCustomers(query);
 }
 
-export async function createCustomer(formData: FormData) {
+export async function createCustomer(
+  formData: FormData
+): Promise<CreateCustomerResult> {
   const supabase = createClient();
   const {
     data: { user },
@@ -38,13 +44,11 @@ export async function createCustomer(formData: FormData) {
   const notes = (formData.get("notes") as string)?.trim() || null;
 
   if (!name) {
-    redirect("/dashboard/customers?error=Please enter a customer name");
+    return { ok: false, error: "Please enter a customer name" };
   }
 
   if (!phoneRaw || !isValidIndianPhone(phoneRaw)) {
-    redirect(
-      `/dashboard/customers?error=${encodeURIComponent("Sahi 10-digit mobile number daalein")}`
-    );
+    return { ok: false, error: "Sahi 10-digit mobile number daalein" };
   }
 
   const phone = normalizeIndianPhone(phoneRaw);
@@ -58,11 +62,9 @@ export async function createCustomer(formData: FormData) {
   });
 
   if (error) {
-    redirect(
-      `/dashboard/customers?error=${encodeURIComponent(error.message)}`
-    );
+    return { ok: false, error: error.message };
   }
 
   revalidatePath("/dashboard/customers");
-  redirect("/dashboard/customers?added=1");
+  return { ok: true };
 }

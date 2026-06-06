@@ -33,13 +33,22 @@ export function CustomersView({
   const [query, setQuery] = useState(initialQuery);
   const [showAddForm, setShowAddForm] = useState(false);
   const [toastVisible, setToastVisible] = useState(showAddedToast);
+  const [errorToast, setErrorToast] = useState<string | null>(
+    error ? safeDecodeError(error) : null
+  );
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
   useEffect(() => {
+    if (!error) return;
+    setErrorToast(safeDecodeError(error));
+  }, [error]);
+
+  useEffect(() => {
     if (!showAddedToast) return;
+    setShowAddForm(false);
     setToastVisible(true);
     router.replace(
       initialQuery.trim()
@@ -47,6 +56,7 @@ export function CustomersView({
         : "/dashboard/customers",
       { scroll: false }
     );
+    router.refresh();
   }, [showAddedToast, initialQuery, router]);
 
   useEffect(() => {
@@ -137,6 +147,13 @@ export function CustomersView({
         message="Customer added!"
         show={toastVisible}
         onDismiss={() => setToastVisible(false)}
+      />
+      <Toast
+        message={errorToast ?? ""}
+        show={errorToast !== null}
+        variant="error"
+        durationMs={5000}
+        onDismiss={() => setErrorToast(null)}
       />
     </>
   );

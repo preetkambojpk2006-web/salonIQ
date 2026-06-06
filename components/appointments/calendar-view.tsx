@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
@@ -71,6 +72,30 @@ function safeDecodeError(error: string): string {
   }
 }
 
+function PendingSubmitButton({
+  label,
+  pendingLabel = "Saving…",
+  className,
+  style,
+}: {
+  label: string;
+  pendingLabel?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      className={className}
+      style={style}
+      disabled={pending}
+    >
+      {pending ? pendingLabel : label}
+    </button>
+  );
+}
+
 function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
   const map = new Map<string, Appointment[]>();
 
@@ -124,9 +149,10 @@ function AppointmentActions({
       {appointment.status === "pending" ? (
         <form action={confirmAppointment}>
           <input type="hidden" name="appointment_id" value={appointment.id} />
-          <button type="submit" className={`primary-button ${btnClass}`}>
-            Confirm
-          </button>
+          <PendingSubmitButton
+            label="Confirm"
+            className={`primary-button ${btnClass}`}
+          />
         </form>
       ) : null}
 
@@ -143,13 +169,11 @@ function AppointmentActions({
       {appointment.status === "pending" || appointment.status === "confirmed" ? (
         <form action={markNoShow}>
           <input type="hidden" name="appointment_id" value={appointment.id} />
-          <button
-            type="submit"
+          <PendingSubmitButton
+            label="No show"
             className="demo-button"
             style={{ minHeight: compact ? 32 : 40 }}
-          >
-            No show
-          </button>
+          />
         </form>
       ) : null}
     </div>
@@ -236,6 +260,9 @@ export function CalendarView({
     null
   );
   const [copyToast, setCopyToast] = useState(false);
+  const [bookingErrorToast, setBookingErrorToast] = useState<string | null>(
+    error ? safeDecodeError(error) : null
+  );
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
 
   useEffect(() => {
@@ -243,7 +270,13 @@ export function CalendarView({
   }, [openBooking]);
 
   useEffect(() => {
+    if (!error) return;
+    setBookingErrorToast(safeDecodeError(error));
+  }, [error]);
+
+  useEffect(() => {
     if (!showAddedToast) return;
+    setShowForm(false);
     setBookingToast(true);
 
     if (addedAppointmentId) {
@@ -258,6 +291,7 @@ export function CalendarView({
     router.replace(qs ? `/dashboard/calendar?${qs}` : "/dashboard/calendar", {
       scroll: false,
     });
+    router.refresh();
   }, [showAddedToast, addedAppointmentId, appointments, router]);
 
   useEffect(() => {
@@ -296,6 +330,16 @@ export function CalendarView({
   const handlePaymentError = useCallback((message: string) => {
     setPaymentErrorToast(message);
   }, []);
+
+  const handleCloseWhatsappBooking = useCallback(() => {
+    setWhatsappBooking(null);
+    router.refresh();
+  }, [router]);
+
+  const handleCloseWhatsappPayment = useCallback(() => {
+    setWhatsappPayment(null);
+    router.refresh();
+  }, [router]);
 
   const renderGridBlock = useCallback(
     (appointment: Appointment, onPay: () => void) => (
@@ -411,7 +455,7 @@ export function CalendarView({
         <BookingWhatsAppModal
           appointment={whatsappBooking}
           businessName={businessName}
-          onClose={() => setWhatsappBooking(null)}
+          onClose={handleCloseWhatsappBooking}
         />
       ) : null}
 
@@ -420,7 +464,7 @@ export function CalendarView({
           appointment={whatsappPayment.appointment}
           businessName={businessName}
           paymentMethod={whatsappPayment.paymentMethod}
-          onClose={() => setWhatsappPayment(null)}
+          onClose={handleCloseWhatsappPayment}
         />
       ) : null}
 
@@ -445,6 +489,13 @@ export function CalendarView({
         message="Copied!"
         show={copyToast}
         onDismiss={() => setCopyToast(false)}
+      />
+      <Toast
+        message={bookingErrorToast ?? ""}
+        show={bookingErrorToast !== null}
+        variant="error"
+        durationMs={5000}
+        onDismiss={() => setBookingErrorToast(null)}
       />
     </>
   );

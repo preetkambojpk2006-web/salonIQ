@@ -64,7 +64,13 @@ function defaultEndTime(startIso: string): string {
   return start.toISOString();
 }
 
-export async function createAppointment(formData: FormData) {
+export type CreateAppointmentResult =
+  | { ok: true; appointmentId: string }
+  | { ok: false; error: string };
+
+export async function createAppointment(
+  formData: FormData
+): Promise<CreateAppointmentResult> {
   const supabase = createClient();
   const {
     data: { user },
@@ -76,7 +82,7 @@ export async function createAppointment(formData: FormData) {
 
   const businessId = await getOwnerBusinessId();
   if (!businessId) {
-    redirect("/onboarding/business?error=Set up your salon first");
+    return { ok: false, error: "Pehle salon setup karein." };
   }
 
   const customerName = (formData.get("customer_name") as string)?.trim();
@@ -88,21 +94,21 @@ export async function createAppointment(formData: FormData) {
   const notes = (formData.get("notes") as string)?.trim() || null;
 
   if (!customerName) {
-    redirect("/dashboard/calendar?booking=new&error=Please enter a customer name");
+    return { ok: false, error: "Customer ka naam daalein." };
   }
 
   if (!serviceName) {
-    redirect("/dashboard/calendar?booking=new&error=Please enter a service");
+    return { ok: false, error: "Service ka naam daalein." };
   }
 
   const startTime = parseStartTime(date, time);
   if (!startTime) {
-    redirect("/dashboard/calendar?booking=new&error=Please pick a valid date and time");
+    return { ok: false, error: "Sahi date aur time choose karein." };
   }
 
   const totalAmount = amountRaw ? Number.parseFloat(amountRaw) : 0;
   if (amountRaw && Number.isNaN(totalAmount)) {
-    redirect("/dashboard/calendar?booking=new&error=Please enter a valid amount");
+    return { ok: false, error: "Sahi amount daalein." };
   }
 
   const customerId = await resolveCustomerId(businessId, customerName);
@@ -129,13 +135,11 @@ export async function createAppointment(formData: FormData) {
     .single();
 
   if (error) {
-    redirect(
-      `/dashboard/calendar?booking=new&error=${encodeURIComponent(error.message)}`
-    );
+    return { ok: false, error: error.message };
   }
 
   revalidatePath("/dashboard/calendar");
-  redirect(`/dashboard/calendar?added=1&appointment_id=${created.id}`);
+  return { ok: true, appointmentId: created.id };
 }
 
 const VALID_STATUSES: AppointmentStatus[] = [
