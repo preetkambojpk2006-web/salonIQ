@@ -8,7 +8,7 @@ import type { PaymentMethod } from "@/lib/payments/types";
 type PaymentModalProps = {
   appointment: Appointment;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (method: PaymentMethod) => void;
   onError: (message: string) => void;
 };
 
@@ -52,7 +52,7 @@ export function PaymentModal({
       }
 
       dialogRef.current?.close();
-      onSuccess();
+      onSuccess(method);
       onClose();
     } catch (err) {
       const message =

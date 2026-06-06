@@ -6,6 +6,8 @@ import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
 import { PaymentModal } from "@/components/appointments/payment-modal";
 import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
+import { PaymentWhatsAppModal } from "@/components/whatsapp/PaymentWhatsAppModal";
+import type { PaymentMethod } from "@/lib/payments/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import { WhatsAppCopyButtons } from "@/components/appointments/whatsapp-copy-buttons";
@@ -224,6 +226,10 @@ export function CalendarView({
   const [showForm, setShowForm] = useState(openBooking);
   const [payAppointment, setPayAppointment] = useState<Appointment | null>(null);
   const [whatsappBooking, setWhatsappBooking] = useState<Appointment | null>(null);
+  const [whatsappPayment, setWhatsappPayment] = useState<{
+    appointment: Appointment;
+    paymentMethod: PaymentMethod;
+  } | null>(null);
   const [bookingToast, setBookingToast] = useState(showAddedToast);
   const [paymentToast, setPaymentToast] = useState(showPaymentToast);
   const [paymentErrorToast, setPaymentErrorToast] = useState<string | null>(
@@ -273,10 +279,19 @@ export function CalendarView({
 
   const handleCopied = useCallback(() => setCopyToast(true), []);
 
-  const handlePaymentSuccess = useCallback(() => {
-    setPaymentToast(true);
-    router.refresh();
-  }, [router]);
+  const handlePaymentSuccess = useCallback(
+    (method: PaymentMethod) => {
+      setPaymentToast(true);
+
+      if (payAppointment && (method === "cash" || method === "upi")) {
+        setWhatsappPayment({ appointment: payAppointment, paymentMethod: method });
+      }
+
+      setPayAppointment(null);
+      router.refresh();
+    },
+    [payAppointment, router]
+  );
 
   const handlePaymentError = useCallback((message: string) => {
     setPaymentErrorToast(message);
@@ -397,6 +412,15 @@ export function CalendarView({
           appointment={whatsappBooking}
           businessName={businessName}
           onClose={() => setWhatsappBooking(null)}
+        />
+      ) : null}
+
+      {whatsappPayment ? (
+        <PaymentWhatsAppModal
+          appointment={whatsappPayment.appointment}
+          businessName={businessName}
+          paymentMethod={whatsappPayment.paymentMethod}
+          onClose={() => setWhatsappPayment(null)}
         />
       ) : null}
 
