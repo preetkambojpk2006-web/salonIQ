@@ -1,5 +1,6 @@
 "use server";
 
+import { incrementCustomerNoShowCount } from "@/lib/customers/reliability";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { AppointmentStatus } from "@/lib/appointments/types";
 import { listAppointments } from "@/lib/appointments/queries";
@@ -206,14 +207,36 @@ export async function markNoShow(formData: FormData) {
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not update");
 
-  const error = await setAppointmentStatus(appointmentId, businessId, "no_show");
-  if (error) {
-    redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("status, customer_id")
+    .eq("id", appointmentId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  if (!appointment) {
+    redirect("/dashboard/calendar?error=Could not update");
+  }
+
+  if (appointment.status !== "no_show") {
+    const error = await setAppointmentStatus(
+      appointmentId,
+      businessId,
+      "no_show"
+    );
+    if (error) {
+      redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
+    }
+
+    if (appointment.customer_id) {
+      await incrementCustomerNoShowCount(appointment.customer_id, businessId);
+    }
   }
 
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/money");
+  revalidatePath("/dashboard/customers");
   redirect("/dashboard/calendar");
 }
 
@@ -239,6 +262,17 @@ export async function updateAppointmentStatus(formData: FormData) {
     redirect("/dashboard/calendar?error=Could not update booking");
   }
 
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("status, customer_id")
+    .eq("id", appointmentId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  if (!appointment) {
+    redirect("/dashboard/calendar?error=Could not update booking");
+  }
+
   const error = await setAppointmentStatus(appointmentId, businessId, status);
 
   if (error) {
@@ -247,7 +281,16 @@ export async function updateAppointmentStatus(formData: FormData) {
     );
   }
 
+  if (
+    status === "no_show" &&
+    appointment.status !== "no_show" &&
+    appointment.customer_id
+  ) {
+    await incrementCustomerNoShowCount(appointment.customer_id, businessId);
+  }
+
   revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard/customers");
   redirect("/dashboard/calendar");
 }
 

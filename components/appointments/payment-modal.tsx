@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { recordAppointmentPayment } from "@/lib/payments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import type { CustomerReliability } from "@/lib/customers/types";
 import type { PaymentMethod } from "@/lib/payments/types";
 
 type PaymentModalProps = {
@@ -14,6 +15,38 @@ type PaymentModalProps = {
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+function ReliabilityAlert({
+  reliability,
+}: {
+  reliability: CustomerReliability;
+}) {
+  if (reliability === "good") return null;
+
+  const isWarning = reliability === "warning";
+
+  return (
+    <div
+      role="status"
+      style={{
+        width: "100%",
+        marginBottom: 12,
+        padding: "8px 12px",
+        borderRadius: 10,
+        border: `1px solid ${isWarning ? "#C9A96E" : "#D94F4F"}`,
+        background: isWarning ? "#E8D9C0" : "#FCE8E8",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "#1A1A1A",
+        lineHeight: 1.4,
+      }}
+    >
+      {isWarning
+        ? "⚠️ Yeh customer pehle no-show kar chuka hai. Confirm karein."
+        : "🚫 Yeh customer baar baar no-show karta hai. Booking lena carefully."}
+    </div>
+  );
 }
 
 export function PaymentModal({
@@ -69,6 +102,11 @@ export function PaymentModal({
   return (
     <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
       <div className="payment-modal-form">
+        {appointment.customer_reliability === "warning" ||
+        appointment.customer_reliability === "blacklisted" ? (
+          <ReliabilityAlert reliability={appointment.customer_reliability} />
+        ) : null}
+
         <div className="payment-modal-header">
           <div>
             <p className="eyebrow">Payment</p>

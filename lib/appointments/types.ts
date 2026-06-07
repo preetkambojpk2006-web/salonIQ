@@ -1,3 +1,5 @@
+import type { CustomerReliability } from "@/lib/customers/types";
+
 export type AppointmentStatus =
   | "pending"
   | "confirmed"
@@ -26,6 +28,7 @@ export type Appointment = {
   created_at: string;
   customer_name: string | null;
   customer_phone: string | null;
+  customer_reliability: CustomerReliability | null;
   branch_address: string | null;
   payment_method: AppointmentPaymentMethod | null;
 };

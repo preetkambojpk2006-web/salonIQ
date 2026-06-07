@@ -1,3 +1,4 @@
+import type { CustomerReliability } from "@/lib/customers/types";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type {
   Appointment,
@@ -29,7 +30,10 @@ type AppointmentRow = {
   payment_status: string;
   source: string;
   created_at: string;
-  customers: { name: string; phone: string | null } | { name: string; phone: string | null }[] | null;
+  customers:
+    | { name: string; phone: string | null; reliability: string | null }
+    | { name: string; phone: string | null; reliability: string | null }[]
+    | null;
   branches: { address: string | null } | { address: string | null }[] | null;
   payments: PaymentJoin | PaymentJoin[] | null;
 };
@@ -67,6 +71,15 @@ function mapRow(row: AppointmentRow): Appointment {
   const customerPhone = Array.isArray(customer)
     ? customer[0]?.phone ?? null
     : customer?.phone ?? null;
+  const rawReliability = Array.isArray(customer)
+    ? customer[0]?.reliability ?? null
+    : customer?.reliability ?? null;
+  const customerReliability =
+    rawReliability === "warning" ||
+    rawReliability === "blacklisted" ||
+    rawReliability === "good"
+      ? (rawReliability as CustomerReliability)
+      : null;
 
   const branch = row.branches;
   const branchAddress = Array.isArray(branch)
@@ -90,6 +103,7 @@ function mapRow(row: AppointmentRow): Appointment {
     created_at: row.created_at,
     customer_name: customerName,
     customer_phone: customerPhone,
+    customer_reliability: customerReliability,
     branch_address: branchAddress,
     payment_method: latestPaymentMethod(row.payments),
   };
@@ -108,7 +122,7 @@ export async function listAppointments(): Promise<Appointment[]> {
     .select(
       `
       *,
-      customers ( name, phone ),
+      customers ( name, phone, reliability ),
       branches ( address ),
       payments ( method, status, amount, paid_at, created_at )
     `

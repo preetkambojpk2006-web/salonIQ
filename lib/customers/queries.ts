@@ -42,6 +42,8 @@ export async function listCustomers(search?: string): Promise<Customer[]> {
     ...row,
     total_spend: Number(row.total_spend ?? 0),
     visit_count: Number(row.visit_count ?? 0),
+    no_show_count: Number(row.no_show_count ?? 0),
+    reliability: (row.reliability ?? "good") as Customer["reliability"],
   }));
 }
 

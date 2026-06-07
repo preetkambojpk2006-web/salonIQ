@@ -17,6 +17,7 @@ import {
   markNoShow,
 } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
 
 type CalendarViewProps = {
@@ -93,6 +94,46 @@ function PendingSubmitButton({
     >
       {pending ? pendingLabel : label}
     </button>
+  );
+}
+
+function ReliabilityAlert({
+  reliability,
+}: {
+  reliability: CustomerReliability;
+}) {
+  if (reliability === "good") return null;
+
+  const isWarning = reliability === "warning";
+
+  return (
+    <div
+      role="status"
+      style={{
+        width: "100%",
+        marginBottom: 8,
+        padding: "8px 12px",
+        borderRadius: 10,
+        border: `1px solid ${isWarning ? "#C9A96E" : "#D94F4F"}`,
+        background: isWarning ? "#E8D9C0" : "#FCE8E8",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "#1A1A1A",
+        lineHeight: 1.4,
+      }}
+    >
+      {isWarning
+        ? "⚠️ Yeh customer pehle no-show kar chuka hai. Confirm karein."
+        : "🚫 Yeh customer baar baar no-show karta hai. Booking lena carefully."}
+    </div>
+  );
+}
+
+function shouldShowReliabilityAlert(appointment: Appointment): boolean {
+  return (
+    (appointment.status === "pending" || appointment.status === "confirmed") &&
+    (appointment.customer_reliability === "warning" ||
+      appointment.customer_reliability === "blacklisted")
   );
 }
 
@@ -202,6 +243,10 @@ const AppointmentBlock = memo(function AppointmentBlock({
   if (compact) {
     return (
       <div style={{ display: "grid", gap: 8 }}>
+        {shouldShowReliabilityAlert(appointment) &&
+        appointment.customer_reliability ? (
+          <ReliabilityAlert reliability={appointment.customer_reliability} />
+        ) : null}
         <div className="booking-block">{blockTitle(appointment)}</div>
         <AppointmentActions
           appointment={appointment}
@@ -220,6 +265,10 @@ const AppointmentBlock = memo(function AppointmentBlock({
         {formatTime12h(appointment.start_time)}
       </span>
       <div>
+        {shouldShowReliabilityAlert(appointment) &&
+        appointment.customer_reliability ? (
+          <ReliabilityAlert reliability={appointment.customer_reliability} />
+        ) : null}
         <strong>{blockTitle(appointment)}</strong>
         <p>{staffLabel(appointment)}</p>
         {appointment.total_amount > 0 ? (
