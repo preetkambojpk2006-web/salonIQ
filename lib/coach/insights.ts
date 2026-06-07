@@ -255,6 +255,57 @@ function buildSlowSlotInsight(appointments: AppointmentRow[]): Insight | null {
   };
 }
 
+function buildBusySlotInsight(appointments: AppointmentRow[]): Insight | null {
+  const fourWeeksAgo = addCalendarDays(mondayOfWeekCalendarDay(), -28);
+  const { startIso } = getDayBoundsIso(fourWeeksAgo);
+
+  const recent = appointments.filter(
+    (a) => isActiveBooking(a.status) && a.start_time >= startIso
+  );
+
+  if (recent.length < 3) {
+    return null;
+  }
+
+  const slotCounts = new Map<string, number>();
+
+  for (const appointment of recent) {
+    const dow = dayOfWeekInTimezone(appointment.start_time);
+    const hour = hourInTimezone(appointment.start_time);
+    const key = `${dow}-${hour}`;
+    slotCounts.set(key, (slotCounts.get(key) ?? 0) + 1);
+  }
+
+  let busiestKey: string | null = null;
+  let busiestCount = Number.NEGATIVE_INFINITY;
+
+  for (let dow = 1; dow <= 6; dow++) {
+    for (let hour = 10; hour <= 19; hour++) {
+      const key = `${dow}-${hour}`;
+      const count = slotCounts.get(key) ?? 0;
+      if (count > busiestCount) {
+        busiestCount = count;
+        busiestKey = key;
+      }
+    }
+  }
+
+  if (!busiestKey || busiestCount <= 0) {
+    return null;
+  }
+
+  const [dowStr, hourStr] = busiestKey.split("-");
+  const dow = Number.parseInt(dowStr, 10);
+  const hour = Number.parseInt(hourStr, 10);
+
+  return {
+    id: "busy-slot",
+    severity: "good",
+    title: "Peak slot — yahan demand sabse zyada hai",
+    detail: `Pichle 4 hafton mein ${DAY_LABELS[dow]} ${formatHour12(hour)} par ${busiestCount} booking${busiestCount === 1 ? "" : "s"} hui. Is slot ko protect karein aur premium services yahan schedule karein.`,
+  };
+}
+
 function buildTopServiceByBookingsInsight(
   appointments: AppointmentRow[]
 ): Insight | null {
@@ -498,6 +549,7 @@ export async function getCoachInsights(businessId: string): Promise<Insight[]> {
   const builders = [
     () => buildRevenueTrendInsight(paidPayments),
     () => buildSlowSlotInsight(data.appointments),
+    () => buildBusySlotInsight(data.appointments),
     () => buildTopServiceByBookingsInsight(data.appointments),
     () => buildTopServiceByRevenueInsight(data.appointments, paidPayments),
     () => buildTopStaffByRevenueInsight(data.appointments, paidPayments),
