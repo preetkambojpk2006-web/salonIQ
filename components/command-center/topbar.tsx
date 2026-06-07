@@ -16,6 +16,7 @@ const titleByNav = {
   money: "Business Finance Tracker",
   insights: "AI Business Intelligence",
   automations: "Automation Engine",
+  coach: "AI Business Coach",
   branches: "Multi-Branch Control",
 };
 

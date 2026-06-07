@@ -19,6 +19,7 @@ export function CommandMobileNav() {
     "receptionist",
     "insights",
     "automations",
+    "coach",
     "branches",
   ].includes(activeId);
 
