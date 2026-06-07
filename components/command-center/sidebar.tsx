@@ -1,6 +1,6 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Bot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -39,7 +39,7 @@ export function CommandSidebar() {
               }
             >
               {item.id === "coach" ? (
-                <Lightbulb
+                <Bot
                   className="h-4 w-4 shrink-0"
                   strokeWidth={1.75}
                   aria-hidden
