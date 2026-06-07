@@ -2,6 +2,7 @@ import { TodayView } from "@/components/command-center/today/today-view";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getTodayDashboardData } from "@/lib/dashboard/today-queries";
+import { getStaffLeaderboard } from "@/lib/staff/leaderboard";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,10 @@ export default async function DashboardPage() {
     getOwnerBusinessId(),
   ]);
 
-  const insights = businessId ? await getCoachInsights(businessId) : [];
+  const [insights, leaderboard] = await Promise.all([
+    businessId ? getCoachInsights(businessId) : Promise.resolve([]),
+    businessId ? getStaffLeaderboard(businessId) : Promise.resolve([]),
+  ]);
   const topInsight = pickTopInsight(insights);
 
   return (
@@ -33,6 +37,7 @@ export default async function DashboardPage() {
       upcoming={data.upcoming}
       liveFlow={data.liveFlow}
       coachTeaserTitle={topInsight?.title ?? null}
+      staffLeaderboard={leaderboard}
     />
   );
 }

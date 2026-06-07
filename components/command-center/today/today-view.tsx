@@ -5,7 +5,9 @@ import { NextAppointments } from "@/components/command-center/today/next-appoint
 import { OsHero } from "@/components/command-center/today/os-hero";
 import { PremiumStrip } from "@/components/command-center/today/premium-strip";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
+import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
+import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
 import type {
   LiveFlowItem,
   TodayMetrics,
@@ -17,6 +19,7 @@ type TodayViewProps = {
   upcoming: UpcomingAppointment[];
   liveFlow: LiveFlowItem[];
   coachTeaserTitle?: string | null;
+  staffLeaderboard?: StaffLeaderboardEntry[];
 };
 
 export function TodayView({
@@ -24,12 +27,14 @@ export function TodayView({
   upcoming,
   liveFlow,
   coachTeaserTitle = null,
+  staffLeaderboard = [],
 }: TodayViewProps) {
   return (
     <div className="view-stack">
       <OsHero liveFlow={liveFlow} />
       <SummaryGrid metrics={metrics} />
       <CoachTeaser topInsightTitle={coachTeaserTitle} />
+      <LeaderboardCard entries={staffLeaderboard} />
 
       <div className="two-column">
         <NextAppointments appointments={upcoming} />
