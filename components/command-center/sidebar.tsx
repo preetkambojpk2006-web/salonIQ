@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,7 +32,19 @@ export function CommandSidebar() {
               href={item.href}
               prefetch
               className={isActive ? "nav-item active" : "nav-item"}
+              style={
+                item.id === "coach"
+                  ? { display: "flex", alignItems: "center", gap: 8, lineHeight: 1.3, paddingTop: 10, paddingBottom: 10 }
+                  : undefined
+              }
             >
+              {item.id === "coach" ? (
+                <Lightbulb
+                  className="h-4 w-4 shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+              ) : null}
               {item.label}
             </Link>
           );
