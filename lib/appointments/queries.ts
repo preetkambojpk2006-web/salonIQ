@@ -31,8 +31,18 @@ type AppointmentRow = {
   source: string;
   created_at: string;
   customers:
-    | { name: string; phone: string | null; reliability: string | null }
-    | { name: string; phone: string | null; reliability: string | null }[]
+    | {
+        name: string;
+        phone: string | null;
+        reliability: string | null;
+        notes: string | null;
+      }
+    | {
+        name: string;
+        phone: string | null;
+        reliability: string | null;
+        notes: string | null;
+      }[]
     | null;
   branches: { address: string | null } | { address: string | null }[] | null;
   payments: PaymentJoin | PaymentJoin[] | null;
@@ -80,6 +90,9 @@ function mapRow(row: AppointmentRow): Appointment {
     rawReliability === "good"
       ? (rawReliability as CustomerReliability)
       : null;
+  const customerNotes = Array.isArray(customer)
+    ? customer[0]?.notes ?? null
+    : customer?.notes ?? null;
 
   const branch = row.branches;
   const branchAddress = Array.isArray(branch)
@@ -103,6 +116,7 @@ function mapRow(row: AppointmentRow): Appointment {
     created_at: row.created_at,
     customer_name: customerName,
     customer_phone: customerPhone,
+    customer_notes: customerNotes,
     customer_reliability: customerReliability,
     branch_address: branchAddress,
     payment_method: latestPaymentMethod(row.payments),
@@ -122,7 +136,7 @@ export async function listAppointments(): Promise<Appointment[]> {
     .select(
       `
       *,
-      customers ( name, phone, reliability ),
+      customers ( name, phone, reliability, notes ),
       branches ( address ),
       payments ( method, status, amount, paid_at, created_at )
     `

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { recordAppointmentPayment } from "@/lib/payments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import { VibeCard } from "@/components/appointments/vibe-card";
 import type { CustomerReliability } from "@/lib/customers/types";
 import type { PaymentMethod } from "@/lib/payments/types";
 
@@ -106,6 +107,8 @@ export function PaymentModal({
         appointment.customer_reliability === "blacklisted" ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
+
+        <VibeCard notes={appointment.customer_notes} />
 
         <div className="payment-modal-header">
           <div>

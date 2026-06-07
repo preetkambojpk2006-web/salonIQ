@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
+import { AppointmentDetailModal } from "@/components/appointments/appointment-detail-modal";
 import { PaymentModal } from "@/components/appointments/payment-modal";
 import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
 import { PaymentWhatsAppModal } from "@/components/whatsapp/PaymentWhatsAppModal";
@@ -227,17 +228,28 @@ function blockTitle(appointment: Appointment): string {
   return `${name} - ${service}`;
 }
 
+const openDetailButtonStyle: React.CSSProperties = {
+  width: "100%",
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  textAlign: "left",
+  cursor: "pointer",
+};
+
 const AppointmentBlock = memo(function AppointmentBlock({
   appointment,
   businessName,
   onCompletePay,
   onCopied,
+  onOpenDetail,
   compact = false,
 }: {
   appointment: Appointment;
   businessName: string;
   onCompletePay: () => void;
   onCopied: () => void;
+  onOpenDetail: () => void;
   compact?: boolean;
 }) {
   if (compact) {
@@ -247,7 +259,15 @@ const AppointmentBlock = memo(function AppointmentBlock({
         appointment.customer_reliability ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
-        <div className="booking-block">{blockTitle(appointment)}</div>
+        <button
+          type="button"
+          className="booking-block"
+          style={openDetailButtonStyle}
+          onClick={onOpenDetail}
+          aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
+        >
+          {blockTitle(appointment)}
+        </button>
         <AppointmentActions
           appointment={appointment}
           businessName={businessName}
@@ -264,17 +284,26 @@ const AppointmentBlock = memo(function AppointmentBlock({
       <span className="appointment-time">
         {formatTime12h(appointment.start_time)}
       </span>
-      <div>
+      <button
+        type="button"
+        onClick={onOpenDetail}
+        aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
+        style={{
+          ...openDetailButtonStyle,
+          color: "inherit",
+          font: "inherit",
+        }}
+      >
         {shouldShowReliabilityAlert(appointment) &&
         appointment.customer_reliability ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
-        <strong>{blockTitle(appointment)}</strong>
-        <p>{staffLabel(appointment)}</p>
+        <strong style={{ display: "block" }}>{blockTitle(appointment)}</strong>
+        <p style={{ margin: "4px 0 0" }}>{staffLabel(appointment)}</p>
         {appointment.total_amount > 0 ? (
-          <p>{formatRs(appointment.total_amount)}</p>
+          <p style={{ margin: "4px 0 0" }}>{formatRs(appointment.total_amount)}</p>
         ) : null}
-      </div>
+      </button>
       <AppointmentActions
         appointment={appointment}
         businessName={businessName}
@@ -297,6 +326,9 @@ export function CalendarView({
 }: CalendarViewProps) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(openBooking);
+  const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(
+    null
+  );
   const [payAppointment, setPayAppointment] = useState<Appointment | null>(null);
   const [whatsappBooking, setWhatsappBooking] = useState<Appointment | null>(null);
   const [whatsappPayment, setWhatsappPayment] = useState<{
@@ -356,7 +388,12 @@ export function CalendarView({
 
   const grouped = useMemo(() => groupByDate(appointments), [appointments]);
 
+  const handleOpenDetail = useCallback((appointment: Appointment) => {
+    setDetailAppointment(appointment);
+  }, []);
+
   const handleCompletePay = useCallback((appointment: Appointment) => {
+    setDetailAppointment(null);
     setPayAppointment(appointment);
   }, []);
 
@@ -397,10 +434,11 @@ export function CalendarView({
         businessName={businessName}
         onCompletePay={onPay}
         onCopied={handleCopied}
+        onOpenDetail={() => handleOpenDetail(appointment)}
         compact
       />
     ),
-    [businessName, handleCopied]
+    [businessName, handleCopied, handleOpenDetail]
   );
 
   const openNewBooking = () => {
@@ -477,6 +515,7 @@ export function CalendarView({
                         businessName={businessName}
                         onCompletePay={() => handleCompletePay(appointment)}
                         onCopied={handleCopied}
+                        onOpenDetail={() => handleOpenDetail(appointment)}
                       />
                     ))}
                   </div>
@@ -489,6 +528,21 @@ export function CalendarView({
 
       {showForm ? (
         <NewBookingForm onClose={closeForm} error={openBooking ? error : undefined} />
+      ) : null}
+
+      {detailAppointment ? (
+        <AppointmentDetailModal
+          appointment={detailAppointment}
+          onClose={() => setDetailAppointment(null)}
+          actions={
+            <AppointmentActions
+              appointment={detailAppointment}
+              businessName={businessName}
+              onCompletePay={() => handleCompletePay(detailAppointment)}
+              onCopied={handleCopied}
+            />
+          }
+        />
       ) : null}
 
       {payAppointment ? (
