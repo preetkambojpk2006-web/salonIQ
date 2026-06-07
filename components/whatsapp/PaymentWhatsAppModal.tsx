@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import type { Appointment } from "@/lib/appointments/types";
 import type { PaymentMethod } from "@/lib/payments/types";
-import { invoice } from "@/lib/whatsapp/templates";
+import { googleReviewRequest, invoice } from "@/lib/whatsapp/templates";
 
 type PaymentWhatsAppModalProps = {
   appointment: Appointment;
   businessName: string;
   paymentMethod: PaymentMethod;
+  googleReviewLink?: string | null;
   onClose: () => void;
 };
 
@@ -29,9 +30,11 @@ export function PaymentWhatsAppModal({
   appointment,
   businessName,
   paymentMethod,
+  googleReviewLink,
   onClose,
 }: PaymentWhatsAppModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const reviewLink = googleReviewLink?.trim() ?? "";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -52,6 +55,15 @@ export function PaymentWhatsAppModal({
       }),
     [appointment, businessName, paymentMethod]
   );
+
+  const reviewMessage = useMemo(() => {
+    if (!reviewLink) return "";
+    return googleReviewRequest({
+      customerName: appointment.customer_name ?? "Customer",
+      salonName: businessName,
+      googleReviewLink: reviewLink,
+    });
+  }, [appointment.customer_name, businessName, reviewLink]);
 
   const phone = appointment.customer_phone ?? "";
 
@@ -94,6 +106,54 @@ export function PaymentWhatsAppModal({
         <div className="mt-4">
           <MessageActions phone={phone} message={message} />
         </div>
+
+        {reviewLink ? (
+          <div
+            style={{
+              marginTop: 18,
+              padding: "14px 16px",
+              borderRadius: 12,
+              border: "1px solid #E0DAD0",
+              background: "#E8D9C0",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#1A1A1A",
+              }}
+            >
+              Google Review maango?
+            </p>
+            <p
+              style={{
+                margin: "6px 0 12px",
+                fontSize: 13,
+                color: "#8A8A8A",
+                lineHeight: 1.4,
+              }}
+            >
+              Optional — khush customer ko review request bhej sakte hain.
+            </p>
+            <textarea
+              readOnly
+              value={reviewMessage}
+              rows={7}
+              className="w-full resize-none rounded-xl border border-[#E0DAD0] bg-white/80 p-3 text-sm leading-relaxed text-[#1A1A1A]"
+              aria-label="Google review request message"
+            />
+            <div className="mt-3">
+              <MessageActions
+                phone={phone}
+                message={reviewMessage}
+                copyLabel="Copy review message"
+                sendLabel="Send Review Request"
+              />
+            </div>
+          </div>
+        ) : null}
 
         <div className="payment-modal-actions">
           <button type="button" className="payment-btn-ghost" onClick={handleClose}>

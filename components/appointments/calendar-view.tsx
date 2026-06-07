@@ -24,6 +24,7 @@ import { formatTime12h } from "@/lib/format/time";
 type CalendarViewProps = {
   appointments: Appointment[];
   businessName: string;
+  googleReviewLink?: string | null;
   openBooking?: boolean;
   error?: string;
   showAddedToast?: boolean;
@@ -318,6 +319,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
 export function CalendarView({
   appointments,
   businessName,
+  googleReviewLink = null,
   openBooking = false,
   error,
   showAddedToast = false,
@@ -567,6 +569,7 @@ export function CalendarView({
           appointment={whatsappPayment.appointment}
           businessName={businessName}
           paymentMethod={whatsappPayment.paymentMethod}
+          googleReviewLink={googleReviewLink}
           onClose={handleCloseWhatsappPayment}
         />
       ) : null}

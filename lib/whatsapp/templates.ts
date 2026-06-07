@@ -238,3 +238,27 @@ export function birthdayOffer(params: BirthdayOfferParams): string {
 
   return message;
 }
+
+export interface GoogleReviewRequestParams {
+  customerName: string;
+  salonName: string;
+  googleReviewLink: string;
+}
+
+export function googleReviewRequest(params: GoogleReviewRequestParams): string {
+  const customer = params.customerName?.trim() || "Customer";
+  const salon = params.salonName?.trim() || "Salon";
+  const link = params.googleReviewLink?.trim();
+
+  let message = `Namaste ${customer}! 🙏\n`;
+  message += `${salon} mein aana acha laga.\n`;
+  message += `Aapka experience kaisa raha? Hamare baare mein Google pe ek review likhein — hamare liye bahut helpful hoga! ⭐\n`;
+
+  if (link) {
+    message += `${link}\n`;
+  }
+
+  message += `Agle visit par kuch khaas milega! 😊`;
+
+  return message;
+}

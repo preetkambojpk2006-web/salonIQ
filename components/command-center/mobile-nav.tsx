@@ -21,6 +21,7 @@ export function CommandMobileNav() {
     "automations",
     "coach",
     "branches",
+    "settings",
   ].includes(activeId);
 
   return (

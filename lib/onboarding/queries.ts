@@ -10,7 +10,7 @@ export async function getOwnerBusiness() {
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, name, logo_url, phone, email, opening_hours")
+    .select("id, name, logo_url, phone, email, opening_hours, google_review_link")
     .eq("owner_id", user.id)
     .maybeSingle();
 

@@ -24,6 +24,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     <CalendarView
       appointments={appointments}
       businessName={business?.name ?? "Your salon"}
+      googleReviewLink={business?.google_review_link ?? null}
       openBooking={searchParams?.booking === "new"}
       error={searchParams?.error}
       showAddedToast={searchParams?.added === "1"}

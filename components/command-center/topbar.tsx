@@ -18,6 +18,7 @@ const titleByNav = {
   automations: "Automation Engine",
   coach: "AI Business Coach",
   branches: "Multi-Branch Control",
+  settings: "Salon Settings",
 };
 
 export function CommandTopbar({ workspace }: CommandTopbarProps) {
