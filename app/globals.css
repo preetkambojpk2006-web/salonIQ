@@ -29,11 +29,11 @@
     --transition: all 0.2s var(--ease);
     --shadow-rest: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
     --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
-    color-scheme: light;
+    color-scheme: light only;
   }
 
   html {
-    color-scheme: light;
+    color-scheme: light only;
     scroll-behavior: smooth;
   }
 
@@ -197,6 +197,33 @@
     height: 180px;
     background: linear-gradient(180deg, transparent, rgba(47, 159, 115, 0.18));
     pointer-events: none;
+  }
+
+  .sidebar-footer {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 16px;
+  }
+
+  .sidebar-signout {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .sidebar-signout:hover {
+    background: rgba(255, 255, 255, 0.14);
   }
 
   .brand-lockup {
@@ -413,7 +440,7 @@
   .os-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: 18px;
     min-height: 310px;
     padding: 22px;
@@ -1230,6 +1257,12 @@
     color: #fff;
   }
 
+  .toast-exit {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+
   .stack-6 {
     display: grid;
     gap: 18px;
@@ -1937,12 +1970,7 @@
   }
 
   .sidebar {
-    position: static;
-    height: auto;
-  }
-
-  .nav-stack {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: none;
   }
 
   .summary-grid,
@@ -1975,6 +2003,21 @@
   .panel-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .branch-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .topbar-actions .primary-button {
+    flex: 1;
+    min-width: 0;
   }
 
   .summary-grid,

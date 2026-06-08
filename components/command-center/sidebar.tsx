@@ -3,6 +3,7 @@
 import { Bot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/lib/auth/actions";
 import type { AppRole } from "@/lib/auth/membership";
 import {
   getActiveNavId,
@@ -57,7 +58,16 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
         })}
       </nav>
 
-      {appRole === "owner" || appRole === "admin" ? <OwnerWhatsappBrief /> : null}
+      <div className="sidebar-footer">
+        {appRole === "owner" || appRole === "admin" ? (
+          <OwnerWhatsappBrief />
+        ) : null}
+        <form action={signOut}>
+          <button type="submit" className="sidebar-signout">
+            Sign out
+          </button>
+        </form>
+      </div>
     </aside>
   );
 }

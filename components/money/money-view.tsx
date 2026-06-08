@@ -1,5 +1,6 @@
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
 import { StaffPayouts } from "@/components/money/StaffPayouts";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
 import type { StaffPayoutsSummary } from "@/lib/staff/types";
 
@@ -68,9 +69,26 @@ export function MoneyView({ stats, cashUpiSplit, staffPayouts }: MoneyViewProps)
   ];
 
   const maxIncome = Math.max(...incomeBars.map((b) => b.value), 1);
+  const isEmptySalon =
+    stats.revenueToday === 0 &&
+    stats.revenueWeek === 0 &&
+    stats.pendingCount === 0 &&
+    cashUpiSplit.total === 0;
 
   return (
     <div className="view-stack">
+      {isEmptySalon ? (
+        <section className="panel">
+          <EmptyState
+            icon="money"
+            title="Abhi koi payment record nahi hai"
+            description="Calendar se booking complete karein aur Cash ya UPI select karein — revenue yahan auto dikhegi."
+            actionLabel="Pehli booking add karein"
+            actionHref="/dashboard/calendar?booking=new"
+          />
+        </section>
+      ) : null}
+
       <div className="summary-grid stagger-metrics">
         {summaryCards.map((card) => (
           <article key={card.key} className={card.className}>

@@ -29,11 +29,6 @@ export function TodayPageSkeleton() {
         <PanelSkeleton rows={4} />
         <PanelSkeleton rows={2} />
       </div>
-      <div className="premium-strip">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="skeleton-metric-card min-h-[112px]" />
-        ))}
-      </div>
     </div>
   );
 }

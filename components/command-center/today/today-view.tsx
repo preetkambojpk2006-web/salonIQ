@@ -1,9 +1,7 @@
-import { AiAdvisor } from "@/components/command-center/today/ai-advisor";
-import { BookingSources } from "@/components/command-center/today/booking-sources";
-import { DemoStory } from "@/components/command-center/today/demo-story";
+import { GettingStartedPanel } from "@/components/command-center/today/getting-started-panel";
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
 import { OsHero } from "@/components/command-center/today/os-hero";
-import { PremiumStrip } from "@/components/command-center/today/premium-strip";
+import { WelcomeBanner } from "@/components/command-center/welcome-banner";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
 import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
@@ -31,9 +29,14 @@ export function TodayView({
   appRole = "owner",
 }: TodayViewProps) {
   const showOwnerInsights = canManageFinance(appRole);
+  const isNewSalon =
+    metrics.revenueToday === 0 &&
+    metrics.bookingsToday === 0 &&
+    upcoming.length === 0;
 
   return (
     <div className="view-stack">
+      <WelcomeBanner />
       <OsHero
         nextAppointment={upcoming[0] ?? null}
         revenueToday={metrics.revenueToday}
@@ -47,12 +50,8 @@ export function TodayView({
 
       <div className="two-column">
         <NextAppointments appointments={upcoming} />
-        <AiAdvisor />
+        {isNewSalon ? <GettingStartedPanel /> : null}
       </div>
-
-      <PremiumStrip />
-      <DemoStory />
-      <BookingSources />
     </div>
   );
 }

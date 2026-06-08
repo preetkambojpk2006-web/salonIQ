@@ -32,14 +32,8 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
   return {
     ownerName,
     ownerEmail: user?.email ?? null,
-    businessName: business?.name ?? "Glow Studio Salon",
-    branches:
-      branches.length > 0
-        ? branches.map((b) => ({ id: b.id, name: b.name }))
-        : [
-            { id: "mock-koramangala", name: "Koramangala" },
-            { id: "mock-indiranagar", name: "Indiranagar" },
-          ],
+    businessName: business?.name ?? "Your salon",
+    branches: branches.map((b) => ({ id: b.id, name: b.name })),
     greeting: getNamasteGreeting(user?.email, displayName),
     appRole: membership?.appRole ?? "owner",
   };

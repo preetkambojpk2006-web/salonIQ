@@ -36,21 +36,20 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
       </div>
 
       <div className="topbar-actions">
-        <select
-          id="branch-select"
-          className="branch-select"
-          aria-label="Select branch"
-          defaultValue={workspace.branches[0]?.id}
-        >
-          {workspace.branches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
-        <button type="button" className="demo-button">
-          Start sales demo
-        </button>
+        {workspace.branches.length > 0 ? (
+          <select
+            id="branch-select"
+            className="branch-select"
+            aria-label="Select branch"
+            defaultValue={workspace.branches[0]?.id}
+          >
+            {workspace.branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <button
           type="button"
           className="primary-button"

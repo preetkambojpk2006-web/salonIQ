@@ -2,104 +2,270 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateGoogleReviewLink } from "@/lib/settings/actions";
+import { Toast } from "@/components/ui/toast";
+import {
+  changePassword,
+  updateBusinessSettings,
+} from "@/lib/settings/actions";
 
 type SettingsViewProps = {
-  salonName: string;
-  initialGoogleReviewLink: string | null;
+  initialName: string;
+  initialPhone: string;
+  initialEmail: string;
+  initialOpeningHours: string;
+  initialGoogleReviewLink: string;
 };
 
 export function SettingsView({
-  salonName,
+  initialName,
+  initialPhone,
+  initialEmail,
+  initialOpeningHours,
   initialGoogleReviewLink,
 }: SettingsViewProps) {
   const router = useRouter();
-  const [googleReviewLink, setGoogleReviewLink] = useState(
-    initialGoogleReviewLink ?? ""
-  );
-  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState(initialName);
+  const [phone, setPhone] = useState(initialPhone);
+  const [email, setEmail] = useState(initialEmail);
+  const [openingHours, setOpeningHours] = useState(initialOpeningHours);
+  const [googleReviewLink, setGoogleReviewLink] = useState(initialGoogleReviewLink);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    variant: "success" | "error";
+  }>({ show: false, message: "", variant: "success" });
 
   useEffect(() => {
-    setGoogleReviewLink(initialGoogleReviewLink ?? "");
-  }, [initialGoogleReviewLink]);
+    setName(initialName);
+    setPhone(initialPhone);
+    setEmail(initialEmail);
+    setOpeningHours(initialOpeningHours);
+    setGoogleReviewLink(initialGoogleReviewLink);
+  }, [
+    initialName,
+    initialPhone,
+    initialEmail,
+    initialOpeningHours,
+    initialGoogleReviewLink,
+  ]);
 
-  const handleSave = async () => {
-    setSaving(true);
+  const showToast = (message: string, variant: "success" | "error") => {
+    setToast({ show: true, message, variant });
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
     setError(null);
 
-    const result = await updateGoogleReviewLink(googleReviewLink);
-    setSaving(false);
+    const formData = new FormData();
+    formData.set("name", name);
+    formData.set("phone", phone);
+    formData.set("email", email);
+    formData.set("opening_hours", openingHours);
+    formData.set("google_review_link", googleReviewLink);
+
+    const result = await updateBusinessSettings(formData);
+    setSavingProfile(false);
 
     if (!result.ok) {
       setError(result.error);
+      showToast(result.error, "error");
       return;
     }
 
-    setSaved(true);
+    showToast("Settings save ho gayi ✓", "success");
     router.refresh();
-    window.setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleChangePassword = async () => {
+    setSavingPassword(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.set("new_password", newPassword);
+    formData.set("confirm_password", confirmPassword);
+
+    const result = await changePassword(formData);
+    setSavingPassword(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      showToast(result.error, "error");
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    showToast("Password update ho gaya ✓", "success");
   };
 
   return (
-    <div className="view-stack">
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Salon settings</p>
-            <h2>{salonName}</h2>
+    <>
+      <div className="view-stack">
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Salon settings</p>
+              <h2>Salon details</h2>
+            </div>
           </div>
-        </div>
 
-        <div style={{ maxWidth: 520 }}>
-          <label
-            htmlFor="google-review-link"
-            className="field-label"
-            style={{ color: "#1A1A1A", fontWeight: 700 }}
-          >
-            Google Review Link
-          </label>
-          <p
-            style={{
-              margin: "6px 0 10px",
-              fontSize: 14,
-              color: "#8A8A8A",
-              lineHeight: 1.45,
-            }}
-          >
-            Apna Google Business review URL paste karein — payment ke baad
-            customers ko review request bhej sakte hain.
-          </p>
-          <input
-            id="google-review-link"
-            type="url"
-            className="input-field"
-            value={googleReviewLink}
-            onChange={(event) => setGoogleReviewLink(event.target.value)}
-            placeholder="https://g.page/r/..."
-            style={{
-              borderRadius: 10,
-              borderColor: "#E0DAD0",
-              color: "#1A1A1A",
-            }}
-          />
-          {error ? (
-            <p style={{ margin: "8px 0 0", fontSize: 13, color: "#D94F4F" }}>
-              {error}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="primary-button"
-            style={{ marginTop: 14, minHeight: 44, borderRadius: 10 }}
-          >
-            {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
-          </button>
-        </div>
-      </section>
-    </div>
+          <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
+            <div>
+              <label htmlFor="salon-name" className="field-label">
+                Salon name
+              </label>
+              <input
+                id="salon-name"
+                type="text"
+                className="input-field"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Glow Studio"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="salon-phone" className="field-label">
+                Phone
+              </label>
+              <input
+                id="salon-phone"
+                type="tel"
+                className="input-field"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="salon-email" className="field-label">
+                Email
+              </label>
+              <input
+                id="salon-email"
+                type="email"
+                className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="contact@salon.com"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="opening-hours" className="field-label">
+                Opening hours
+              </label>
+              <textarea
+                id="opening-hours"
+                className="input-field"
+                value={openingHours}
+                onChange={(e) => setOpeningHours(e.target.value)}
+                placeholder="Mon–Sat, 10am – 8pm"
+                rows={2}
+                style={{ borderRadius: 10, borderColor: "#E0DAD0", resize: "vertical" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="google-review-link" className="field-label">
+                Google Review Link
+              </label>
+              <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
+                Payment ke baad customers ko review request bhej sakte hain.
+              </p>
+              <input
+                id="google-review-link"
+                type="url"
+                className="input-field"
+                value={googleReviewLink}
+                onChange={(e) => setGoogleReviewLink(e.target.value)}
+                placeholder="https://g.page/r/..."
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            {error ? (
+              <p style={{ margin: 0, fontSize: 13, color: "#D94F4F" }}>{error}</p>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="primary-button"
+              style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
+            >
+              {savingProfile ? "Saving…" : "Save salon details"}
+            </button>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Security</p>
+              <h2>Change password</h2>
+            </div>
+          </div>
+
+          <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
+            <div>
+              <label htmlFor="new-password" className="field-label">
+                Naya password
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                className="input-field"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm-password" className="field-label">
+                Password confirm karein
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                className="input-field"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={savingPassword}
+              className="primary-button"
+              style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
+            >
+              {savingPassword ? "Updating…" : "Update password"}
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <Toast
+        message={toast.message}
+        show={toast.show}
+        variant={toast.variant}
+        onDismiss={() => setToast((t) => ({ ...t, show: false }))}
+      />
+    </>
   );
 }
