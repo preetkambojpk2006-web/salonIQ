@@ -1,5 +1,7 @@
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
+import { StaffPayouts } from "@/components/money/StaffPayouts";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
+import type { StaffPayoutsSummary } from "@/lib/staff/types";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -19,9 +21,10 @@ function pendingPaymentContext(amount: number, count: number): string {
 type MoneyViewProps = {
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
+  staffPayouts: StaffPayoutsSummary;
 };
 
-export function MoneyView({ stats, cashUpiSplit }: MoneyViewProps) {
+export function MoneyView({ stats, cashUpiSplit, staffPayouts }: MoneyViewProps) {
   const summaryCards = [
     {
       key: "today",
@@ -79,6 +82,8 @@ export function MoneyView({ stats, cashUpiSplit }: MoneyViewProps) {
       </div>
 
       <CashUpiSplit split={cashUpiSplit} />
+
+      <StaffPayouts payouts={staffPayouts} />
 
       <section className="panel">
         <div className="panel-header">
