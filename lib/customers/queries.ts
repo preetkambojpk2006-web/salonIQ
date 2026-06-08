@@ -1,6 +1,5 @@
 import type { Customer } from "@/lib/customers/types";
 import { getUserBusinessId as resolveUserBusinessId } from "@/lib/auth/membership";
-import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
 
 function escapeIlike(value: string): string {

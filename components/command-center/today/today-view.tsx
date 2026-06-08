@@ -11,7 +11,6 @@ import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
 import type { AppRole } from "@/lib/auth/membership";
 import { canManageFinance } from "@/lib/auth/membership";
 import type {
-  LiveFlowItem,
   TodayMetrics,
   UpcomingAppointment,
 } from "@/lib/dashboard/today-queries";
@@ -19,7 +18,6 @@ import type {
 type TodayViewProps = {
   metrics: TodayMetrics;
   upcoming: UpcomingAppointment[];
-  liveFlow: LiveFlowItem[];
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
   appRole?: AppRole;
@@ -28,7 +26,6 @@ type TodayViewProps = {
 export function TodayView({
   metrics,
   upcoming,
-  liveFlow,
   coachTeaserTitle = null,
   staffLeaderboard = [],
   appRole = "owner",

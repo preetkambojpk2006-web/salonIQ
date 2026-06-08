@@ -42,7 +42,6 @@ export default async function DashboardPage() {
     <TodayView
       metrics={data.metrics}
       upcoming={data.upcoming}
-      liveFlow={data.liveFlow}
       coachTeaserTitle={topInsight?.title ?? null}
       staffLeaderboard={leaderboard}
       appRole={appRole}
