@@ -1,3 +1,6 @@
+import type { AppRole } from "@/lib/auth/membership";
+import { canAccessNavItem } from "@/lib/auth/route-access";
+
 export type CommandNavId =
   | "today"
   | "receptionist"
@@ -38,6 +41,10 @@ export const commandNavItems: CommandNavItem[] = [
 export const mobileNavItems = commandNavItems.filter((item) => item.mobile);
 
 export const moreNavItems = commandNavItems.filter((item) => !item.mobile);
+
+export function getNavItemsForRole(role: AppRole): CommandNavItem[] {
+  return commandNavItems.filter((item) => canAccessNavItem(role, item.id));
+}
 
 export function getActiveNavId(pathname: string): CommandNavId {
   if (pathname === "/dashboard") return "today";

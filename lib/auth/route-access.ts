@@ -1,0 +1,40 @@
+import type { AppRole } from "@/lib/auth/membership";
+import type { CommandNavId } from "@/lib/command-center/navigation";
+
+const STAFF_BLOCKED_PATHS = [
+  "/dashboard/money",
+  "/dashboard/insights",
+  "/dashboard/automations",
+  "/dashboard/coach",
+  "/dashboard/branches",
+  "/dashboard/settings",
+] as const;
+
+const FINANCE_NAV_IDS = new Set<CommandNavId>([
+  "money",
+  "insights",
+  "automations",
+  "coach",
+  "branches",
+  "settings",
+]);
+
+export function isStaffBlockedPath(pathname: string): boolean {
+  return STAFF_BLOCKED_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+}
+
+export function canAccessNavItem(role: AppRole, navId: CommandNavId): boolean {
+  if (role === "staff" && FINANCE_NAV_IDS.has(navId)) {
+    return false;
+  }
+  return true;
+}
+
+export function canAccessDashboardPath(role: AppRole, pathname: string): boolean {
+  if (role !== "staff") {
+    return true;
+  }
+  return !isStaffBlockedPath(pathname);
+}

@@ -1,3 +1,5 @@
+import { canAccessDashboardPath } from "@/lib/auth/route-access";
+import { resolveAppRole } from "@/lib/auth/resolve-role";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -47,10 +49,29 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/onboarding";
-    return NextResponse.redirect(url);
+  if (user) {
+    const appRole = (await resolveAppRole(supabase, user.id)) ?? "owner";
+
+    if (pathname.startsWith("/onboarding") && appRole !== "owner") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    if (
+      pathname.startsWith("/dashboard") &&
+      !canAccessDashboardPath(appRole, pathname)
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = appRole === "owner" ? "/onboarding" : "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

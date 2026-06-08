@@ -1,3 +1,5 @@
+import type { AppRole } from "@/lib/auth/membership";
+import { getUserMembership } from "@/lib/auth/membership";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getGreeting } from "@/lib/dashboard/greeting";
@@ -8,6 +10,7 @@ export type WorkspaceContext = {
   businessName: string;
   branches: { id: string; name: string }[];
   greeting: string;
+  appRole: AppRole;
 };
 
 function nameFromEmail(email: string | undefined): string {
@@ -25,6 +28,7 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const membership = await getUserMembership();
   const business = await getOwnerBusiness();
   const branches = business
     ? await getOwnerBranches(business.id)
@@ -49,5 +53,6 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
             { id: "mock-indiranagar", name: "Indiranagar" },
           ],
     greeting: getGreeting(),
+    appRole: membership?.appRole ?? "owner",
   };
 }

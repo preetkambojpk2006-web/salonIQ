@@ -26,6 +26,8 @@ export default async function DashboardLayout({
   const workspace = await getWorkspaceContext();
 
   return (
-    <CommandCenterShell workspace={workspace}>{children}</CommandCenterShell>
+    <CommandCenterShell workspace={workspace} appRole={workspace.appRole}>
+      {children}
+    </CommandCenterShell>
   );
 }

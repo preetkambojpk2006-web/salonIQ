@@ -18,6 +18,16 @@ export async function getOnboardingStep(
     return "business";
   }
 
+  const { data: member } = await supabase
+    .from("business_members")
+    .select("business_id, app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (member?.app_role === "staff" || member?.app_role === "admin") {
+    return "complete";
+  }
+
   const { data: business } = await supabase
     .from("businesses")
     .select("id")

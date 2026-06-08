@@ -1,4 +1,5 @@
 import { CalendarView } from "@/components/appointments/calendar-view";
+import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { listAppointments } from "@/lib/appointments/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 
@@ -15,16 +16,19 @@ type CalendarPageProps = {
 };
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
-  const [appointments, business] = await Promise.all([
+  const [appointments, business, membership] = await Promise.all([
     listAppointments(),
     getOwnerBusiness(),
+    getUserMembership(),
   ]);
+  const appRole = membership?.appRole ?? "owner";
 
   return (
     <CalendarView
       appointments={appointments}
       businessName={business?.name ?? "Your salon"}
       googleReviewLink={business?.google_review_link ?? null}
+      canManageFinance={canManageFinance(appRole)}
       openBooking={searchParams?.booking === "new"}
       error={searchParams?.error}
       showAddedToast={searchParams?.added === "1"}

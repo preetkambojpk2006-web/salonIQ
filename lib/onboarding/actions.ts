@@ -55,17 +55,33 @@ export async function createBusiness(formData: FormData) {
     ? { display: openingHoursNote }
     : {};
 
-  const { error } = await supabase.from("businesses").insert({
-    owner_id: user.id,
-    name,
-    phone,
-    email,
-    opening_hours,
-  });
+  const { data: createdBusiness, error } = await supabase
+    .from("businesses")
+    .insert({
+      owner_id: user.id,
+      name,
+      phone,
+      email,
+      opening_hours,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     redirect(
       `/onboarding/business?error=${encodeURIComponent(error.message)}`
+    );
+  }
+
+  const { error: memberError } = await supabase.from("business_members").insert({
+    user_id: user.id,
+    business_id: createdBusiness.id,
+    app_role: "owner",
+  });
+
+  if (memberError) {
+    redirect(
+      `/onboarding/business?error=${encodeURIComponent(memberError.message)}`
     );
   }
 

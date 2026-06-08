@@ -25,6 +25,7 @@ type CalendarViewProps = {
   appointments: Appointment[];
   businessName: string;
   googleReviewLink?: string | null;
+  canManageFinance?: boolean;
   openBooking?: boolean;
   error?: string;
   showAddedToast?: boolean;
@@ -157,12 +158,14 @@ function AppointmentActions({
   businessName,
   onCompletePay,
   onCopied,
+  canManageFinance = true,
   compact = false,
 }: {
   appointment: Appointment;
   businessName: string;
   onCompletePay: () => void;
   onCopied: () => void;
+  canManageFinance?: boolean;
   compact?: boolean;
 }) {
   const btnClass = compact ? "" : "";
@@ -199,7 +202,7 @@ function AppointmentActions({
         </form>
       ) : null}
 
-      {appointment.status === "confirmed" ? (
+      {appointment.status === "confirmed" && canManageFinance ? (
         <button
           type="button"
           className={`primary-button ${btnClass}`}
@@ -244,6 +247,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
   onCompletePay,
   onCopied,
   onOpenDetail,
+  canManageFinance = true,
   compact = false,
 }: {
   appointment: Appointment;
@@ -251,6 +255,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
   onCompletePay: () => void;
   onCopied: () => void;
   onOpenDetail: () => void;
+  canManageFinance?: boolean;
   compact?: boolean;
 }) {
   if (compact) {
@@ -274,6 +279,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
           businessName={businessName}
           onCompletePay={onCompletePay}
           onCopied={onCopied}
+          canManageFinance={canManageFinance}
           compact
         />
       </div>
@@ -310,6 +316,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
         businessName={businessName}
         onCompletePay={onCompletePay}
         onCopied={onCopied}
+        canManageFinance={canManageFinance}
         compact={compact}
       />
     </article>
@@ -320,6 +327,7 @@ export function CalendarView({
   appointments,
   businessName,
   googleReviewLink = null,
+  canManageFinance = true,
   openBooking = false,
   error,
   showAddedToast = false,
@@ -437,10 +445,11 @@ export function CalendarView({
         onCompletePay={onPay}
         onCopied={handleCopied}
         onOpenDetail={() => handleOpenDetail(appointment)}
+        canManageFinance={canManageFinance}
         compact
       />
     ),
-    [businessName, handleCopied, handleOpenDetail]
+    [businessName, canManageFinance, handleCopied, handleOpenDetail]
   );
 
   const openNewBooking = () => {
@@ -518,6 +527,7 @@ export function CalendarView({
                         onCompletePay={() => handleCompletePay(appointment)}
                         onCopied={handleCopied}
                         onOpenDetail={() => handleOpenDetail(appointment)}
+                        canManageFinance={canManageFinance}
                       />
                     ))}
                   </div>
@@ -542,6 +552,7 @@ export function CalendarView({
               businessName={businessName}
               onCompletePay={() => handleCompletePay(detailAppointment)}
               onCopied={handleCopied}
+              canManageFinance={canManageFinance}
             />
           }
         />

@@ -8,6 +8,8 @@ import { CoachTeaser } from "@/components/coach/CoachTeaser";
 import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
 import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
+import type { AppRole } from "@/lib/auth/membership";
+import { canManageFinance } from "@/lib/auth/membership";
 import type {
   LiveFlowItem,
   TodayMetrics,
@@ -20,6 +22,7 @@ type TodayViewProps = {
   liveFlow: LiveFlowItem[];
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
+  appRole?: AppRole;
 };
 
 export function TodayView({
@@ -28,13 +31,18 @@ export function TodayView({
   liveFlow,
   coachTeaserTitle = null,
   staffLeaderboard = [],
+  appRole = "owner",
 }: TodayViewProps) {
+  const showOwnerInsights = canManageFinance(appRole);
+
   return (
     <div className="view-stack">
       <OsHero liveFlow={liveFlow} />
-      <SummaryGrid metrics={metrics} />
-      <CoachTeaser topInsightTitle={coachTeaserTitle} />
-      <LeaderboardCard entries={staffLeaderboard} />
+      <SummaryGrid metrics={metrics} appRole={appRole} />
+      {showOwnerInsights ? (
+        <CoachTeaser topInsightTitle={coachTeaserTitle} />
+      ) : null}
+      {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
 
       <div className="two-column">
         <NextAppointments appointments={upcoming} />

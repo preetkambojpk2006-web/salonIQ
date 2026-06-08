@@ -1,4 +1,5 @@
 import { TodayView } from "@/components/command-center/today/today-view";
+import { getUserMembership } from "@/lib/auth/membership";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getTodayDashboardData } from "@/lib/dashboard/today-queries";
@@ -20,14 +21,20 @@ function pickTopInsight(insights: Insight[]): Insight | null {
 }
 
 export default async function DashboardPage() {
-  const [data, businessId] = await Promise.all([
+  const [data, businessId, membership] = await Promise.all([
     getTodayDashboardData(),
     getOwnerBusinessId(),
+    getUserMembership(),
   ]);
+  const appRole = membership?.appRole ?? "owner";
 
   const [insights, leaderboard] = await Promise.all([
-    businessId ? getCoachInsights(businessId) : Promise.resolve([]),
-    businessId ? getStaffLeaderboard(businessId) : Promise.resolve([]),
+    businessId && appRole !== "staff"
+      ? getCoachInsights(businessId)
+      : Promise.resolve([]),
+    businessId && appRole !== "staff"
+      ? getStaffLeaderboard(businessId)
+      : Promise.resolve([]),
   ]);
   const topInsight = pickTopInsight(insights);
 
@@ -38,6 +45,7 @@ export default async function DashboardPage() {
       liveFlow={data.liveFlow}
       coachTeaserTitle={topInsight?.title ?? null}
       staffLeaderboard={leaderboard}
+      appRole={appRole}
     />
   );
 }

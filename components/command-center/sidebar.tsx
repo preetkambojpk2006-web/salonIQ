@@ -3,15 +3,21 @@
 import { Bot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { AppRole } from "@/lib/auth/membership";
 import {
-  commandNavItems,
   getActiveNavId,
+  getNavItemsForRole,
 } from "@/lib/command-center/navigation";
 import { OwnerWhatsappBrief } from "@/components/command-center/owner-whatsapp-brief";
 
-export function CommandSidebar() {
+type CommandSidebarProps = {
+  appRole: AppRole;
+};
+
+export function CommandSidebar({ appRole }: CommandSidebarProps) {
   const pathname = usePathname();
   const activeId = getActiveNavId(pathname);
+  const navItems = getNavItemsForRole(appRole);
 
   return (
     <aside className="sidebar" aria-label="Primary navigation">
@@ -24,7 +30,7 @@ export function CommandSidebar() {
       </div>
 
       <nav className="nav-stack" aria-label="Main">
-        {commandNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = item.id === activeId;
           return (
             <Link
@@ -51,7 +57,7 @@ export function CommandSidebar() {
         })}
       </nav>
 
-      <OwnerWhatsappBrief />
+      {appRole === "owner" || appRole === "admin" ? <OwnerWhatsappBrief /> : null}
     </aside>
   );
 }

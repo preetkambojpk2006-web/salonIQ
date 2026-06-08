@@ -1,3 +1,5 @@
+import type { AppRole } from "@/lib/auth/membership";
+import { canManageFinance } from "@/lib/auth/membership";
 import type { TodayMetrics } from "@/lib/dashboard/today-queries";
 
 function formatRs(amount: number): string {
@@ -6,9 +8,12 @@ function formatRs(amount: number): string {
 
 type SummaryGridProps = {
   metrics: TodayMetrics;
+  appRole?: AppRole;
 };
 
-export function SummaryGrid({ metrics }: SummaryGridProps) {
+export function SummaryGrid({ metrics, appRole = "owner" }: SummaryGridProps) {
+  const showFinance = canManageFinance(appRole);
+
   const cards = [
     {
       key: "revenue",
@@ -44,7 +49,12 @@ export function SummaryGrid({ metrics }: SummaryGridProps) {
           ? "Healthy retention"
           : metrics.repeatContext,
     },
-  ];
+  ].filter((card) => {
+    if (!showFinance && (card.key === "revenue" || card.key === "pending")) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="summary-grid stagger-metrics">

@@ -1,4 +1,5 @@
 import type { Customer } from "@/lib/customers/types";
+import { getUserBusinessId as resolveUserBusinessId } from "@/lib/auth/membership";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,8 +8,7 @@ function escapeIlike(value: string): string {
 }
 
 export async function getOwnerBusinessId(): Promise<string | null> {
-  const business = await getOwnerBusiness();
-  return business?.id ?? null;
+  return resolveUserBusinessId();
 }
 
 export async function listCustomers(search?: string): Promise<Customer[]> {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth/actions";
-import { commandNavItems } from "@/lib/command-center/navigation";
+import { getUserMembership } from "@/lib/auth/membership";
+import { getNavItemsForRole } from "@/lib/command-center/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MorePage() {
@@ -8,8 +9,10 @@ export default async function MorePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const membership = await getUserMembership();
+  const appRole = membership?.appRole ?? "owner";
 
-  const extraNav = commandNavItems.filter(
+  const extraNav = getNavItemsForRole(appRole).filter(
     (item) => !item.mobile && item.id !== "today"
   );
 

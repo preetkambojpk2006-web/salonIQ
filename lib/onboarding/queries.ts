@@ -1,17 +1,16 @@
+import { getUserMembership } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getOwnerBusiness() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const membership = await getUserMembership();
 
-  if (!user) return null;
+  if (!membership) return null;
 
   const { data: business } = await supabase
     .from("businesses")
     .select("id, name, logo_url, phone, email, opening_hours, google_review_link")
-    .eq("owner_id", user.id)
+    .eq("id", membership.businessId)
     .maybeSingle();
 
   return business;
