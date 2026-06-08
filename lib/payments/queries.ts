@@ -5,7 +5,11 @@ import {
   mondayOfWeekCalendarDay,
   todayCalendarDay,
 } from "@/lib/payments/date-utils";
-import type { MoneyDashboardStats, Payment } from "@/lib/payments/types";
+import type {
+  CashUpiSplit,
+  MoneyDashboardStats,
+  Payment,
+} from "@/lib/payments/types";
 import { createClient } from "@/lib/supabase/server";
 
 function sumAmounts(rows: { amount: number | string }[] | null): number {
@@ -134,6 +138,54 @@ async function fetchPaymentMethodCounts(businessId: string) {
   }
 
   return { cashCount, upiCount, pendingMethodCount };
+}
+
+const EMPTY_CASH_UPI_SPLIT: CashUpiSplit = {
+  cash: 0,
+  upi: 0,
+  total: 0,
+  cashPercent: 0,
+  upiPercent: 0,
+};
+
+export async function getCashUpiSplit(
+  businessId: string,
+  dateFrom: Date,
+  dateTo: Date
+): Promise<CashUpiSplit> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("payments")
+    .select("amount, method")
+    .eq("business_id", businessId)
+    .eq("status", "paid")
+    .not("paid_at", "is", null)
+    .gte("paid_at", dateFrom.toISOString())
+    .lt("paid_at", dateTo.toISOString());
+
+  if (error) {
+    console.error("getCashUpiSplit:", error.message);
+    return EMPTY_CASH_UPI_SPLIT;
+  }
+
+  let cash = 0;
+  let upi = 0;
+
+  for (const row of data ?? []) {
+    const amount = Number(row.amount ?? 0);
+    if (row.method === "cash") {
+      cash += amount;
+    } else if (row.method === "upi") {
+      upi += amount;
+    }
+  }
+
+  const total = cash + upi;
+  const cashPercent = total > 0 ? Math.round((cash / total) * 100) : 0;
+  const upiPercent = total > 0 ? Math.round((upi / total) * 100) : 0;
+
+  return { cash, upi, total, cashPercent, upiPercent };
 }
 
 export async function getMoneyDashboardStats(): Promise<MoneyDashboardStats> {

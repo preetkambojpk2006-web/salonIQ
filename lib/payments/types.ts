@@ -13,6 +13,14 @@ export type Payment = {
   created_at: string;
 };
 
+export type CashUpiSplit = {
+  cash: number;
+  upi: number;
+  total: number;
+  cashPercent: number;
+  upiPercent: number;
+};
+
 export type MoneyDashboardStats = {
   revenueToday: number;
   revenueWeek: number;

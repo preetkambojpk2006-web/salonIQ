@@ -1,4 +1,5 @@
-import type { MoneyDashboardStats } from "@/lib/payments/types";
+import { CashUpiSplit } from "@/components/money/CashUpiSplit";
+import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -17,9 +18,10 @@ function pendingPaymentContext(amount: number, count: number): string {
 
 type MoneyViewProps = {
   stats: MoneyDashboardStats;
+  cashUpiSplit: CashUpiSplitData;
 };
 
-export function MoneyView({ stats }: MoneyViewProps) {
+export function MoneyView({ stats, cashUpiSplit }: MoneyViewProps) {
   const summaryCards = [
     {
       key: "today",
@@ -76,6 +78,8 @@ export function MoneyView({ stats }: MoneyViewProps) {
         ))}
       </div>
 
+      <CashUpiSplit split={cashUpiSplit} />
+
       <section className="panel">
         <div className="panel-header">
           <div>
@@ -115,34 +119,6 @@ export function MoneyView({ stats }: MoneyViewProps) {
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Payment methods</p>
-            <h2>Cash vs UPI</h2>
-          </div>
-        </div>
-        <div
-          className="summary-grid stagger-metrics"
-          style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-        >
-          <article className="metric-card">
-            <p>Cash</p>
-            <strong>{stats.cashCount}</strong>
-            <span>payments</span>
-          </article>
-          <article className="metric-card success">
-            <p>UPI</p>
-            <strong>{stats.upiCount}</strong>
-            <span>payments</span>
-          </article>
-          <article className="metric-card warning">
-            <p>Pending</p>
-            <strong>{stats.pendingMethodCount}</strong>
-            <span>to collect</span>
-          </article>
-        </div>
-      </section>
     </div>
   );
 }
