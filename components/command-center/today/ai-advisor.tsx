@@ -19,7 +19,7 @@ export function AiAdvisor() {
       <div className="panel-header">
         <div>
           <p className="eyebrow">AI advisor</p>
-          <h2>What needs attention</h2>
+          <h2>Aaj kya important hai</h2>
         </div>
       </div>
       <div className="insight-stack stagger-list">

@@ -25,8 +25,27 @@ export function NextAppointments({ appointments }: NextAppointmentsProps) {
         </div>
         <Link
           href="/dashboard/calendar?booking=new"
-          className="icon-button"
           title="Add appointment"
+          aria-label="Add appointment"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 38,
+            height: 38,
+            minWidth: 38,
+            minHeight: 38,
+            flexShrink: 0,
+            borderRadius: 999,
+            background: "#1FA873",
+            color: "#fff",
+            fontSize: 22,
+            fontWeight: 700,
+            lineHeight: 1,
+            textDecoration: "none",
+            border: 0,
+            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.06)",
+          }}
         >
           +
         </Link>
