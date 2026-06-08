@@ -2,7 +2,7 @@ import type { AppRole } from "@/lib/auth/membership";
 import { getUserMembership } from "@/lib/auth/membership";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
-import { getGreeting } from "@/lib/dashboard/greeting";
+import { getNamasteGreeting, getFirstName } from "@/lib/dashboard/greeting";
 
 export type WorkspaceContext = {
   ownerName: string;
@@ -12,15 +12,6 @@ export type WorkspaceContext = {
   greeting: string;
   appRole: AppRole;
 };
-
-function nameFromEmail(email: string | undefined): string {
-  if (!email) return "Owner";
-  const local = email.split("@")[0] ?? "owner";
-  return local
-    .split(/[._-]/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 export async function getWorkspaceContext(): Promise<WorkspaceContext> {
   const supabase = createClient();
@@ -35,11 +26,8 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
     : [];
 
   const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
-  const ownerName =
-    meta?.full_name ??
-    meta?.name ??
-    nameFromEmail(user?.email) ??
-    "Priya";
+  const displayName = meta?.full_name ?? meta?.name ?? null;
+  const ownerName = getFirstName(user?.email, displayName);
 
   return {
     ownerName,
@@ -52,7 +40,7 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
             { id: "mock-koramangala", name: "Koramangala" },
             { id: "mock-indiranagar", name: "Indiranagar" },
           ],
-    greeting: getGreeting(),
+    greeting: getNamasteGreeting(user?.email, displayName),
     appRole: membership?.appRole ?? "owner",
   };
 }

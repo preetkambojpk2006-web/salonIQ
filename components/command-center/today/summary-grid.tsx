@@ -20,10 +20,7 @@ export function SummaryGrid({ metrics, appRole = "owner" }: SummaryGridProps) {
       className: "metric-card success",
       label: "Revenue today",
       value: formatRs(metrics.revenueToday),
-      context:
-        metrics.revenueToday > 0
-          ? "+22% vs last Friday"
-          : metrics.revenueContext,
+      context: metrics.revenueContext,
     },
     {
       key: "bookings",
@@ -44,10 +41,7 @@ export function SummaryGrid({ metrics, appRole = "owner" }: SummaryGridProps) {
       className: "metric-card",
       label: "Repeat customers",
       value: `${metrics.repeatPercent}%`,
-      context:
-        metrics.repeatPercent >= 50
-          ? "Healthy retention"
-          : metrics.repeatContext,
+      context: metrics.repeatContext,
     },
   ].filter((card) => {
     if (!showFinance && (card.key === "revenue" || card.key === "pending")) {

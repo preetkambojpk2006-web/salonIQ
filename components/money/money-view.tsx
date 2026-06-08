@@ -4,6 +4,17 @@ function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
+function formatInr(amount: number): string {
+  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+function pendingPaymentContext(amount: number, count: number): string {
+  if (count === 0) {
+    return "Aaj ka saara hisaab clear hai!";
+  }
+  return `${formatInr(amount)} collect karna baaki hai`;
+}
+
 type MoneyViewProps = {
   stats: MoneyDashboardStats;
 };
@@ -15,7 +26,7 @@ export function MoneyView({ stats }: MoneyViewProps) {
       className: "metric-card success",
       label: "Today's revenue",
       value: formatRs(stats.revenueToday),
-      context: "Paid collections today",
+      context: "Aaj ki paid collections",
     },
     {
       key: "week",
@@ -29,17 +40,14 @@ export function MoneyView({ stats }: MoneyViewProps) {
       className: "metric-card warning",
       label: "Pending payments",
       value: formatRs(stats.pendingAmount),
-      context:
-        stats.pendingCount === 0
-          ? "Sab clear hai"
-          : `${stats.pendingCount} payment baaki`,
+      context: pendingPaymentContext(stats.pendingAmount, stats.pendingCount),
     },
     {
       key: "profit",
       className: "metric-card",
       label: "Net profit (week)",
       value: formatRs(stats.netProfit),
-      context: "Expenses placeholder — jald add hoga",
+      context: "Expenses tracking jald aayega",
     },
   ];
 

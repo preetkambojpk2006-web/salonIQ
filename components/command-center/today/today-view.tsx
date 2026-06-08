@@ -37,7 +37,11 @@ export function TodayView({
 
   return (
     <div className="view-stack">
-      <OsHero liveFlow={liveFlow} />
+      <OsHero
+        nextAppointment={upcoming[0] ?? null}
+        revenueToday={metrics.revenueToday}
+        showRevenue={showOwnerInsights}
+      />
       <SummaryGrid metrics={metrics} appRole={appRole} />
       {showOwnerInsights ? (
         <CoachTeaser topInsightTitle={coachTeaserTitle} />

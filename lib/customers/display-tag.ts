@@ -52,6 +52,6 @@ export function getCustomerDisplayTag(customer: Customer): CustomerTagDisplay {
 export function getCustomerVisitLine(customer: Customer): string {
   const visits = customer.visit_count;
   const visitWord = visits === 1 ? "visit" : "visits";
-  const detail = customer.notes?.trim() || "Facial, Haircut";
+  const detail = customer.notes?.trim() || "Visit notes add karein";
   return `${visits} ${visitWord} · ${detail}`;
 }

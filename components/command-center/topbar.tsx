@@ -29,8 +29,8 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
   return (
     <header className="topbar">
       <div>
-        <p className="eyebrow">
-          {workspace.greeting}, {workspace.ownerName}
+        <p className="eyebrow" style={{ textTransform: "none", letterSpacing: "0.01em" }}>
+          {workspace.greeting}
         </p>
         <h1>{titleByNav[activeId]}</h1>
       </div>

@@ -43,6 +43,17 @@ function endOfToday(): Date {
   return d;
 }
 
+function formatRs(amount: number): string {
+  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+function formatPendingContext(amount: number, count: number): string {
+  if (count === 0) {
+    return "Aaj ka saara hisaab clear hai!";
+  }
+  return `${formatRs(amount)} collect karna baaki hai`;
+}
+
 function customerName(row: {
   customers: { name: string } | { name: string }[] | null;
 }): string {
@@ -63,7 +74,7 @@ export async function getTodayDashboardData(): Promise<{
     revenueContext: "Complete appointments se revenue aayegi",
     pendingAmount: 0,
     pendingCount: 0,
-    pendingContext: "Sab clear hai",
+    pendingContext: "Aaj ka saara hisaab clear hai!",
     repeatPercent: 0,
     repeatContext: "Customers add karte jayein",
   };
@@ -143,23 +154,22 @@ export async function getTodayDashboardData(): Promise<{
     bookingsContext:
       activeToday.length === 0
         ? "Aaj koi booking nahi"
-        : `${completedToday.length} done, ${upcomingToday.length} baaki`,
+        : `${completedToday.length} complete · ${upcomingToday.length} abhi baaki`,
     revenueToday,
     revenueContext:
       revenueToday > 0
-        ? "Paid collections today"
-        : "Cash / UPI se revenue yahan dikhegi",
+        ? "Aaj ki paid collections"
+        : "Cash / UPI payments yahan dikhengi",
     pendingAmount,
     pendingCount,
-    pendingContext:
-      pendingCount === 0
-        ? "Sab clear hai"
-        : `${pendingCount} payment baaki`,
+    pendingContext: formatPendingContext(pendingAmount, pendingCount),
     repeatPercent,
     repeatContext:
       totalCustomers === 0
         ? "Customers add karte jayein"
-        : `${repeatCustomers} of ${totalCustomers} repeat`,
+        : repeatPercent >= 50
+          ? "Acchi customer loyalty"
+          : `${repeatCustomers} of ${totalCustomers} repeat customers`,
   };
 
   const upcoming: UpcomingAppointment[] = (upcomingRows ?? []).map((row) => ({
