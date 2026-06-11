@@ -11,6 +11,7 @@ export type CommandNavId =
   | "automations"
   | "coach"
   | "branches"
+  | "services"
   | "settings";
 
 export type CommandNavItem = {
@@ -35,6 +36,7 @@ export const commandNavItems: CommandNavItem[] = [
   { id: "automations", label: "Automations", href: "/dashboard/automations" },
   { id: "coach", label: "AI Coach", href: "/dashboard/coach" },
   { id: "branches", label: "Branches", href: "/dashboard/branches" },
+  { id: "services", label: "Services & Staff", href: "/dashboard/services" },
   { id: "settings", label: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -56,6 +58,7 @@ export function getActiveNavId(pathname: string): CommandNavId {
   if (pathname.startsWith("/dashboard/automations")) return "automations";
   if (pathname.startsWith("/dashboard/coach")) return "coach";
   if (pathname.startsWith("/dashboard/branches")) return "branches";
+  if (pathname.startsWith("/dashboard/services")) return "services";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   return "today";
 }

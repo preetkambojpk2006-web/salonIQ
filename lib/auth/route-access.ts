@@ -7,6 +7,7 @@ const STAFF_BLOCKED_PATHS = [
   "/dashboard/automations",
   "/dashboard/coach",
   "/dashboard/branches",
+  "/dashboard/services",
   "/dashboard/settings",
 ] as const;
 
@@ -16,6 +17,7 @@ const FINANCE_NAV_IDS = new Set<CommandNavId>([
   "automations",
   "coach",
   "branches",
+  "services",
   "settings",
 ]);
 
