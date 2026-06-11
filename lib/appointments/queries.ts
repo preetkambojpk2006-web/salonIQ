@@ -15,6 +15,13 @@ type PaymentJoin = {
   created_at: string;
 };
 
+type CustomerJoin = {
+  name: string;
+  phone: string | null;
+  reliability?: string | null;
+  notes: string | null;
+};
+
 type AppointmentRow = {
   id: string;
   business_id: string;
@@ -30,26 +37,13 @@ type AppointmentRow = {
   payment_status: string;
   source: string;
   created_at: string;
-  customers:
-    | {
-        name: string;
-        phone: string | null;
-        reliability: string | null;
-        notes: string | null;
-      }
-    | {
-        name: string;
-        phone: string | null;
-        reliability: string | null;
-        notes: string | null;
-      }[]
-    | null;
+  customers: CustomerJoin | CustomerJoin[] | null;
   branches: { address: string | null } | { address: string | null }[] | null;
-  payments: PaymentJoin | PaymentJoin[] | null;
+  payments?: PaymentJoin | PaymentJoin[] | null;
 };
 
 function latestPaymentMethod(
-  payments: PaymentJoin | PaymentJoin[] | null
+  payments: PaymentJoin | PaymentJoin[] | null | undefined
 ): AppointmentPaymentMethod | null {
   if (!payments) return null;
 
@@ -123,6 +117,31 @@ function mapRow(row: AppointmentRow): Appointment {
   };
 }
 
+/** All pending online requests for businesses the user can access (RLS-scoped). */
+export async function listOnlinePendingAppointments(): Promise<Appointment[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      `
+      *,
+      customers ( name, phone, notes ),
+      branches ( address )
+    `
+    )
+    .eq("status", "pending")
+    .eq("source", "online")
+    .order("start_time", { ascending: true });
+
+  if (error) {
+    console.error("listOnlinePendingAppointments:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => mapRow(row as AppointmentRow));
+}
+
 export async function listAppointments(): Promise<Appointment[]> {
   const supabase = createClient();
   const businessId = await getOwnerBusinessId();
@@ -136,7 +155,7 @@ export async function listAppointments(): Promise<Appointment[]> {
     .select(
       `
       *,
-      customers ( name, phone, reliability, notes ),
+      customers ( name, phone, notes ),
       branches ( address ),
       payments ( method, status, amount, paid_at, created_at )
     `

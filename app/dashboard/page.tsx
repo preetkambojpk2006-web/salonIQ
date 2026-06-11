@@ -2,6 +2,7 @@ import { TodayView } from "@/components/command-center/today/today-view";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
+import { listOnlinePendingAppointments } from "@/lib/appointments/queries";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getTodayDashboardData } from "@/lib/dashboard/today-queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
@@ -23,10 +24,11 @@ function pickTopInsight(insights: Insight[]): Insight | null {
 }
 
 export default async function DashboardPage() {
-  const [data, businessId, membership] = await Promise.all([
+  const [data, businessId, membership, onlinePending] = await Promise.all([
     getTodayDashboardData(),
     getOwnerBusinessId(),
     getUserMembership(),
+    listOnlinePendingAppointments(),
   ]);
   const appRole = membership?.appRole ?? "owner";
 
@@ -51,6 +53,7 @@ export default async function DashboardPage() {
     <TodayView
       metrics={data.metrics}
       upcoming={data.upcoming}
+      onlinePending={onlinePending}
       coachTeaserTitle={topInsight?.title ?? null}
       staffLeaderboard={leaderboard}
       appRole={appRole}

@@ -1,6 +1,9 @@
 import { CalendarView } from "@/components/appointments/calendar-view";
 import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
-import { listAppointments } from "@/lib/appointments/queries";
+import {
+  listAppointments,
+  listOnlinePendingAppointments,
+} from "@/lib/appointments/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +19,9 @@ type CalendarPageProps = {
 };
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
-  const [appointments, business, membership] = await Promise.all([
+  const [appointments, onlinePending, business, membership] = await Promise.all([
     listAppointments(),
+    listOnlinePendingAppointments(),
     getOwnerBusiness(),
     getUserMembership(),
   ]);
@@ -26,6 +30,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   return (
     <CalendarView
       appointments={appointments}
+      onlinePending={onlinePending}
       businessName={business?.name ?? "Your salon"}
       googleReviewLink={business?.google_review_link ?? null}
       canManageFinance={canManageFinance(appRole)}

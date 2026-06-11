@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
+import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
 import { AppointmentDetailModal } from "@/components/appointments/appointment-detail-modal";
 import { PaymentModal } from "@/components/appointments/payment-modal";
 import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
@@ -19,11 +20,17 @@ import {
   rejectAppointment,
 } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import {
+  isOnlinePendingAppointment,
+  mergeAppointments,
+} from "@/lib/appointments/utils";
 import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
+import { calendarDayInTimezone, SALON_TIMEZONE } from "@/lib/payments/date-utils";
 
 type CalendarViewProps = {
   appointments: Appointment[];
+  onlinePending?: Appointment[];
   businessName: string;
   googleReviewLink?: string | null;
   canManageFinance?: boolean;
@@ -61,8 +68,7 @@ function formatDateHeading(iso: string): string {
 }
 
 function dateKey(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return calendarDayInTimezone(iso, SALON_TIMEZONE);
 }
 
 function staffLabel(appointment: Appointment): string {
@@ -157,7 +163,7 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
 function AppointmentSourceTag({ appointment }: { appointment: Appointment }) {
   if (appointment.status !== "pending") return null;
 
-  if (appointment.source === "online") {
+  if (isOnlinePendingAppointment(appointment)) {
     return (
       <span className="tag orange" style={{ marginBottom: 6, display: "inline-flex" }}>
         Online · Confirm karein
@@ -357,6 +363,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
 
 export function CalendarView({
   appointments,
+  onlinePending = [],
   businessName,
   googleReviewLink = null,
   canManageFinance = true,
@@ -389,28 +396,17 @@ export function CalendarView({
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
   const [onlinePendingOnly, setOnlinePendingOnly] = useState(false);
 
-  const onlinePendingCount = useMemo(
-    () =>
-      appointments.filter(
-        (a) => a.status === "pending" && a.source === "online"
-      ).length,
-    [appointments]
+  const mergedAppointments = useMemo(
+    () => mergeAppointments(appointments, onlinePending),
+    [appointments, onlinePending]
   );
 
-  const onlinePendingAppointments = useMemo(
-    () =>
-      [...appointments]
-        .filter((a) => a.status === "pending" && a.source === "online")
-        .sort((a, b) => a.start_time.localeCompare(b.start_time)),
-    [appointments]
-  );
+  const onlinePendingCount = onlinePending.length;
 
   const visibleAppointments = useMemo(() => {
-    if (!onlinePendingOnly) return appointments;
-    return appointments.filter(
-      (a) => a.status === "pending" && a.source === "online"
-    );
-  }, [appointments, onlinePendingOnly]);
+    if (!onlinePendingOnly) return mergedAppointments;
+    return onlinePending;
+  }, [mergedAppointments, onlinePending, onlinePendingOnly]);
 
   useEffect(() => {
     setShowForm(openBooking);
@@ -427,7 +423,7 @@ export function CalendarView({
     setBookingToast(true);
 
     if (addedAppointmentId) {
-      const match = appointments.find((a) => a.id === addedAppointmentId);
+      const match = mergedAppointments.find((a) => a.id === addedAppointmentId);
       if (match) setWhatsappBooking(match);
     }
 
@@ -439,7 +435,7 @@ export function CalendarView({
       scroll: false,
     });
     router.refresh();
-  }, [showAddedToast, addedAppointmentId, appointments, router]);
+  }, [showAddedToast, addedAppointmentId, mergedAppointments, router]);
 
   useEffect(() => {
     if (!showPaymentToast) return;
@@ -562,7 +558,7 @@ export function CalendarView({
             </p>
           ) : null}
 
-          {appointments.length === 0 ? (
+          {mergedAppointments.length === 0 && onlinePendingCount === 0 ? (
             <EmptyState
               icon="calendar"
               title="Aaj koi booking nahi"
@@ -576,46 +572,8 @@ export function CalendarView({
             </p>
           ) : (
             <div className="view-stack">
-              {onlinePendingAppointments.length > 0 && !onlinePendingOnly ? (
-                <section
-                  style={{
-                    marginBottom: 8,
-                    padding: 16,
-                    borderRadius: 16,
-                    border: "1px solid #1FA873",
-                    background: "#D4E8DD",
-                  }}
-                >
-                  <p
-                    className="eyebrow"
-                    style={{ marginBottom: 4, color: "#1A1A1A" }}
-                  >
-                    Online booking requests
-                  </p>
-                  <p
-                    style={{
-                      margin: "0 0 12px",
-                      fontSize: 13,
-                      color: "#8A8A8A",
-                    }}
-                  >
-                    In requests ko confirm ya reject karein — customer ko wait kar
-                    rahe hain.
-                  </p>
-                  <div className="appointment-list stagger-list">
-                    {onlinePendingAppointments.map((appointment) => (
-                      <AppointmentBlock
-                        key={`online-pending-${appointment.id}`}
-                        appointment={appointment}
-                        businessName={businessName}
-                        onCompletePay={() => handleCompletePay(appointment)}
-                        onCopied={handleCopied}
-                        onOpenDetail={() => handleOpenDetail(appointment)}
-                        canManageFinance={canManageFinance}
-                      />
-                    ))}
-                  </div>
-                </section>
+              {onlinePendingCount > 0 ? (
+                <OnlinePendingRequests appointments={onlinePending} />
               ) : null}
 
               {grouped.map(([key, dayAppointments]) => (

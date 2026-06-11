@@ -9,14 +9,17 @@ import { SummaryGrid } from "@/components/command-center/today/summary-grid";
 import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
 import type { AppRole } from "@/lib/auth/membership";
 import { canManageFinance } from "@/lib/auth/membership";
+import type { Appointment } from "@/lib/appointments/types";
 import type {
   TodayMetrics,
   UpcomingAppointment,
 } from "@/lib/dashboard/today-queries";
+import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
   upcoming: UpcomingAppointment[];
+  onlinePending?: Appointment[];
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
   appRole?: AppRole;
@@ -27,6 +30,7 @@ type TodayViewProps = {
 export function TodayView({
   metrics,
   upcoming,
+  onlinePending = [],
   coachTeaserTitle = null,
   staffLeaderboard = [],
   appRole = "owner",
@@ -55,6 +59,10 @@ export function TodayView({
         <CoachTeaser topInsightTitle={coachTeaserTitle} />
       ) : null}
       {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
+
+      {showOwnerInsights && onlinePending.length > 0 ? (
+        <OnlinePendingRequests appointments={onlinePending} />
+      ) : null}
 
       <div className="two-column">
         <NextAppointments appointments={upcoming} />

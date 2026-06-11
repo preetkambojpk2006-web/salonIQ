@@ -153,17 +153,25 @@ const VALID_STATUSES: AppointmentStatus[] = [
 
 async function setAppointmentStatus(
   appointmentId: string,
-  businessId: string,
   status: AppointmentStatus
 ) {
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("appointments")
     .update({ status })
     .eq("id", appointmentId)
-    .eq("business_id", businessId);
+    .select("id")
+    .maybeSingle();
 
-  return error;
+  if (error) {
+    return error;
+  }
+
+  if (!data) {
+    return new Error("Could not update booking");
+  }
+
+  return null;
 }
 
 export async function confirmAppointment(formData: FormData) {
@@ -173,17 +181,10 @@ export async function confirmAppointment(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const businessId = await getOwnerBusinessId();
-  if (!businessId) redirect("/dashboard/calendar?error=Set up your salon first");
-
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not confirm");
 
-  const error = await setAppointmentStatus(
-    appointmentId,
-    businessId,
-    "confirmed"
-  );
+  const error = await setAppointmentStatus(appointmentId, "confirmed");
   if (error) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
   }
@@ -201,17 +202,10 @@ export async function rejectAppointment(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const businessId = await getOwnerBusinessId();
-  if (!businessId) redirect("/dashboard/calendar?error=Set up your salon first");
-
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not reject");
 
-  const error = await setAppointmentStatus(
-    appointmentId,
-    businessId,
-    "cancelled"
-  );
+  const error = await setAppointmentStatus(appointmentId, "cancelled");
   if (error) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
   }
@@ -228,17 +222,13 @@ export async function markNoShow(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const businessId = await getOwnerBusinessId();
-  if (!businessId) redirect("/dashboard/calendar?error=Set up your salon first");
-
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not update");
 
   const { data: appointment } = await supabase
     .from("appointments")
-    .select("status, customer_id")
+    .select("status, customer_id, business_id")
     .eq("id", appointmentId)
-    .eq("business_id", businessId)
     .maybeSingle();
 
   if (!appointment) {
@@ -246,17 +236,16 @@ export async function markNoShow(formData: FormData) {
   }
 
   if (appointment.status !== "no_show") {
-    const error = await setAppointmentStatus(
-      appointmentId,
-      businessId,
-      "no_show"
-    );
+    const error = await setAppointmentStatus(appointmentId, "no_show");
     if (error) {
       redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
     }
 
     if (appointment.customer_id) {
-      await incrementCustomerNoShowCount(appointment.customer_id, businessId);
+      await incrementCustomerNoShowCount(
+        appointment.customer_id,
+        appointment.business_id
+      );
     }
   }
 
@@ -291,16 +280,15 @@ export async function updateAppointmentStatus(formData: FormData) {
 
   const { data: appointment } = await supabase
     .from("appointments")
-    .select("status, customer_id")
+    .select("status, customer_id, business_id")
     .eq("id", appointmentId)
-    .eq("business_id", businessId)
     .maybeSingle();
 
   if (!appointment) {
     redirect("/dashboard/calendar?error=Could not update booking");
   }
 
-  const error = await setAppointmentStatus(appointmentId, businessId, status);
+  const error = await setAppointmentStatus(appointmentId, status);
 
   if (error) {
     redirect(
@@ -313,7 +301,10 @@ export async function updateAppointmentStatus(formData: FormData) {
     appointment.status !== "no_show" &&
     appointment.customer_id
   ) {
-    await incrementCustomerNoShowCount(appointment.customer_id, businessId);
+    await incrementCustomerNoShowCount(
+      appointment.customer_id,
+      appointment.business_id
+    );
   }
 
   revalidatePath("/dashboard/calendar");
