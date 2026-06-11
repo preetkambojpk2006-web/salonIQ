@@ -194,6 +194,33 @@ export async function confirmAppointment(formData: FormData) {
   redirect("/dashboard/calendar");
 }
 
+export async function rejectAppointment(formData: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const businessId = await getOwnerBusinessId();
+  if (!businessId) redirect("/dashboard/calendar?error=Set up your salon first");
+
+  const appointmentId = (formData.get("appointment_id") as string)?.trim();
+  if (!appointmentId) redirect("/dashboard/calendar?error=Could not reject");
+
+  const error = await setAppointmentStatus(
+    appointmentId,
+    businessId,
+    "cancelled"
+  );
+  if (error) {
+    redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard");
+  redirect("/dashboard/calendar");
+}
+
 export async function markNoShow(formData: FormData) {
   const supabase = createClient();
   const {

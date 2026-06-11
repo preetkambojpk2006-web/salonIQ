@@ -2,6 +2,7 @@ import { GettingStartedPanel } from "@/components/command-center/today/getting-s
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
 import { OsHero } from "@/components/command-center/today/os-hero";
 import { WelcomeBanner } from "@/components/command-center/welcome-banner";
+import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
 import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
@@ -19,6 +20,8 @@ type TodayViewProps = {
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
   appRole?: AppRole;
+  bookingSlug?: string | null;
+  salonName?: string;
 };
 
 export function TodayView({
@@ -27,6 +30,8 @@ export function TodayView({
   coachTeaserTitle = null,
   staffLeaderboard = [],
   appRole = "owner",
+  bookingSlug = null,
+  salonName = "Your salon",
 }: TodayViewProps) {
   const showOwnerInsights = canManageFinance(appRole);
   const isNewSalon =
@@ -37,6 +42,9 @@ export function TodayView({
   return (
     <div className="view-stack">
       <WelcomeBanner />
+      {showOwnerInsights && bookingSlug ? (
+        <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
+      ) : null}
       <OsHero
         nextAppointment={upcoming[0] ?? null}
         revenueToday={metrics.revenueToday}

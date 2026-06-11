@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { Toast } from "@/components/ui/toast";
 import {
   changePassword,
@@ -14,6 +15,8 @@ type SettingsViewProps = {
   initialEmail: string;
   initialOpeningHours: string;
   initialGoogleReviewLink: string;
+  bookingSlug?: string | null;
+  salonName: string;
 };
 
 export function SettingsView({
@@ -22,6 +25,8 @@ export function SettingsView({
   initialEmail,
   initialOpeningHours,
   initialGoogleReviewLink,
+  bookingSlug = null,
+  salonName,
 }: SettingsViewProps) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -107,6 +112,10 @@ export function SettingsView({
   return (
     <>
       <div className="view-stack">
+        {bookingSlug ? (
+          <BookingLinkCard slug={bookingSlug} salonName={salonName} />
+        ) : null}
+
         <section className="panel">
           <div className="panel-header">
             <div>

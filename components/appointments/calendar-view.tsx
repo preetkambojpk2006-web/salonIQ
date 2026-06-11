@@ -16,6 +16,7 @@ import { WhatsAppCopyButtons } from "@/components/appointments/whatsapp-copy-but
 import {
   confirmAppointment,
   markNoShow,
+  rejectAppointment,
 } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
 import type { CustomerReliability } from "@/lib/customers/types";
@@ -153,6 +154,24 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
+function AppointmentSourceTag({ appointment }: { appointment: Appointment }) {
+  if (appointment.status !== "pending") return null;
+
+  if (appointment.source === "online") {
+    return (
+      <span className="tag orange" style={{ marginBottom: 6, display: "inline-flex" }}>
+        Online · Confirm karein
+      </span>
+    );
+  }
+
+  return (
+    <span className="tag orange" style={{ marginBottom: 6, display: "inline-flex" }}>
+      Pending
+    </span>
+  );
+}
+
 function AppointmentActions({
   appointment,
   businessName,
@@ -191,15 +210,27 @@ function AppointmentActions({
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div style={{ display: "grid", gap: 6 }}>
+      <AppointmentSourceTag appointment={appointment} />
+      <div className="flex flex-wrap gap-1.5 items-start">
       {appointment.status === "pending" ? (
-        <form action={confirmAppointment}>
-          <input type="hidden" name="appointment_id" value={appointment.id} />
-          <PendingSubmitButton
-            label="Confirm"
-            className={`primary-button ${btnClass}`}
-          />
-        </form>
+        <>
+          <form action={confirmAppointment}>
+            <input type="hidden" name="appointment_id" value={appointment.id} />
+            <PendingSubmitButton
+              label="Confirm"
+              className={`primary-button ${btnClass}`}
+            />
+          </form>
+          <form action={rejectAppointment}>
+            <input type="hidden" name="appointment_id" value={appointment.id} />
+            <PendingSubmitButton
+              label="Reject"
+              className={`demo-button ${btnClass}`}
+              style={{ minHeight: compact ? 32 : 40 }}
+            />
+          </form>
+        </>
       ) : null}
 
       {appointment.status === "confirmed" && canManageFinance ? (
@@ -222,6 +253,7 @@ function AppointmentActions({
           />
         </form>
       ) : null}
+      </div>
     </div>
   );
 }
@@ -355,6 +387,22 @@ export function CalendarView({
     error ? safeDecodeError(error) : null
   );
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
+  const [onlinePendingOnly, setOnlinePendingOnly] = useState(false);
+
+  const onlinePendingCount = useMemo(
+    () =>
+      appointments.filter(
+        (a) => a.status === "pending" && a.source === "online"
+      ).length,
+    [appointments]
+  );
+
+  const visibleAppointments = useMemo(() => {
+    if (!onlinePendingOnly) return appointments;
+    return appointments.filter(
+      (a) => a.status === "pending" && a.source === "online"
+    );
+  }, [appointments, onlinePendingOnly]);
 
   useEffect(() => {
     setShowForm(openBooking);
@@ -396,7 +444,7 @@ export function CalendarView({
     });
   }, [showPaymentToast, router]);
 
-  const grouped = useMemo(() => groupByDate(appointments), [appointments]);
+  const grouped = useMemo(() => groupByDate(visibleAppointments), [visibleAppointments]);
 
   const handleOpenDetail = useCallback((appointment: Appointment) => {
     setDetailAppointment(appointment);
@@ -472,6 +520,16 @@ export function CalendarView({
               <h2>Daily staff calendar</h2>
             </div>
             <div className="topbar-actions">
+              {onlinePendingCount > 0 ? (
+                <button
+                  type="button"
+                  className={onlinePendingOnly ? "primary-button" : "demo-button"}
+                  onClick={() => setOnlinePendingOnly((value) => !value)}
+                  style={{ minHeight: 40 }}
+                >
+                  Online pending ({onlinePendingCount})
+                </button>
+              ) : null}
               <div className="segmented">
                 {(["day", "week", "month"] as const).map((mode) => (
                   <button
@@ -504,6 +562,10 @@ export function CalendarView({
               actionLabel="Nayi booking"
               onAction={openNewBooking}
             />
+          ) : visibleAppointments.length === 0 ? (
+            <p className="text-body" style={{ color: "var(--muted)" }}>
+              Koi online pending booking nahi. Filter hata kar saari bookings dekhein.
+            </p>
           ) : (
             <div className="view-stack">
               {grouped.map(([key, dayAppointments]) => (

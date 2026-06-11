@@ -1,4 +1,5 @@
 import { SettingsView } from "@/components/settings/settings-view";
+import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,11 @@ function openingHoursDisplay(
 
 export default async function SettingsPage() {
   const business = await getOwnerBusiness();
+  const bookingSlug =
+    business?.id && business.name
+      ? (business.booking_slug ??
+        (await ensureBusinessBookingSlug(business.id, business.name)))
+      : null;
 
   return (
     <SettingsView
@@ -23,6 +29,8 @@ export default async function SettingsPage() {
         business?.opening_hours as { display?: string } | null
       )}
       initialGoogleReviewLink={business?.google_review_link ?? ""}
+      bookingSlug={bookingSlug}
+      salonName={business?.name ?? "Your salon"}
     />
   );
 }

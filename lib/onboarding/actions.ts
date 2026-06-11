@@ -85,6 +85,21 @@ export async function createBusiness(formData: FormData) {
     );
   }
 
+  const { data: slug, error: slugError } = await supabase.rpc(
+    "generate_booking_slug",
+    {
+      p_name: name,
+      p_business_id: createdBusiness.id,
+    }
+  );
+
+  if (!slugError && slug) {
+    await supabase
+      .from("businesses")
+      .update({ booking_slug: slug })
+      .eq("id", createdBusiness.id);
+  }
+
   redirect("/onboarding/branch");
 }
 
