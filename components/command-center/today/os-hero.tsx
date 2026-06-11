@@ -1,8 +1,10 @@
 import type { UpcomingAppointment } from "@/lib/dashboard/today-queries";
+import { RevenueTargetProgress } from "@/components/command-center/today/revenue-target-progress";
 
 type OsHeroProps = {
   nextAppointment: UpcomingAppointment | null;
   revenueToday: number;
+  dailyRevenueTarget?: number | null;
   showRevenue?: boolean;
 };
 
@@ -13,6 +15,7 @@ function formatRs(amount: number): string {
 export function OsHero({
   nextAppointment,
   revenueToday,
+  dailyRevenueTarget = null,
   showRevenue = true,
 }: OsHeroProps) {
   return (
@@ -90,6 +93,13 @@ export function OsHero({
           </div>
         ) : null}
       </div>
+
+      {showRevenue ? (
+        <RevenueTargetProgress
+          revenueToday={revenueToday}
+          dailyTarget={dailyRevenueTarget}
+        />
+      ) : null}
     </section>
   );
 }

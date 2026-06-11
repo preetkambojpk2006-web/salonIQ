@@ -25,6 +25,7 @@ type TodayViewProps = {
   appRole?: AppRole;
   bookingSlug?: string | null;
   salonName?: string;
+  dailyRevenueTarget?: number | null;
 };
 
 export function TodayView({
@@ -36,6 +37,7 @@ export function TodayView({
   appRole = "owner",
   bookingSlug = null,
   salonName = "Your salon",
+  dailyRevenueTarget = null,
 }: TodayViewProps) {
   const showOwnerInsights = canManageFinance(appRole);
   const isNewSalon =
@@ -52,6 +54,7 @@ export function TodayView({
       <OsHero
         nextAppointment={upcoming[0] ?? null}
         revenueToday={metrics.revenueToday}
+        dailyRevenueTarget={dailyRevenueTarget}
         showRevenue={showOwnerInsights}
       />
       <SummaryGrid metrics={metrics} appRole={appRole} />

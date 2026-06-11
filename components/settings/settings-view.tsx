@@ -15,6 +15,7 @@ type SettingsViewProps = {
   initialEmail: string;
   initialOpeningHours: string;
   initialGoogleReviewLink: string;
+  initialDailyRevenueTarget?: string;
   bookingSlug?: string | null;
   salonName: string;
 };
@@ -25,6 +26,7 @@ export function SettingsView({
   initialEmail,
   initialOpeningHours,
   initialGoogleReviewLink,
+  initialDailyRevenueTarget = "",
   bookingSlug = null,
   salonName,
 }: SettingsViewProps) {
@@ -34,6 +36,9 @@ export function SettingsView({
   const [email, setEmail] = useState(initialEmail);
   const [openingHours, setOpeningHours] = useState(initialOpeningHours);
   const [googleReviewLink, setGoogleReviewLink] = useState(initialGoogleReviewLink);
+  const [dailyRevenueTarget, setDailyRevenueTarget] = useState(
+    initialDailyRevenueTarget
+  );
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -51,12 +56,14 @@ export function SettingsView({
     setEmail(initialEmail);
     setOpeningHours(initialOpeningHours);
     setGoogleReviewLink(initialGoogleReviewLink);
+    setDailyRevenueTarget(initialDailyRevenueTarget);
   }, [
     initialName,
     initialPhone,
     initialEmail,
     initialOpeningHours,
     initialGoogleReviewLink,
+    initialDailyRevenueTarget,
   ]);
 
   const showToast = (message: string, variant: "success" | "error") => {
@@ -73,6 +80,7 @@ export function SettingsView({
     formData.set("email", email);
     formData.set("opening_hours", openingHours);
     formData.set("google_review_link", googleReviewLink);
+    formData.set("daily_revenue_target", dailyRevenueTarget);
 
     const result = await updateBusinessSettings(formData);
     setSavingProfile(false);
@@ -199,6 +207,27 @@ export function SettingsView({
                 value={googleReviewLink}
                 onChange={(e) => setGoogleReviewLink(e.target.value)}
                 placeholder="https://g.page/r/..."
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="daily-revenue-target" className="field-label">
+                Aaj ka revenue target (₹)
+              </label>
+              <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
+                Today dashboard par progress bar is target ke against dikhega. Khali
+                chhodne par target off rahega.
+              </p>
+              <input
+                id="daily-revenue-target"
+                type="number"
+                min={0}
+                step="1"
+                className="input-field"
+                value={dailyRevenueTarget}
+                onChange={(e) => setDailyRevenueTarget(e.target.value)}
+                placeholder="e.g. 5000"
                 style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
               />
             </div>

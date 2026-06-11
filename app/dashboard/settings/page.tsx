@@ -29,6 +29,11 @@ export default async function SettingsPage() {
         business?.opening_hours as { display?: string } | null
       )}
       initialGoogleReviewLink={business?.google_review_link ?? ""}
+      initialDailyRevenueTarget={
+        business?.daily_revenue_target != null
+          ? String(Number(business.daily_revenue_target))
+          : ""
+      }
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
     />

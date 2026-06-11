@@ -37,9 +37,24 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
     (formData.get("opening_hours") as string)?.trim() || null;
   const googleReviewLink =
     (formData.get("google_review_link") as string)?.trim() || null;
+  const dailyRevenueTargetRaw = (
+    formData.get("daily_revenue_target") as string
+  )?.trim();
 
   if (!name) {
     return { ok: false, error: "Salon naam zaroori hai." };
+  }
+
+  let daily_revenue_target: number | null = null;
+  if (dailyRevenueTargetRaw) {
+    const parsed = parseFloat(dailyRevenueTargetRaw);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return {
+        ok: false,
+        error: "Aaj ka revenue target valid number hona chahiye (0 ya usse zyada).",
+      };
+    }
+    daily_revenue_target = parsed;
   }
 
   const opening_hours = openingHoursNote
@@ -54,6 +69,7 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
       email,
       opening_hours,
       google_review_link: googleReviewLink,
+      daily_revenue_target,
     })
     .eq("id", membership.businessId);
 

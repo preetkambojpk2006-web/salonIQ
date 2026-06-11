@@ -59,6 +59,11 @@ export default async function DashboardPage() {
       appRole={appRole}
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
+      dailyRevenueTarget={
+        business?.daily_revenue_target != null
+          ? Number(business.daily_revenue_target)
+          : null
+      }
     />
   );
 }
