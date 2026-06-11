@@ -397,6 +397,14 @@ export function CalendarView({
     [appointments]
   );
 
+  const onlinePendingAppointments = useMemo(
+    () =>
+      [...appointments]
+        .filter((a) => a.status === "pending" && a.source === "online")
+        .sort((a, b) => a.start_time.localeCompare(b.start_time)),
+    [appointments]
+  );
+
   const visibleAppointments = useMemo(() => {
     if (!onlinePendingOnly) return appointments;
     return appointments.filter(
@@ -568,19 +576,54 @@ export function CalendarView({
             </p>
           ) : (
             <div className="view-stack">
+              {onlinePendingAppointments.length > 0 && !onlinePendingOnly ? (
+                <section
+                  style={{
+                    marginBottom: 8,
+                    padding: 16,
+                    borderRadius: 16,
+                    border: "1px solid #1FA873",
+                    background: "#D4E8DD",
+                  }}
+                >
+                  <p
+                    className="eyebrow"
+                    style={{ marginBottom: 4, color: "#1A1A1A" }}
+                  >
+                    Online booking requests
+                  </p>
+                  <p
+                    style={{
+                      margin: "0 0 12px",
+                      fontSize: 13,
+                      color: "#8A8A8A",
+                    }}
+                  >
+                    In requests ko confirm ya reject karein — customer ko wait kar
+                    rahe hain.
+                  </p>
+                  <div className="appointment-list stagger-list">
+                    {onlinePendingAppointments.map((appointment) => (
+                      <AppointmentBlock
+                        key={`online-pending-${appointment.id}`}
+                        appointment={appointment}
+                        businessName={businessName}
+                        onCompletePay={() => handleCompletePay(appointment)}
+                        onCopied={handleCopied}
+                        onOpenDetail={() => handleOpenDetail(appointment)}
+                        canManageFinance={canManageFinance}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
               {grouped.map(([key, dayAppointments]) => (
                 <div key={key}>
                   <p className="eyebrow" style={{ marginBottom: 12 }}>
                     {formatDateHeading(dayAppointments[0].start_time)}
                   </p>
-                  <div className="hidden desktop:block">
-                    <CalendarDayGrid
-                      dayAppointments={dayAppointments}
-                      onCompletePay={handleCompletePay}
-                      renderBlock={renderGridBlock}
-                    />
-                  </div>
-                  <div className="appointment-list stagger-list desktop:hidden">
+                  <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
                     {dayAppointments.map((appointment) => (
                       <AppointmentBlock
                         key={appointment.id}
@@ -592,6 +635,13 @@ export function CalendarView({
                         canManageFinance={canManageFinance}
                       />
                     ))}
+                  </div>
+                  <div className="hidden desktop:block">
+                    <CalendarDayGrid
+                      dayAppointments={dayAppointments}
+                      onCompletePay={handleCompletePay}
+                      renderBlock={renderGridBlock}
+                    />
                   </div>
                 </div>
               ))}

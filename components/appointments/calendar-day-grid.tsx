@@ -2,6 +2,7 @@
 
 import { Fragment, memo, useMemo } from "react";
 import type { Appointment } from "@/lib/appointments/types";
+import { SALON_TIMEZONE } from "@/lib/payments/date-utils";
 
 const TIME_SLOTS = [
   { hour: 10, label: "10 AM" },
@@ -13,12 +14,30 @@ const TIME_SLOTS = [
   { hour: 16, label: "4 PM" },
   { hour: 17, label: "5 PM" },
   { hour: 18, label: "6 PM" },
+  { hour: 19, label: "7 PM" },
 ];
-
-const DEMO_STAFF = ["Aarav", "Meera", "Imran", "Priya"];
 
 function staffLabel(appointment: Appointment): string {
   return appointment.staff_name?.trim() || "Unassigned";
+}
+
+function appointmentHourInSalon(iso: string): number {
+  const hour = new Intl.DateTimeFormat("en-US", {
+    timeZone: SALON_TIMEZONE,
+    hour: "numeric",
+    hour12: false,
+  }).format(new Date(iso));
+
+  return Number.parseInt(hour, 10);
+}
+
+function nearestSlotHour(hour: number): number {
+  const exact = TIME_SLOTS.find((s) => s.hour === hour);
+  if (exact) return exact.hour;
+
+  return TIME_SLOTS.reduce((prev, cur) =>
+    Math.abs(cur.hour - hour) < Math.abs(prev.hour - hour) ? cur : prev
+  ).hour;
 }
 
 type CalendarDayGridProps = {
@@ -40,27 +59,28 @@ function CalendarDayGridInner({
     for (const a of dayAppointments) {
       names.add(staffLabel(a));
     }
-    const list = Array.from(names).sort();
-    const onlyUnassigned = list.length === 1 && list[0] === "Unassigned";
-    if (list.length === 0 || onlyUnassigned) return DEMO_STAFF;
-    return list;
+    if (names.size === 0) {
+      return ["Unassigned"];
+    }
+    return Array.from(names).sort();
   }, [dayAppointments]);
 
   const cellMap = useMemo(() => {
     const map = new Map<string, Appointment[]>();
+    const columnIndex = new Map(staffColumns.map((name, index) => [name, index]));
+
     for (const a of dayAppointments) {
-      const hour = new Date(a.start_time).getHours();
-      const slot =
-        TIME_SLOTS.find((s) => s.hour === hour)?.hour ??
-        TIME_SLOTS.reduce((prev, cur) =>
-          Math.abs(cur.hour - hour) < Math.abs(prev.hour - hour) ? cur : prev
-        ).hour;
-      const col = staffColumns.indexOf(staffLabel(a));
+      const label = staffLabel(a);
+      const col = columnIndex.get(label) ?? 0;
+
+      const hour = appointmentHourInSalon(a.start_time);
+      const slot = nearestSlotHour(hour);
       const key = `${slot}-${col}`;
       const list = map.get(key) ?? [];
       list.push(a);
       map.set(key, list);
     }
+
     return map;
   }, [dayAppointments, staffColumns]);
 
