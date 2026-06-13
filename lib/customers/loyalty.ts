@@ -1,8 +1,5 @@
 import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
-import { computeLoyaltyProgress } from "@/lib/customers/loyalty-progress";
 import { createClient } from "@/lib/supabase/server";
-
-export { computeLoyaltyProgress } from "@/lib/customers/loyalty-progress";
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
