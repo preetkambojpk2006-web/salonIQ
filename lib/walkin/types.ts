@@ -15,6 +15,26 @@ export type WalkinJoinResult = {
   daily_token_number: number;
   position: number;
   estimated_wait_mins: number;
-  status: "waiting" | "called" | "in_service" | "done" | "left" | "no_show";
+  status: WalkinQueueStatus;
   existing_entry: boolean;
+};
+
+export type WalkinQueueStatus =
+  | "waiting"
+  | "called"
+  | "in_service"
+  | "done"
+  | "left"
+  | "no_show";
+
+export type WalkinQueueStatusResult = {
+  salon_name: string;
+  daily_token_number: number;
+  status: WalkinQueueStatus;
+  position: number;
+  estimated_wait_mins: number;
+  joined_at: string;
+  called_at: string | null;
+  service_started_at: string | null;
+  completed_at: string | null;
 };
