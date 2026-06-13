@@ -32,26 +32,23 @@ const VALID_STATUSES: WalkinQueueStatus[] = [
   "no_show",
 ];
 
-function startOfTodayIstIso(): string {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const todayIst = new Date(now.getTime() + istOffset);
-  todayIst.setUTCHours(0, 0, 0, 0);
-  const startOfTodayIst = new Date(todayIst.getTime() - istOffset);
-  return startOfTodayIst.toISOString();
-}
-
 export async function listTodayWalkinQueue(
   businessId: string
 ): Promise<WalkinQueueRow[]> {
   const supabase = createClient();
+
+  const now = new Date();
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const nowInIst = new Date(now.getTime() + istOffsetMs);
+  nowInIst.setUTCHours(0, 0, 0, 0);
+  const startOfTodayUtc = new Date(nowInIst.getTime() - istOffsetMs);
 
   const { data, error } = await supabase
     .from("walkin_queue")
     .select("*")
     .eq("business_id", businessId)
     .in("status", VALID_STATUSES)
-    .gte("joined_at", startOfTodayIstIso())
+    .gte("joined_at", startOfTodayUtc.toISOString())
     .order("joined_at", { ascending: true });
 
   if (error) {
