@@ -37,6 +37,7 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Public routes (no login): /book/*, /queue/*, /login, /signup, etc.
   const isAuthRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
   const isProtectedRoute =
