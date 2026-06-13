@@ -43,6 +43,12 @@ export async function listCustomers(search?: string): Promise<Customer[]> {
     visit_count: Number(row.visit_count ?? 0),
     no_show_count: Number(row.no_show_count ?? 0),
     reliability: (row.reliability ?? "good") as Customer["reliability"],
+    reward_pending: Boolean(row.reward_pending),
+    reward_earned_at: row.reward_earned_at ?? null,
+    reward_notified_at: row.reward_notified_at ?? null,
+    reward_redeemed_at: row.reward_redeemed_at ?? null,
+    loyalty_baseline_visits: Number(row.loyalty_baseline_visits ?? 0),
+    loyalty_baseline_spend: Number(row.loyalty_baseline_spend ?? 0),
   }));
 }
 

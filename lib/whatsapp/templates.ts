@@ -263,6 +263,25 @@ export function googleReviewRequest(params: GoogleReviewRequestParams): string {
   return message;
 }
 
+export interface RewardEarnedParams {
+  customerName: string;
+  salonName: string;
+  rewardDescription: string;
+}
+
+export function rewardEarned(params: RewardEarnedParams): string {
+  const customer = params.customerName?.trim() || "Customer";
+  const salon = params.salonName?.trim() || "Salon";
+  const reward = params.rewardDescription?.trim() || "special reward";
+
+  let message = `Namaste ${customer}! 🎉\n`;
+  message += `${salon} ki taraf se aapke liye khaas khushkhabri!\n`;
+  message += `Aapne loyalty reward jeet liya hai — ${reward}! 🎁\n`;
+  message += `Agle visit par claim kar lena. Hum intezar karenge! ✨`;
+
+  return message;
+}
+
 export interface QueueYourTurnParams {
   customerName: string;
   salonName: string;

@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 import { Toast } from "@/components/ui/toast";
+import type { RewardType } from "@/lib/customers/loyalty-types";
 import {
   changePassword,
   updateBusinessSettings,
+  updateLoyaltySettings,
 } from "@/lib/settings/actions";
 
 type SettingsViewProps = {
@@ -17,6 +19,10 @@ type SettingsViewProps = {
   initialOpeningHours: string;
   initialGoogleReviewLink: string;
   initialDailyRevenueTarget?: string;
+  initialRewardEnabled?: boolean;
+  initialRewardType?: RewardType;
+  initialRewardThreshold?: string;
+  initialRewardDescription?: string;
   bookingSlug?: string | null;
   salonName: string;
 };
@@ -28,6 +34,10 @@ export function SettingsView({
   initialOpeningHours,
   initialGoogleReviewLink,
   initialDailyRevenueTarget = "",
+  initialRewardEnabled = false,
+  initialRewardType = "visits",
+  initialRewardThreshold = "10",
+  initialRewardDescription = "",
   bookingSlug = null,
   salonName,
 }: SettingsViewProps) {
@@ -40,11 +50,19 @@ export function SettingsView({
   const [dailyRevenueTarget, setDailyRevenueTarget] = useState(
     initialDailyRevenueTarget
   );
+  const [rewardEnabled, setRewardEnabled] = useState(initialRewardEnabled);
+  const [rewardType, setRewardType] = useState<RewardType>(initialRewardType);
+  const [rewardThreshold, setRewardThreshold] = useState(initialRewardThreshold);
+  const [rewardDescription, setRewardDescription] = useState(
+    initialRewardDescription
+  );
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingLoyalty, setSavingLoyalty] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loyaltyError, setLoyaltyError] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -58,6 +76,10 @@ export function SettingsView({
     setOpeningHours(initialOpeningHours);
     setGoogleReviewLink(initialGoogleReviewLink);
     setDailyRevenueTarget(initialDailyRevenueTarget);
+    setRewardEnabled(initialRewardEnabled);
+    setRewardType(initialRewardType);
+    setRewardThreshold(initialRewardThreshold);
+    setRewardDescription(initialRewardDescription);
   }, [
     initialName,
     initialPhone,
@@ -65,6 +87,10 @@ export function SettingsView({
     initialOpeningHours,
     initialGoogleReviewLink,
     initialDailyRevenueTarget,
+    initialRewardEnabled,
+    initialRewardType,
+    initialRewardThreshold,
+    initialRewardDescription,
   ]);
 
   const showToast = (message: string, variant: "success" | "error") => {
@@ -93,6 +119,29 @@ export function SettingsView({
     }
 
     showToast("Settings save ho gayi ✓", "success");
+    router.refresh();
+  };
+
+  const handleSaveLoyalty = async () => {
+    setSavingLoyalty(true);
+    setLoyaltyError(null);
+
+    const formData = new FormData();
+    formData.set("reward_enabled", rewardEnabled ? "true" : "false");
+    formData.set("reward_type", rewardType);
+    formData.set("reward_threshold", rewardThreshold);
+    formData.set("reward_description", rewardDescription);
+
+    const result = await updateLoyaltySettings(formData);
+    setSavingLoyalty(false);
+
+    if (!result.ok) {
+      setLoyaltyError(result.error);
+      showToast(result.error, "error");
+      return;
+    }
+
+    showToast("Loyalty settings save ho gayi ✓", "success");
     router.refresh();
   };
 
@@ -136,6 +185,148 @@ export function SettingsView({
             <WalkinQrCard slug={bookingSlug} businessName={salonName} />
           </section>
         ) : null}
+
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">Customer loyalty</p>
+              <h2>Repeat customers ko reward</h2>
+            </div>
+          </div>
+
+          <p className="text-body" style={{ margin: "0 0 16px", fontSize: 14 }}>
+            Regular customers ko visit ya spend ke hisaab se reward do — progress
+            customer card par dikhega aur WhatsApp se bhi bhej sakte ho.
+          </p>
+
+          <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={rewardEnabled}
+                onChange={(e) => setRewardEnabled(e.target.checked)}
+                style={{ width: 18, height: 18, accentColor: "#1FA873" }}
+              />
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>
+                Loyalty reward on karein
+              </span>
+            </label>
+
+            <fieldset
+              style={{
+                margin: 0,
+                padding: 0,
+                border: "none",
+                display: "grid",
+                gap: 8,
+                opacity: rewardEnabled ? 1 : 0.55,
+              }}
+              disabled={!rewardEnabled}
+            >
+              <legend className="field-label" style={{ marginBottom: 4 }}>
+                Reward kaise milega?
+              </legend>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 14,
+                  cursor: rewardEnabled ? "pointer" : "not-allowed",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="reward_type"
+                  value="visits"
+                  checked={rewardType === "visits"}
+                  onChange={() => setRewardType("visits")}
+                />
+                Kitni visits ke baad (e.g. har 10 visits par)
+              </label>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 14,
+                  cursor: rewardEnabled ? "pointer" : "not-allowed",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="reward_type"
+                  value="spend"
+                  checked={rewardType === "spend"}
+                  onChange={() => setRewardType("spend")}
+                />
+                Kitna kharch (₹) ke baad (e.g. ₹5000 spend par)
+              </label>
+            </fieldset>
+
+            <div style={{ opacity: rewardEnabled ? 1 : 0.55 }}>
+              <label htmlFor="reward-threshold" className="field-label">
+                {rewardType === "visits"
+                  ? "Kitni visits par reward?"
+                  : "Kitne ₹ kharch par reward?"}
+              </label>
+              <input
+                id="reward-threshold"
+                type="number"
+                min={1}
+                step={rewardType === "visits" ? 1 : 100}
+                className="input-field"
+                value={rewardThreshold}
+                onChange={(e) => setRewardThreshold(e.target.value)}
+                disabled={!rewardEnabled}
+                placeholder={rewardType === "visits" ? "e.g. 10" : "e.g. 5000"}
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            <div style={{ opacity: rewardEnabled ? 1 : 0.55 }}>
+              <label htmlFor="reward-description" className="field-label">
+                Customer ko kya milega?
+              </label>
+              <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
+                Yeh customer card aur WhatsApp message mein dikhega.
+              </p>
+              <input
+                id="reward-description"
+                type="text"
+                className="input-field"
+                value={rewardDescription}
+                onChange={(e) => setRewardDescription(e.target.value)}
+                disabled={!rewardEnabled}
+                placeholder="e.g. Free Haircut"
+                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
+              />
+            </div>
+
+            {loyaltyError ? (
+              <p style={{ margin: 0, fontSize: 13, color: "#D94F4F" }} role="alert">
+                {loyaltyError}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleSaveLoyalty}
+              disabled={savingLoyalty}
+              className="primary-button"
+              style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
+            >
+              {savingLoyalty ? "Saving…" : "Loyalty settings save karein"}
+            </button>
+          </div>
+        </section>
 
         <section className="panel">
           <div className="panel-header">

@@ -1,13 +1,20 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   getCustomerDisplayTag,
   getCustomerVisitLine,
 } from "@/lib/customers/display-tag";
-import { updateCustomerNotes } from "@/lib/customers/actions";
+import { redeemCustomerReward, markCustomerRewardNotified, updateCustomerNotes } from "@/lib/customers/actions";
+import {
+  computeLoyaltyProgress,
+  formatLoyaltyProgressLine,
+} from "@/lib/customers/loyalty-progress";
+import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer, CustomerReliability } from "@/lib/customers/types";
+import { MessageActions } from "@/components/whatsapp/MessageActions";
+import { rewardEarned } from "@/lib/whatsapp/templates";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -15,6 +22,8 @@ function formatRs(amount: number): string {
 
 type CustomerCardProps = {
   customer: Customer;
+  rewardConfig: BusinessRewardConfig;
+  salonName: string;
 };
 
 function ReliabilityBadge({ reliability }: { reliability: CustomerReliability }) {
@@ -128,7 +137,206 @@ function CustomerNotesEditor({
   );
 }
 
-function CustomerCardInner({ customer }: CustomerCardProps) {
+function LoyaltyProgressSection({
+  customer,
+  rewardConfig,
+  salonName,
+}: {
+  customer: Customer;
+  rewardConfig: BusinessRewardConfig;
+  salonName: string;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const progress = useMemo(
+    () => computeLoyaltyProgress(customer, rewardConfig),
+    [customer, rewardConfig]
+  );
+
+  const rewardMessage = useMemo(() => {
+    if (!progress?.reward_pending) return "";
+    return rewardEarned({
+      customerName: customer.name,
+      salonName,
+      rewardDescription:
+        progress.reward_description?.trim() || "special reward",
+    });
+  }, [progress, customer.name, salonName]);
+
+  if (!progress) {
+    return null;
+  }
+
+  const progressLine = formatLoyaltyProgressLine(progress);
+  const barPercent = progress.reward_pending ? 100 : progress.percent;
+  const phone = customer.phone?.trim() ?? "";
+
+  const handleRedeem = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await redeemCustomerReward(customer.id);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const handleRewardWhatsAppSend = () => {
+    startTransition(async () => {
+      const result = await markCustomerRewardNotified(customer.id);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        padding: "12px 14px",
+        borderRadius: 12,
+        border: "1px solid #E0DAD0",
+        background: progress.reward_pending ? "#F5E6A8" : "#EDE8DF",
+      }}
+    >
+      {progress.reward_pending ? (
+        <span
+          style={{
+            display: "inline-block",
+            marginBottom: 8,
+            padding: "4px 10px",
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 800,
+            background: "#1FA873",
+            color: "#fff",
+          }}
+        >
+          🎁 Reward ready
+        </span>
+      ) : (
+        <p
+          style={{
+            margin: "0 0 8px",
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#8A8A8A",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Loyalty progress
+        </p>
+      )}
+
+      <p
+        style={{
+          margin: 0,
+          fontSize: 13,
+          fontWeight: 700,
+          color: "#1A1A1A",
+          lineHeight: 1.45,
+        }}
+      >
+        {progressLine}
+      </p>
+
+      <div
+        style={{
+          marginTop: 10,
+          height: 8,
+          borderRadius: 999,
+          background: "#fff",
+          border: "1px solid #E0DAD0",
+          overflow: "hidden",
+        }}
+        aria-hidden
+      >
+        <div
+          style={{
+            width: `${barPercent}%`,
+            height: "100%",
+            borderRadius: 999,
+            background: progress.reward_pending ? "#1FA873" : "#1FA873",
+            transition: "width 0.3s ease",
+          }}
+        />
+      </div>
+
+      {progress.reward_pending ? (
+        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+          {phone ? (
+            <>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#8A8A8A",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Customer ko batayein
+              </p>
+              <MessageActions
+                phone={phone}
+                message={rewardMessage}
+                copyLabel="Copy message"
+                sendLabel="Send on WhatsApp"
+                onSend={handleRewardWhatsAppSend}
+              />
+              {customer.reward_notified_at ? (
+                <p style={{ margin: 0, fontSize: 12, color: "#1FA873", fontWeight: 700 }}>
+                  WhatsApp bhej diya ✓
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <p style={{ margin: 0, fontSize: 12, color: "#8A8A8A" }}>
+              WhatsApp ke liye customer ka phone number add karein.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleRedeem}
+            disabled={isPending}
+            style={{
+              minHeight: 36,
+              padding: "6px 14px",
+              borderRadius: 10,
+              border: "1px solid #1A1A1A",
+              background: "#1A1A1A",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: isPending ? "not-allowed" : "pointer",
+              opacity: isPending ? 0.7 : 1,
+              justifySelf: "start",
+            }}
+          >
+            {isPending ? "Saving…" : "Mark redeemed ✓"}
+          </button>
+        </div>
+      ) : null}
+
+      {error ? (
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#D94F4F" }} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function CustomerCardInner({ customer, rewardConfig, salonName }: CustomerCardProps) {
   const tag = getCustomerDisplayTag(customer);
 
   return (
@@ -139,6 +347,11 @@ function CustomerCardInner({ customer }: CustomerCardProps) {
       {customer.phone ? <p>{customer.phone}</p> : null}
       <strong>{formatRs(customer.total_spend)}</strong>
       <p>{getCustomerVisitLine(customer)}</p>
+      <LoyaltyProgressSection
+        customer={customer}
+        rewardConfig={rewardConfig}
+        salonName={salonName}
+      />
       <CustomerNotesEditor
         customerId={customer.id}
         initialNotes={customer.notes}

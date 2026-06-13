@@ -6,6 +6,7 @@ import { CustomerCard } from "@/components/command-center/customers/customer-car
 import { AddCustomerForm } from "@/components/command-center/customers/add-customer-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
+import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer } from "@/lib/customers/types";
 
 type CustomersViewProps = {
@@ -13,6 +14,8 @@ type CustomersViewProps = {
   initialQuery?: string;
   error?: string;
   showAddedToast?: boolean;
+  rewardConfig: BusinessRewardConfig;
+  salonName: string;
 };
 
 function safeDecodeError(error: string): string {
@@ -28,6 +31,8 @@ export function CustomersView({
   initialQuery = "",
   error,
   showAddedToast = false,
+  rewardConfig,
+  salonName,
 }: CustomersViewProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
@@ -134,7 +139,12 @@ export function CustomersView({
           ) : (
             <div className="customer-grid stagger-list">
               {initialCustomers.map((customer) => (
-                <CustomerCard key={customer.id} customer={customer} />
+                <CustomerCard
+                  key={customer.id}
+                  customer={customer}
+                  rewardConfig={rewardConfig}
+                  salonName={salonName}
+                />
               ))}
             </div>
           )}

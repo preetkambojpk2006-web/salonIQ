@@ -83,6 +83,82 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
   return { ok: true };
 }
 
+export async function updateLoyaltySettings(
+  formData: FormData
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin loyalty settings update kar sakte hain.",
+    };
+  }
+
+  const rewardEnabled = formData.get("reward_enabled") === "true";
+  const rewardTypeRaw = (formData.get("reward_type") as string)?.trim();
+  const rewardType = rewardTypeRaw === "spend" ? "spend" : "visits";
+  const thresholdRaw = (formData.get("reward_threshold") as string)?.trim();
+  const rewardDescription =
+    (formData.get("reward_description") as string)?.trim() || null;
+
+  let reward_threshold = 10;
+  if (thresholdRaw) {
+    const parsed = parseFloat(thresholdRaw);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      return {
+        ok: false,
+        error: "Threshold 0 se zyada hona chahiye.",
+      };
+    }
+    if (rewardType === "visits" && !Number.isInteger(parsed)) {
+      return {
+        ok: false,
+        error: "Visits threshold poore number mein hona chahiye (e.g. 10).",
+      };
+    }
+    reward_threshold = parsed;
+  } else if (rewardEnabled) {
+    return {
+      ok: false,
+      error: "Reward on karne ke liye threshold daalein.",
+    };
+  }
+
+  if (rewardEnabled && !rewardDescription) {
+    return {
+      ok: false,
+      error: "Reward on karne ke liye batayein customer ko kya milega (e.g. Free Haircut).",
+    };
+  }
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({
+      reward_enabled: rewardEnabled,
+      reward_type: rewardType,
+      reward_threshold,
+      reward_description: rewardDescription,
+    })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/customers");
+  return { ok: true };
+}
+
 export async function changePassword(formData: FormData): Promise<SettingsActionResult> {
   const supabase = createClient();
   const {

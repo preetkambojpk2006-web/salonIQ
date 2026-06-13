@@ -9,6 +9,8 @@ type MessageActionsProps = {
   message: string;
   copyLabel?: string;
   sendLabel?: string;
+  onSend?: () => void;
+  onCopy?: () => void;
 };
 
 const BTN_BASE =
@@ -19,6 +21,8 @@ export function MessageActions({
   message,
   copyLabel = "Copy message",
   sendLabel = "Send on WhatsApp",
+  onSend,
+  onCopy,
 }: MessageActionsProps) {
   const [copyToast, setCopyToast] = useState(false);
 
@@ -26,14 +30,16 @@ export function MessageActions({
     try {
       await navigator.clipboard.writeText(message);
       setCopyToast(true);
+      onCopy?.();
     } catch {
       // Clipboard blocked — no toast (same as whatsapp-copy-buttons)
     }
-  }, [message]);
+  }, [message, onCopy]);
 
   const handleSend = useCallback(() => {
     window.open(buildWhatsAppLink(phone, message), "_blank", "noopener,noreferrer");
-  }, [phone, message]);
+    onSend?.();
+  }, [phone, message, onSend]);
 
   return (
     <>

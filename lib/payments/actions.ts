@@ -1,5 +1,6 @@
 "use server";
 
+import { recordCustomerLoyaltyForPayment } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
@@ -39,7 +40,7 @@ export async function recordAppointmentPayment(
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
     .select(
-      "id, business_id, total_amount, staff_name, customer_id, customers ( name )"
+      "id, business_id, total_amount, staff_name, customer_id, loyalty_counted_at, customers ( name )"
     )
     .eq("id", appointmentId)
     .eq("business_id", businessId)
@@ -120,6 +121,17 @@ export async function recordAppointmentPayment(
       serviceAmount: amount >= 0 ? amount : 0,
       earnedAt: now,
     });
+
+    const customerId = appointment.customer_id as string | null;
+    if (customerId) {
+      await recordCustomerLoyaltyForPayment({
+        businessId: rowBusinessId,
+        appointmentId,
+        customerId,
+        amount: amount >= 0 ? amount : 0,
+        paidAt: now,
+      });
+    }
   }
 
   const { error: updateError } = await supabase
@@ -138,6 +150,7 @@ export async function recordAppointmentPayment(
 
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard/money");
+  revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard");
 
   return { ok: true };

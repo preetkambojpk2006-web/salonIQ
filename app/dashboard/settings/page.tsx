@@ -34,6 +34,16 @@ export default async function SettingsPage() {
           ? String(Number(business.daily_revenue_target))
           : ""
       }
+      initialRewardEnabled={Boolean(business?.reward_enabled)}
+      initialRewardType={
+        business?.reward_type === "spend" ? "spend" : "visits"
+      }
+      initialRewardThreshold={
+        business?.reward_threshold != null
+          ? String(Number(business.reward_threshold))
+          : "10"
+      }
+      initialRewardDescription={business?.reward_description ?? ""}
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
     />

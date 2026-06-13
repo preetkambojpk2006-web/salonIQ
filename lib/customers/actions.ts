@@ -1,6 +1,10 @@
 "use server";
 
 import {
+  getUserMembership,
+  isOwnerOrAdmin,
+} from "@/lib/auth/membership";
+import {
   getOwnerBusinessId,
   listCustomers,
 } from "@/lib/customers/queries";
@@ -18,6 +22,10 @@ export type CreateCustomerResult =
   | { ok: false; error: string };
 
 export type UpdateCustomerNotesResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export type RedeemCustomerRewardResult =
   | { ok: true }
   | { ok: false; error: string };
 
@@ -108,5 +116,137 @@ export async function updateCustomerNotes(
 
   revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard/calendar");
+  return { ok: true };
+}
+
+export async function redeemCustomerReward(
+  customerId: string
+): Promise<RedeemCustomerRewardResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin reward redeem mark kar sakte hain.",
+    };
+  }
+
+  const trimmedId = customerId.trim();
+  if (!trimmedId) {
+    return { ok: false, error: "Customer nahi mila." };
+  }
+
+  const { data: customer, error: fetchError } = await supabase
+    .from("customers")
+    .select(
+      "id, reward_pending, visit_count, total_spend"
+    )
+    .eq("id", trimmedId)
+    .eq("business_id", membership.businessId)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { ok: false, error: fetchError.message };
+  }
+
+  if (!customer) {
+    return { ok: false, error: "Customer nahi mila." };
+  }
+
+  if (!customer.reward_pending) {
+    return { ok: false, error: "Is customer ka koi pending reward nahi hai." };
+  }
+
+  const now = new Date().toISOString();
+  const visitCount = Number(customer.visit_count ?? 0);
+  const totalSpend = Number(customer.total_spend ?? 0);
+
+  const { error: updateError } = await supabase
+    .from("customers")
+    .update({
+      reward_pending: false,
+      reward_redeemed_at: now,
+      loyalty_baseline_visits: visitCount,
+      loyalty_baseline_spend: totalSpend,
+    })
+    .eq("id", trimmedId)
+    .eq("business_id", membership.businessId);
+
+  if (updateError) {
+    return { ok: false, error: updateError.message };
+  }
+
+  revalidatePath("/dashboard/customers");
+  return { ok: true };
+}
+
+export type MarkCustomerRewardNotifiedResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function markCustomerRewardNotified(
+  customerId: string
+): Promise<MarkCustomerRewardNotifiedResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin reward notification mark kar sakte hain.",
+    };
+  }
+
+  const trimmedId = customerId.trim();
+  if (!trimmedId) {
+    return { ok: false, error: "Customer nahi mila." };
+  }
+
+  const { data: customer, error: fetchError } = await supabase
+    .from("customers")
+    .select("id, reward_pending")
+    .eq("id", trimmedId)
+    .eq("business_id", membership.businessId)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { ok: false, error: fetchError.message };
+  }
+
+  if (!customer) {
+    return { ok: false, error: "Customer nahi mila." };
+  }
+
+  if (!customer.reward_pending) {
+    return { ok: false, error: "Is customer ka koi pending reward nahi hai." };
+  }
+
+  const now = new Date().toISOString();
+  const { error: updateError } = await supabase
+    .from("customers")
+    .update({ reward_notified_at: now })
+    .eq("id", trimmedId)
+    .eq("business_id", membership.businessId);
+
+  if (updateError) {
+    return { ok: false, error: updateError.message };
+  }
+
+  revalidatePath("/dashboard/customers");
   return { ok: true };
 }
