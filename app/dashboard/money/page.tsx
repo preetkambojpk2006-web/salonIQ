@@ -1,4 +1,6 @@
 import { MoneyView } from "@/components/money/money-view";
+import { StaffAdvances } from "@/components/money/StaffAdvances";
+import { StaffPayouts } from "@/components/money/StaffPayouts";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import {
@@ -49,13 +51,20 @@ export default async function MoneyPage() {
       ])
     : [EMPTY_SPLIT, EMPTY_PAYOUTS, [] as StaffAdvance[], []];
 
+  const activeStaff = staffMembers
+    .filter((member) => member.is_active)
+    .map((member) => ({ id: member.id, name: member.name }));
+
   return (
     <MoneyView
       stats={stats}
       cashUpiSplit={cashUpiSplit}
-      staffPayouts={staffPayouts}
-      staffAdvances={staffAdvances}
-      staffMembers={staffMembers}
+      staffPanels={
+        <>
+          <StaffAdvances advances={staffAdvances} staffMembers={activeStaff} />
+          <StaffPayouts payouts={staffPayouts} />
+        </>
+      }
     />
   );
 }

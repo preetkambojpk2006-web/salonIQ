@@ -1,10 +1,7 @@
+import type { ReactNode } from "react";
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
-import { StaffAdvances } from "@/components/money/StaffAdvances";
-import { StaffPayouts } from "@/components/money/StaffPayouts";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
-import type { SalonStaff } from "@/lib/salon/types";
-import type { StaffAdvance, StaffPayoutsSummary } from "@/lib/staff/types";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -24,17 +21,13 @@ function pendingPaymentContext(amount: number, count: number): string {
 type MoneyViewProps = {
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
-  staffPayouts: StaffPayoutsSummary;
-  staffAdvances: StaffAdvance[];
-  staffMembers: SalonStaff[];
+  staffPanels?: ReactNode;
 };
 
 export function MoneyView({
   stats,
   cashUpiSplit,
-  staffPayouts,
-  staffAdvances,
-  staffMembers,
+  staffPanels,
 }: MoneyViewProps) {
   const summaryCards = [
     {
@@ -111,14 +104,7 @@ export function MoneyView({
 
       <CashUpiSplit split={cashUpiSplit} />
 
-      <StaffAdvances
-        advances={staffAdvances}
-        staffMembers={staffMembers
-          .filter((member) => member.is_active)
-          .map((member) => ({ id: member.id, name: member.name }))}
-      />
-
-      <StaffPayouts payouts={staffPayouts} />
+      {staffPanels}
 
       <section className="panel">
         <div className="panel-header">

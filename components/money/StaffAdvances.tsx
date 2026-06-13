@@ -37,7 +37,10 @@ function formatAdvanceDate(iso: string): string {
   });
 }
 
-export function StaffAdvances({ advances, staffMembers }: StaffAdvancesProps) {
+export function StaffAdvances({
+  advances = [],
+  staffMembers = [],
+}: StaffAdvancesProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [staffId, setStaffId] = useState("");
@@ -99,7 +102,7 @@ export function StaffAdvances({ advances, staffMembers }: StaffAdvancesProps) {
   };
 
   return (
-    <>
+    <div className="staff-advances-panel">
       <section
         style={{
           borderRadius: 16,
@@ -146,7 +149,7 @@ export function StaffAdvances({ advances, staffMembers }: StaffAdvancesProps) {
           <p style={{ margin: 0, fontSize: 14, color: TOKENS.textMuted }}>
             Pehle{" "}
             <a href="/dashboard/services" style={{ color: TOKENS.accentGreen, fontWeight: 700 }}>
-              Services &amp; Staff
+              Services & Staff
             </a>{" "}
             se staff add karein.
           </p>
@@ -313,6 +316,8 @@ export function StaffAdvances({ advances, staffMembers }: StaffAdvancesProps) {
         variant={toast.variant}
         onDismiss={() => setToast((prev) => ({ ...prev, show: false }))}
       />
-    </>
+    </div>
   );
 }
+
+export default StaffAdvances;
