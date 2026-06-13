@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Toast } from "@/components/ui/toast";
+import { MessageActions } from "@/components/whatsapp/MessageActions";
 import {
   performWalkinQueueAction,
   type WalkinQueueAction,
 } from "@/lib/walkin/actions";
 import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/queries";
+import { queueYourTurn } from "@/lib/whatsapp/templates";
+
+const WHATSAPP_NOTIFY_MS = 120_000;
 
 const pillBase: CSSProperties = {
   padding: "5px 12px",
@@ -21,6 +25,7 @@ const pillBase: CSSProperties = {
 
 type WalkinQueuePanelClientProps = {
   businessId: string;
+  salonName: string;
   initialQueue: WalkinQueueRow[];
 };
 
@@ -72,13 +77,27 @@ function isTerminalStatus(status: WalkinQueueStatus): boolean {
 
 type QueueRowProps = {
   entry: WalkinQueueRow;
+  salonName: string;
   updating: boolean;
   flash: boolean;
+  showWhatsAppNotify: boolean;
   onAction: (entryId: string, action: WalkinQueueAction) => void;
 };
 
-function QueueRow({ entry, updating, flash, onAction }: QueueRowProps) {
+function QueueRow({
+  entry,
+  salonName,
+  updating,
+  flash,
+  showWhatsAppNotify,
+  onAction,
+}: QueueRowProps) {
   const terminal = isTerminalStatus(entry.status);
+  const whatsAppMessage = queueYourTurn({
+    customerName: entry.customer_name,
+    salonName,
+    tokenNumber: entry.daily_token_number,
+  });
 
   return (
     <article
@@ -261,24 +280,77 @@ function QueueRow({ entry, updating, flash, onAction }: QueueRowProps) {
           ) : null}
         </div>
       ) : null}
+
+      {showWhatsAppNotify && entry.status === "called" ? (
+        <div
+          style={{
+            marginTop: 10,
+            marginLeft: 48,
+            padding: 10,
+            borderRadius: 10,
+            background: "#fff",
+            border: "1px solid #E0DAD0",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 8px",
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#8A8A8A",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Queue — Aapki baari!
+          </p>
+          <MessageActions
+            phone={entry.customer_phone}
+            message={whatsAppMessage}
+            copyLabel="Copy"
+            sendLabel="WhatsApp"
+          />
+        </div>
+      ) : null}
     </article>
   );
 }
 
 export function WalkinQueuePanelClient({
   businessId,
+  salonName,
   initialQueue,
 }: WalkinQueuePanelClientProps) {
   const [queue, setQueue] = useState(initialQueue);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [whatsAppNotifyId, setWhatsAppNotifyId] = useState<string | null>(null);
+  const whatsAppTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
     variant: "success" | "error";
   }>({ show: false, message: "", variant: "success" });
 
+  useEffect(() => {
+    return () => {
+      if (whatsAppTimerRef.current) {
+        clearTimeout(whatsAppTimerRef.current);
+      }
+    };
+  }, []);
+
   const waitingCount = queue.filter((entry) => entry.status === "waiting").length;
+
+  const scheduleWhatsAppNotifyClear = useCallback((entryId: string) => {
+    if (whatsAppTimerRef.current) {
+      clearTimeout(whatsAppTimerRef.current);
+    }
+    whatsAppTimerRef.current = setTimeout(() => {
+      setWhatsAppNotifyId((current) => (current === entryId ? null : current));
+      whatsAppTimerRef.current = null;
+    }, WHATSAPP_NOTIFY_MS);
+  }, []);
 
   const handleAction = useCallback(
     async (entryId: string, action: WalkinQueueAction) => {
@@ -295,8 +367,22 @@ export function WalkinQueuePanelClient({
       setFlashId(entryId);
       setTimeout(() => setFlashId(null), 600);
       setToast({ show: true, message: result.message, variant: "success" });
+
+      if (action === "call") {
+        setWhatsAppNotifyId(entryId);
+        scheduleWhatsAppNotifyClear(entryId);
+      } else {
+        setWhatsAppNotifyId((current) => {
+          if (current !== entryId) return current;
+          if (whatsAppTimerRef.current) {
+            clearTimeout(whatsAppTimerRef.current);
+            whatsAppTimerRef.current = null;
+          }
+          return null;
+        });
+      }
     },
-    [businessId]
+    [businessId, scheduleWhatsAppNotifyClear]
   );
 
   return (
@@ -359,8 +445,10 @@ export function WalkinQueuePanelClient({
               <QueueRow
                 key={entry.id}
                 entry={entry}
+                salonName={salonName}
                 updating={updatingId === entry.id}
                 flash={flashId === entry.id}
+                showWhatsAppNotify={whatsAppNotifyId === entry.id}
                 onAction={handleAction}
               />
             ))}

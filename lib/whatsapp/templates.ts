@@ -262,3 +262,23 @@ export function googleReviewRequest(params: GoogleReviewRequestParams): string {
 
   return message;
 }
+
+export interface QueueYourTurnParams {
+  customerName: string;
+  salonName: string;
+  tokenNumber: number;
+}
+
+export function queueYourTurn(params: QueueYourTurnParams): string {
+  const customer = params.customerName?.trim() || "Customer";
+  const salon = params.salonName?.trim() || "Salon";
+  const token = Number.isFinite(params.tokenNumber)
+    ? Math.max(1, Math.round(params.tokenNumber))
+    : 1;
+
+  return `Namaste ${customer}! 🎉
+${salon} mein aapki baari aa gayi hai!
+Token number: #${token}
+Kripya abhi counter par aa jayein.
+Dhanyavaad! 🙏`;
+}

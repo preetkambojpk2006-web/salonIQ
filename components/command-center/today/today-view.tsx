@@ -90,7 +90,7 @@ export function TodayView({
             </section>
           }
         >
-          <WalkinQueuePanel businessId={businessId} />
+          <WalkinQueuePanel businessId={businessId} salonName={salonName} />
         </Suspense>
       ) : null}
 
