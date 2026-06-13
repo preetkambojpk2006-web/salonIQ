@@ -6,8 +6,10 @@ import {
   getMoneyDashboardStats,
 } from "@/lib/payments/queries";
 import type { CashUpiSplit } from "@/lib/payments/types";
+import { listStaffMembers } from "@/lib/salon/queries";
+import { listStaffAdvances } from "@/lib/staff/advances";
 import { getStaffPayouts } from "@/lib/staff/payouts";
-import type { StaffPayoutsSummary } from "@/lib/staff/types";
+import type { StaffAdvance, StaffPayoutsSummary } from "@/lib/staff/types";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,9 @@ const EMPTY_SPLIT: CashUpiSplit = {
 
 const EMPTY_PAYOUTS: StaffPayoutsSummary = {
   rows: [],
+  totalGrossUnpaid: 0,
+  totalAdvanceOutstanding: 0,
+  totalNetPayable: 0,
   totalUnpaid: 0,
 };
 
@@ -31,7 +36,7 @@ export default async function MoneyPage() {
   ]);
 
   const { startIso, endIsoExclusive } = getDayBoundsIso();
-  const [cashUpiSplit, staffPayouts] = businessId
+  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers] = businessId
     ? await Promise.all([
         getCashUpiSplit(
           businessId,
@@ -39,14 +44,18 @@ export default async function MoneyPage() {
           new Date(endIsoExclusive)
         ),
         getStaffPayouts(businessId),
+        listStaffAdvances(businessId),
+        listStaffMembers(businessId),
       ])
-    : [EMPTY_SPLIT, EMPTY_PAYOUTS];
+    : [EMPTY_SPLIT, EMPTY_PAYOUTS, [] as StaffAdvance[], []];
 
   return (
     <MoneyView
       stats={stats}
       cashUpiSplit={cashUpiSplit}
       staffPayouts={staffPayouts}
+      staffAdvances={staffAdvances}
+      staffMembers={staffMembers}
     />
   );
 }

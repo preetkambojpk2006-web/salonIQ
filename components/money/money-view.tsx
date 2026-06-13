@@ -1,8 +1,10 @@
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
+import { StaffAdvances } from "@/components/money/StaffAdvances";
 import { StaffPayouts } from "@/components/money/StaffPayouts";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
-import type { StaffPayoutsSummary } from "@/lib/staff/types";
+import type { SalonStaff } from "@/lib/salon/types";
+import type { StaffAdvance, StaffPayoutsSummary } from "@/lib/staff/types";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -23,9 +25,17 @@ type MoneyViewProps = {
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
   staffPayouts: StaffPayoutsSummary;
+  staffAdvances: StaffAdvance[];
+  staffMembers: SalonStaff[];
 };
 
-export function MoneyView({ stats, cashUpiSplit, staffPayouts }: MoneyViewProps) {
+export function MoneyView({
+  stats,
+  cashUpiSplit,
+  staffPayouts,
+  staffAdvances,
+  staffMembers,
+}: MoneyViewProps) {
   const summaryCards = [
     {
       key: "today",
@@ -100,6 +110,13 @@ export function MoneyView({ stats, cashUpiSplit, staffPayouts }: MoneyViewProps)
       </div>
 
       <CashUpiSplit split={cashUpiSplit} />
+
+      <StaffAdvances
+        advances={staffAdvances}
+        staffMembers={staffMembers
+          .filter((member) => member.is_active)
+          .map((member) => ({ id: member.id, name: member.name }))}
+      />
 
       <StaffPayouts payouts={staffPayouts} />
 
