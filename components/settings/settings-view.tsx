@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
+import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 import { Toast } from "@/components/ui/toast";
 import {
   changePassword,
@@ -122,6 +123,18 @@ export function SettingsView({
       <div className="view-stack">
         {bookingSlug ? (
           <BookingLinkCard slug={bookingSlug} salonName={salonName} />
+        ) : null}
+
+        {bookingSlug ? (
+          <section className="panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Walk-in queue</p>
+                <h2>QR code</h2>
+              </div>
+            </div>
+            <WalkinQrCard slug={bookingSlug} businessName={salonName} />
+          </section>
         ) : null}
 
         <section className="panel">

@@ -17,6 +17,7 @@ import type {
   UpcomingAppointment,
 } from "@/lib/dashboard/today-queries";
 import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
+import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
@@ -91,6 +92,10 @@ export function TodayView({
         >
           <WalkinQueuePanel businessId={businessId} />
         </Suspense>
+      ) : null}
+
+      {showOwnerInsights && bookingSlug ? (
+        <WalkinQrCard slug={bookingSlug} businessName={salonName} />
       ) : null}
 
       <div className="two-column">
