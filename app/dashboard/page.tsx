@@ -57,6 +57,7 @@ export default async function DashboardPage() {
       coachTeaserTitle={topInsight?.title ?? null}
       staffLeaderboard={leaderboard}
       appRole={appRole}
+      businessId={businessId}
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
       dailyRevenueTarget={

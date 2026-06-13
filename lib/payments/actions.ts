@@ -2,6 +2,7 @@
 
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { PaymentMethod } from "@/lib/payments/types";
+import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -37,7 +38,9 @@ export async function recordAppointmentPayment(
 
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
-    .select("id, business_id, total_amount, customer_id, customers ( name )")
+    .select(
+      "id, business_id, total_amount, staff_name, customer_id, customers ( name )"
+    )
     .eq("id", appointmentId)
     .eq("business_id", businessId)
     .maybeSingle();
@@ -107,6 +110,16 @@ export async function recordAppointmentPayment(
   if (paymentError) {
     console.error("recordAppointmentPayment insert:", paymentError.message);
     return { ok: false, error: paymentError.message };
+  }
+
+  if (isPaid) {
+    await recordStaffCommissionForPayment({
+      businessId: rowBusinessId,
+      appointmentId,
+      staffName: appointment.staff_name as string | null,
+      serviceAmount: amount >= 0 ? amount : 0,
+      earnedAt: now,
+    });
   }
 
   const { error: updateError } = await supabase

@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { GettingStartedPanel } from "@/components/command-center/today/getting-started-panel";
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
 import { OsHero } from "@/components/command-center/today/os-hero";
+import { WalkinQueuePanel } from "@/components/command-center/today/walkin-queue-panel";
 import { WelcomeBanner } from "@/components/command-center/welcome-banner";
 import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
@@ -23,6 +25,7 @@ type TodayViewProps = {
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
   appRole?: AppRole;
+  businessId?: string | null;
   bookingSlug?: string | null;
   salonName?: string;
   dailyRevenueTarget?: number | null;
@@ -35,6 +38,7 @@ export function TodayView({
   coachTeaserTitle = null,
   staffLeaderboard = [],
   appRole = "owner",
+  businessId = null,
   bookingSlug = null,
   salonName = "Your salon",
   dailyRevenueTarget = null,
@@ -65,6 +69,28 @@ export function TodayView({
 
       {showOwnerInsights && onlinePending.length > 0 ? (
         <OnlinePendingRequests appointments={onlinePending} />
+      ) : null}
+
+      {showOwnerInsights && businessId ? (
+        <Suspense
+          fallback={
+            <section
+              style={{
+                marginBottom: 8,
+                padding: 16,
+                borderRadius: 16,
+                border: "1px solid #E0DAD0",
+                background: "#EDE8DF",
+                color: "#5C5C5C",
+                fontSize: 14,
+              }}
+            >
+              Walk-in queue load ho rahi hai…
+            </section>
+          }
+        >
+          <WalkinQueuePanel businessId={businessId} />
+        </Suspense>
       ) : null}
 
       <div className="two-column">
