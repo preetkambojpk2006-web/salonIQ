@@ -1,4 +1,3 @@
-import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import { createClient } from "@/lib/supabase/server";
 
 export type WalkinQueueStatus =
@@ -33,18 +32,26 @@ const VALID_STATUSES: WalkinQueueStatus[] = [
   "no_show",
 ];
 
+function startOfTodayIstIso(): string {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const todayIst = new Date(now.getTime() + istOffset);
+  todayIst.setUTCHours(0, 0, 0, 0);
+  const startOfTodayIst = new Date(todayIst.getTime() - istOffset);
+  return startOfTodayIst.toISOString();
+}
+
 export async function listTodayWalkinQueue(
   businessId: string
 ): Promise<WalkinQueueRow[]> {
   const supabase = createClient();
-  const { startIso, endIsoExclusive } = getDayBoundsIso();
 
   const { data, error } = await supabase
     .from("walkin_queue")
     .select("*")
     .eq("business_id", businessId)
-    .gte("joined_at", startIso)
-    .lt("joined_at", endIsoExclusive)
+    .in("status", VALID_STATUSES)
+    .gte("joined_at", startOfTodayIstIso())
     .order("joined_at", { ascending: true });
 
   if (error) {

@@ -22,7 +22,7 @@ const TOKENS = {
   accentOrangeSoft: "#F5D4A8",
 };
 
-type PublicQueueStatusPageProps = {
+type PublicQueueStatusProps = {
   slug: string;
   token: string;
 };
@@ -56,53 +56,19 @@ function SalonHeader({ salonName }: { salonName: string }) {
   );
 }
 
-function TokenCircle({
-  tokenNumber,
-  variant,
-}: {
-  tokenNumber: number;
-  variant: "waiting" | "called" | "in_service" | "neutral";
-}) {
-  const styles: Record<typeof variant, CSSProperties> = {
-    waiting: {
-      background: "#fff",
-      color: TOKENS.accentGreen,
-      border: `4px solid ${TOKENS.accentGreen}`,
-    },
-    called: {
-      background: TOKENS.accentOrangeSoft,
-      color: "#8A4B00",
-      border: `4px solid ${TOKENS.accentOrange}`,
-    },
-    in_service: {
-      background: TOKENS.accentGreen,
-      color: "#fff",
-      border: `4px solid ${TOKENS.accentGreen}`,
-    },
-    neutral: {
-      background: "#E8E4DC",
-      color: "#5C5C5C",
-      border: `4px solid ${TOKENS.borderSubtle}`,
-    },
-  };
-
+function StatusCard({ children }: { children: ReactNode }) {
   return (
-    <div
+    <section
       style={{
-        width: 96,
-        height: 96,
-        margin: "0 auto 16px",
-        borderRadius: 999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 36,
-        fontWeight: 800,
-        ...styles[variant],
+        borderRadius: 16,
+        border: `1px solid ${TOKENS.borderSubtle}`,
+        background: "#fff",
+        padding: 24,
+        textAlign: "center",
       }}
     >
-      #{tokenNumber}
-    </div>
+      {children}
+    </section>
   );
 }
 
@@ -129,22 +95,6 @@ function StatusBadge({
   );
 }
 
-function StatusCard({ children }: { children: ReactNode }) {
-  return (
-    <section
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${TOKENS.borderSubtle}`,
-        background: "#fff",
-        padding: 24,
-        textAlign: "center",
-      }}
-    >
-      {children}
-    </section>
-  );
-}
-
 function peopleAheadCopy(position: number): string {
   if (position <= 1) {
     return "Aap next hain! 🎉";
@@ -155,7 +105,23 @@ function peopleAheadCopy(position: number): string {
 function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
   return (
     <StatusCard>
-      <TokenCircle tokenNumber={status.daily_token_number} variant="waiting" />
+      <div
+        style={{
+          width: 96,
+          height: 96,
+          margin: "0 auto 16px",
+          borderRadius: 999,
+          background: TOKENS.accentGreen,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 36,
+          fontWeight: 800,
+        }}
+      >
+        #{status.daily_token_number}
+      </div>
       <h2
         style={{
           margin: 0,
@@ -164,7 +130,7 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
           color: TOKENS.textDark,
         }}
       >
-        Aap #{status.daily_token_number} number par hain
+        Aapka number: #{status.daily_token_number}
       </h2>
       <p
         style={{
@@ -200,6 +166,16 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
       >
         Har 30 second mein update hota hai
       </p>
+      <p
+        style={{
+          margin: "12px 0 0",
+          fontSize: 14,
+          color: TOKENS.textDark,
+          lineHeight: 1.5,
+        }}
+      >
+        Salon mein rukein — aapko bulaya jayega
+      </p>
     </StatusCard>
   );
 }
@@ -207,7 +183,24 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
 function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
   return (
     <StatusCard>
-      <TokenCircle tokenNumber={status.daily_token_number} variant="called" />
+      <div
+        style={{
+          width: 96,
+          height: 96,
+          margin: "0 auto 16px",
+          borderRadius: 999,
+          background: TOKENS.accentOrangeSoft,
+          color: "#8A4B00",
+          border: `4px solid ${TOKENS.accentOrange}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 36,
+          fontWeight: 800,
+        }}
+      >
+        #{status.daily_token_number}
+      </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
           label="Aapko bulaya ja raha hai! 🔔"
@@ -223,7 +216,7 @@ function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
           lineHeight: 1.5,
         }}
       >
-        Kripya counter par aa jayein
+        Kripya counter par aa jayein abhi
       </p>
     </StatusCard>
   );
@@ -232,7 +225,23 @@ function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
 function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
   return (
     <StatusCard>
-      <TokenCircle tokenNumber={status.daily_token_number} variant="in_service" />
+      <div
+        style={{
+          width: 96,
+          height: 96,
+          margin: "0 auto 16px",
+          borderRadius: 999,
+          background: TOKENS.accentGreen,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 36,
+          fontWeight: 800,
+        }}
+      >
+        #{status.daily_token_number}
+      </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
           label="Service chal rahi hai ✂️"
@@ -248,7 +257,7 @@ function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
           lineHeight: 1.5,
         }}
       >
-        Aapki service shuru ho gayi
+        Aapki service shuru ho gayi — enjoy!
       </p>
     </StatusCard>
   );
@@ -257,7 +266,23 @@ function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
 function DoneStatus({ status }: { status: WalkinQueueStatusResult }) {
   return (
     <StatusCard>
-      <TokenCircle tokenNumber={status.daily_token_number} variant="neutral" />
+      <div
+        style={{
+          width: 96,
+          height: 96,
+          margin: "0 auto 16px",
+          borderRadius: 999,
+          background: "#E8E4DC",
+          color: "#5C5C5C",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 36,
+          fontWeight: 800,
+        }}
+      >
+        #{status.daily_token_number}
+      </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
           label="Service complete ✅"
@@ -299,13 +324,13 @@ function RemovedStatus({ slug }: { slug: string }) {
           textDecoration: "none",
         }}
       >
-        Dobara queue mein join karo →
+        Wapas join karein →
       </Link>
     </StatusCard>
   );
 }
 
-export function PublicQueueStatusPage({ slug, token }: PublicQueueStatusPageProps) {
+export function PublicQueueStatus({ slug, token }: PublicQueueStatusProps) {
   const [status, setStatus] = useState<WalkinQueueStatusResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
