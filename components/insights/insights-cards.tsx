@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/lib/i18n/LanguageContext";
-import type { InsightCard } from "@/lib/insights/queries";
+import type { InsightCard } from "@/lib/insights/types";
 
 type InsightsCardsProps = {
   cards: InsightCard[];

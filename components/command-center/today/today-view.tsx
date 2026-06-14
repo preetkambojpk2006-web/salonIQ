@@ -1,10 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
 import { GettingStartedPanel } from "@/components/command-center/today/getting-started-panel";
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
 import { OsHero } from "@/components/command-center/today/os-hero";
-import { WalkinQueuePanel } from "@/components/command-center/today/walkin-queue-panel";
+import { WalkinQueuePanelClient } from "@/components/command-center/today/walkin-queue-panel-client";
 import { WelcomeBanner } from "@/components/command-center/welcome-banner";
 import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
@@ -20,7 +19,7 @@ import { OnlinePendingRequests } from "@/components/appointments/online-pending-
 import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
-import { useT } from "@/lib/i18n/LanguageContext";
+import type { WalkinQueueRow } from "@/lib/walkin/types";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
@@ -34,6 +33,7 @@ type TodayViewProps = {
   salonName?: string;
   dailyRevenueTarget?: number | null;
   lowStockProducts?: InventoryProductWithBrand[];
+  initialWalkinQueue?: WalkinQueueRow[];
 };
 
 export function TodayView({
@@ -48,8 +48,8 @@ export function TodayView({
   salonName = "Your salon",
   dailyRevenueTarget = null,
   lowStockProducts = [],
+  initialWalkinQueue = [],
 }: TodayViewProps) {
-  const { t } = useT();
   const isNewSalon =
     metrics.revenueToday === 0 &&
     metrics.bookingsToday === 0 &&
@@ -81,25 +81,11 @@ export function TodayView({
       ) : null}
 
       {showOwnerInsights && businessId ? (
-        <Suspense
-          fallback={
-            <section
-              style={{
-                marginBottom: 8,
-                padding: 16,
-                borderRadius: 16,
-                border: "1px solid #E0DAD0",
-                background: "#EDE8DF",
-                color: "#5C5C5C",
-                fontSize: 14,
-              }}
-            >
-              {t("today.queueLoading")}
-            </section>
-          }
-        >
-          <WalkinQueuePanel businessId={businessId} salonName={salonName} />
-        </Suspense>
+        <WalkinQueuePanelClient
+          businessId={businessId}
+          salonName={salonName}
+          initialQueue={initialWalkinQueue}
+        />
       ) : null}
 
       {showOwnerInsights && bookingSlug ? (

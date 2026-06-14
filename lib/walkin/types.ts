@@ -27,6 +27,21 @@ export type WalkinQueueStatus =
   | "left"
   | "no_show";
 
+export type WalkinQueueRow = {
+  id: string;
+  business_id: string;
+  customer_name: string;
+  customer_phone: string;
+  public_token: string;
+  daily_token_number: number;
+  status: WalkinQueueStatus;
+  joined_at: string;
+  called_at: string | null;
+  service_started_at: string | null;
+  completed_at: string | null;
+  estimated_wait_mins: number | null;
+};
+
 export type WalkinQueueStatusResult = {
   salon_name: string;
   daily_token_number: number;

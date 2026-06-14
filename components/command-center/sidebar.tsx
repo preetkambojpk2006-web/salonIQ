@@ -4,7 +4,7 @@ import { Bot, CalendarCheck, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
-import type { AppRole } from "@/lib/auth/membership";
+import type { AppRole } from "@/lib/auth/types";
 import {
   getActiveNavId,
   getNavItemsForRole,

@@ -1,11 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import type { AppRole, UserMembership } from "@/lib/auth/types";
 
-export type AppRole = "owner" | "admin" | "staff";
-
-export type UserMembership = {
-  businessId: string;
-  appRole: AppRole;
-};
+export type { AppRole, UserMembership } from "@/lib/auth/types";
 
 function normalizeRole(value: string | null | undefined): AppRole | null {
   if (value === "owner" || value === "admin" || value === "staff") {

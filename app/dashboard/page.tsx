@@ -9,6 +9,7 @@ import { getLowStockProducts } from "@/lib/inventory/queries";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { getStaffLeaderboard } from "@/lib/staff/leaderboard";
+import { listTodayWalkinQueue } from "@/lib/walkin/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,8 @@ export default async function DashboardPage() {
   ]);
   const appRole = membership?.appRole ?? "owner";
 
-  const [insights, leaderboard, business, lowStockProducts] = await Promise.all([
+  const [insights, leaderboard, business, lowStockProducts, walkinQueue] =
+    await Promise.all([
     businessId && appRole !== "staff"
       ? getCoachInsights(businessId)
       : Promise.resolve([]),
@@ -45,6 +47,9 @@ export default async function DashboardPage() {
     businessId && canManageFinance(appRole)
       ? getLowStockProducts(businessId)
       : Promise.resolve([] as InventoryProductWithBrand[]),
+    businessId && canManageFinance(appRole)
+      ? listTodayWalkinQueue(businessId)
+      : Promise.resolve([]),
   ]);
   const topInsight = pickTopInsight(insights);
 
@@ -71,6 +76,7 @@ export default async function DashboardPage() {
           : null
       }
       lowStockProducts={lowStockProducts}
+      initialWalkinQueue={walkinQueue}
     />
   );
 }

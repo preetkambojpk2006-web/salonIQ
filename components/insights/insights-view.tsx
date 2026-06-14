@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { InsightsCards } from "@/components/insights/insights-cards";
 import { HeatmapSkeleton } from "@/components/ui/page-skeletons";
 import { useT } from "@/lib/i18n/LanguageContext";
-import type { HeatmapRow, InsightCard } from "@/lib/insights/queries";
+import type { HeatmapRow, InsightCard } from "@/lib/insights/types";
 
 const InsightsHeatmap = dynamic(
   () =>

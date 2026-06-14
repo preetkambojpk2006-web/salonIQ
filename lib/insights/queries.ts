@@ -7,26 +7,18 @@ import {
   todayCalendarDay,
 } from "@/lib/payments/date-utils";
 import { createClient } from "@/lib/supabase/server";
+import type {
+  HeatmapRow,
+  InsightCard,
+  InsightsDashboardData,
+} from "@/lib/insights/types";
 
-export type InsightCardTone = "mint" | "amber" | "blue";
-
-export type InsightCard = {
-  id: string;
-  title: string;
-  body: string;
-  tone: InsightCardTone;
-};
-
-export type HeatmapRow = {
-  time: string;
-  values: number[];
-};
-
-export type InsightsDashboardData = {
-  cards: InsightCard[];
-  heatmapRows: HeatmapRow[];
-  showHeatmap: boolean;
-};
+export type {
+  HeatmapRow,
+  InsightCard,
+  InsightCardTone,
+  InsightsDashboardData,
+} from "@/lib/insights/types";
 
 const HEATMAP_TIME_LABELS = ["10a", "12p", "2p", "4p", "6p", "8p"] as const;
 

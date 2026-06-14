@@ -2,7 +2,7 @@ import { CommandMobileNav } from "@/components/command-center/mobile-nav";
 import { CommandSidebar } from "@/components/command-center/sidebar";
 import { CommandTopbar } from "@/components/command-center/topbar";
 import { PageTransition } from "@/components/motion/page-transition";
-import type { AppRole } from "@/lib/auth/membership";
+import type { AppRole } from "@/lib/auth/types";
 import type { WorkspaceContext } from "@/lib/command-center/get-workspace";
 
 type CommandCenterShellProps = {

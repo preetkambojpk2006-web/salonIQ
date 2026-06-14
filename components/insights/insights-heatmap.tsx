@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, memo, useMemo } from "react";
-import type { HeatmapRow } from "@/lib/insights/queries";
+import type { HeatmapRow } from "@/lib/insights/types";
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 

@@ -1,27 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
 
-export type WalkinQueueStatus =
-  | "waiting"
-  | "called"
-  | "in_service"
-  | "done"
-  | "left"
-  | "no_show";
-
-export type WalkinQueueRow = {
-  id: string;
-  business_id: string;
-  customer_name: string;
-  customer_phone: string;
-  public_token: string;
-  daily_token_number: number;
-  status: WalkinQueueStatus;
-  joined_at: string;
-  called_at: string | null;
-  service_started_at: string | null;
-  completed_at: string | null;
-  estimated_wait_mins: number | null;
-};
+export type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
 
 const VALID_STATUSES: WalkinQueueStatus[] = [
   "waiting",

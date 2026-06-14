@@ -1,4 +1,4 @@
-import type { AppRole } from "@/lib/auth/membership";
+import type { AppRole } from "@/lib/auth/types";
 import type { CommandNavId } from "@/lib/command-center/navigation";
 
 const STAFF_BLOCKED_PATHS = [

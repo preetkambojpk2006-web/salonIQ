@@ -7,7 +7,7 @@ import {
   performWalkinQueueAction,
   type WalkinQueueAction,
 } from "@/lib/walkin/actions";
-import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/queries";
+import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
 import { queueYourTurn } from "@/lib/whatsapp/templates";
 import { useT } from "@/lib/i18n/LanguageContext";
 

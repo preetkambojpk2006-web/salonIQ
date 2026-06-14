@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { AppRole } from "@/lib/auth/membership";
+import type { AppRole } from "@/lib/auth/types";
 import { canAccessNavItem } from "@/lib/auth/route-access";
 import { getActiveNavId } from "@/lib/command-center/navigation";
 
