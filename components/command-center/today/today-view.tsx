@@ -18,6 +18,8 @@ import type {
 } from "@/lib/dashboard/today-queries";
 import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
 import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
+import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
+import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
@@ -30,6 +32,7 @@ type TodayViewProps = {
   bookingSlug?: string | null;
   salonName?: string;
   dailyRevenueTarget?: number | null;
+  lowStockProducts?: InventoryProductWithBrand[];
 };
 
 export function TodayView({
@@ -43,6 +46,7 @@ export function TodayView({
   bookingSlug = null,
   salonName = "Your salon",
   dailyRevenueTarget = null,
+  lowStockProducts = [],
 }: TodayViewProps) {
   const showOwnerInsights = canManageFinance(appRole);
   const isNewSalon =
@@ -55,6 +59,9 @@ export function TodayView({
       <WelcomeBanner />
       {showOwnerInsights && bookingSlug ? (
         <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
+      ) : null}
+      {showOwnerInsights && lowStockProducts.length > 0 ? (
+        <LowStockAlerts lowStockProducts={lowStockProducts} />
       ) : null}
       <OsHero
         nextAppointment={upcoming[0] ?? null}

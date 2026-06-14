@@ -1,7 +1,14 @@
 import { MoneyView } from "@/components/money/money-view";
 import { StaffAdvances } from "@/components/money/StaffAdvances";
 import { StaffPayouts } from "@/components/money/StaffPayouts";
+import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
+import {
+  currentIstYearMonth,
+  getBrandSpendSummary,
+  getInventorySummary,
+} from "@/lib/inventory/queries";
+import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import {
   getCashUpiSplit,
@@ -32,25 +39,50 @@ const EMPTY_PAYOUTS: StaffPayoutsSummary = {
   totalUnpaid: 0,
 };
 
+const EMPTY_INVENTORY_SUMMARY: InventorySummary = {
+  total_stock_value: 0,
+  month_purchase_total: 0,
+  month_usage_total: 0,
+  low_stock_count: 0,
+};
+
 export default async function MoneyPage() {
-  const [stats, businessId] = await Promise.all([
+  const [stats, businessId, membership] = await Promise.all([
     getMoneyDashboardStats(),
     getOwnerBusinessId(),
+    getUserMembership(),
   ]);
+  const appRole = membership?.appRole ?? "owner";
+  const showInventorySpend = canManageFinance(appRole);
+  const { year, month } = currentIstYearMonth();
 
   const { startIso, endIsoExclusive } = getDayBoundsIso();
-  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers] = businessId
-    ? await Promise.all([
-        getCashUpiSplit(
-          businessId,
-          new Date(startIso),
-          new Date(endIsoExclusive)
-        ),
-        getStaffPayouts(businessId),
-        listStaffAdvances(businessId),
-        listStaffMembers(businessId),
-      ])
-    : [EMPTY_SPLIT, EMPTY_PAYOUTS, [] as StaffAdvance[], []];
+  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend] =
+    businessId
+      ? await Promise.all([
+          getCashUpiSplit(
+            businessId,
+            new Date(startIso),
+            new Date(endIsoExclusive)
+          ),
+          getStaffPayouts(businessId),
+          listStaffAdvances(businessId),
+          listStaffMembers(businessId),
+          showInventorySpend
+            ? getInventorySummary(businessId, year, month)
+            : Promise.resolve(EMPTY_INVENTORY_SUMMARY),
+          showInventorySpend
+            ? getBrandSpendSummary(businessId, year, month)
+            : Promise.resolve([] as BrandSpendSummary[]),
+        ])
+      : [
+          EMPTY_SPLIT,
+          EMPTY_PAYOUTS,
+          [] as StaffAdvance[],
+          [],
+          EMPTY_INVENTORY_SUMMARY,
+          [] as BrandSpendSummary[],
+        ];
 
   const activeStaff = staffMembers
     .filter((member) => member.is_active)
@@ -60,6 +92,9 @@ export default async function MoneyPage() {
     <MoneyView
       stats={stats}
       cashUpiSplit={cashUpiSplit}
+      showInventorySpend={showInventorySpend}
+      inventorySummary={inventorySummary}
+      brandSpend={brandSpend}
       staffPanels={
         <>
           <StaffAdvances advances={staffAdvances} staffMembers={activeStaff} />

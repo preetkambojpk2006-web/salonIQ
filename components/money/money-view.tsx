@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
+import { InventorySpendSummary } from "@/components/money/InventorySpendSummary";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
 
 function formatRs(amount: number): string {
@@ -21,12 +23,18 @@ function pendingPaymentContext(amount: number, count: number): string {
 type MoneyViewProps = {
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
+  showInventorySpend?: boolean;
+  inventorySummary?: InventorySummary;
+  brandSpend?: BrandSpendSummary[];
   staffPanels?: ReactNode;
 };
 
 export function MoneyView({
   stats,
   cashUpiSplit,
+  showInventorySpend = false,
+  inventorySummary,
+  brandSpend = [],
   staffPanels,
 }: MoneyViewProps) {
   const summaryCards = [
@@ -103,6 +111,13 @@ export function MoneyView({
       </div>
 
       <CashUpiSplit split={cashUpiSplit} />
+
+      {showInventorySpend && inventorySummary ? (
+        <InventorySpendSummary
+          summary={inventorySummary}
+          brandSpend={brandSpend}
+        />
+      ) : null}
 
       {staffPanels}
 

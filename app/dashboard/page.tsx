@@ -5,6 +5,8 @@ import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { listOnlinePendingAppointments } from "@/lib/appointments/queries";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getTodayDashboardData } from "@/lib/dashboard/today-queries";
+import { getLowStockProducts } from "@/lib/inventory/queries";
+import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { getStaffLeaderboard } from "@/lib/staff/leaderboard";
 
@@ -32,7 +34,7 @@ export default async function DashboardPage() {
   ]);
   const appRole = membership?.appRole ?? "owner";
 
-  const [insights, leaderboard, business] = await Promise.all([
+  const [insights, leaderboard, business, lowStockProducts] = await Promise.all([
     businessId && appRole !== "staff"
       ? getCoachInsights(businessId)
       : Promise.resolve([]),
@@ -40,6 +42,9 @@ export default async function DashboardPage() {
       ? getStaffLeaderboard(businessId)
       : Promise.resolve([]),
     canManageFinance(appRole) ? getOwnerBusiness() : Promise.resolve(null),
+    businessId && canManageFinance(appRole)
+      ? getLowStockProducts(businessId)
+      : Promise.resolve([] as InventoryProductWithBrand[]),
   ]);
   const topInsight = pickTopInsight(insights);
 
@@ -65,6 +70,7 @@ export default async function DashboardPage() {
           ? Number(business.daily_revenue_target)
           : null
       }
+      lowStockProducts={lowStockProducts}
     />
   );
 }
