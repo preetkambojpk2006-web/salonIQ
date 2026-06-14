@@ -61,7 +61,7 @@ export function MessageActions({
       </div>
 
       <Toast
-        message="Message copied! ✅"
+        message="Message copied"
         show={copyToast}
         onDismiss={() => setCopyToast(false)}
       />

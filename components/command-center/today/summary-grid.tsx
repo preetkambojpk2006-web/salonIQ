@@ -1,4 +1,5 @@
 import type { TodayMetrics } from "@/lib/dashboard/today-queries";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -10,33 +11,34 @@ type SummaryGridProps = {
 };
 
 export function SummaryGrid({ metrics, showFinance = true }: SummaryGridProps) {
+  const { t } = useT();
 
   const cards = [
     {
       key: "revenue",
       className: "metric-card success",
-      label: "Revenue today",
+      label: t("today.metricRevenue"),
       value: formatRs(metrics.revenueToday),
       context: metrics.revenueContext,
     },
     {
       key: "bookings",
       className: "metric-card",
-      label: "Bookings",
+      label: t("today.metricBookings"),
       value: String(metrics.bookingsToday),
       context: metrics.bookingsContext,
     },
     {
       key: "pending",
       className: "metric-card warning",
-      label: "Pending payments",
+      label: t("today.metricPending"),
       value: formatRs(metrics.pendingAmount),
       context: metrics.pendingContext,
     },
     {
       key: "repeat",
       className: "metric-card",
-      label: "Repeat customers",
+      label: t("today.metricRepeat"),
       value: metrics.totalCustomers === 0 ? "—" : `${metrics.repeatPercent}%`,
       context: metrics.repeatContext,
     },

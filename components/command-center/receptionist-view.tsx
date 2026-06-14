@@ -1,75 +1,88 @@
 "use client";
 
-const workflowSteps = [
-  { label: "Language", value: "Hinglish detected" },
-  { label: "Intent", value: "Book appointment" },
-  { label: "Entities", value: "Service: Haircut, Date: Tomorrow" },
-  { label: "Availability", value: "2 free slots found" },
-  {
-    label: "Next action",
-    value: "Ask customer to choose slot",
-    highlight: true,
-  },
-];
+import { Bot, CalendarClock, MessageCircle, Sparkles } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 export function ReceptionistView() {
+  const { t } = useT();
+
+  const capabilities = [
+    { icon: MessageCircle, key: "receptionist.capabilityReplies" },
+    { icon: CalendarClock, key: "receptionist.capabilityBookings" },
+    { icon: Sparkles, key: "receptionist.capabilityReminders" },
+  ];
+
   return (
     <div className="view-stack">
-      <div className="receptionist-layout">
-        <section className="panel chat-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">WhatsApp AI</p>
-              <h2>Receptionist simulator</h2>
-            </div>
-            <span className="status-pill">
-              <span className="pulse-dot pulse-dot-sm" aria-hidden />
-              Online
-            </span>
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">{t("receptionist.eyebrow")}</p>
+            <h2>{t("receptionist.title")}</h2>
           </div>
-          <div className="chat-window">
-            <div className="message">
-              Namaste. Main SALONIQ AI receptionist hoon. Booking, reschedule, price,
-              reminder, payment sab handle kar sakta hoon.
-              <small>SALONIQ AI</small>
-            </div>
-            <div className="message customer">
-              kal haircut karwana hai
-              <small>Customer</small>
-            </div>
-            <div className="message">
-              Zaroor. Kal haircut ke liye 5:30 PM aur 6:15 PM available hai. Aap
-              kaunsa slot book karna chahenge?
-              <small>SALONIQ AI</small>
-            </div>
-          </div>
-          <form className="chat-input-row" onSubmit={(e) => e.preventDefault()}>
-            <input placeholder="Try: kal haircut karwana hai" readOnly />
-            <button type="submit" className="primary-button">
-              Send
-            </button>
-          </form>
-        </section>
+          <span className="tag orange">{t("receptionist.comingSoon")}</span>
+        </div>
 
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">AI brain</p>
-              <h2>Detected workflow</h2>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            gap: 14,
+            padding: "32px 20px",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              placeItems: "center",
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              background: "var(--mint-soft)",
+              color: "var(--mint)",
+            }}
+          >
+            <Bot size={28} strokeWidth={1.75} aria-hidden />
+          </div>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
+            {t("receptionist.heroTitle")}
+          </h3>
+          <p
+            className="text-body"
+            style={{ margin: 0, maxWidth: 460, lineHeight: 1.55 }}
+          >
+            {t("receptionist.heroDescription")}
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 12,
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          }}
+        >
+          {capabilities.map(({ icon: Icon, key }) => (
+            <div
+              key={key}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                background: "#fff",
+              }}
+            >
+              <Icon size={18} strokeWidth={1.75} aria-hidden style={{ color: "var(--mint)", flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{t(key)}</span>
             </div>
-          </div>
-          <div className="workflow-steps">
-            {workflowSteps.map((step) => (
-              <div key={step.label} className="workflow-step">
-                <p className="eyebrow">{step.label}</p>
-                <p className={step.highlight ? "workflow-step-action" : ""}>
-                  {step.value}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,8 +1,14 @@
+"use client";
+
+import { Sparkles } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageContext";
+
 type VibeCardProps = {
   notes: string | null | undefined;
 };
 
 export function VibeCard({ notes }: VibeCardProps) {
+  const { t } = useT();
   const trimmed = notes?.trim();
   if (!trimmed) return null;
 
@@ -23,9 +29,13 @@ export function VibeCard({ notes }: VibeCardProps) {
           fontWeight: 700,
           color: "#1A1A1A",
           letterSpacing: "0.02em",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
         }}
       >
-        ✨ Customer Vibe
+        <Sparkles size={13} strokeWidth={2.25} aria-hidden />
+        {t("customers.vibeLabel")}
       </p>
       <p
         style={{

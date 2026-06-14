@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState, useTransition } from "react";
-import { AlertTriangle, Ban } from "lucide-react";
+import { AlertTriangle, Ban, Gift } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   getCustomerDisplayTag,
@@ -219,7 +219,9 @@ function LoyaltyProgressSection({
       {progress.reward_pending ? (
         <span
           style={{
-            display: "inline-block",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
             marginBottom: 8,
             padding: "4px 10px",
             borderRadius: 999,
@@ -229,7 +231,8 @@ function LoyaltyProgressSection({
             color: "#fff",
           }}
         >
-          🎁 Reward ready
+          <Gift size={13} strokeWidth={2.25} aria-hidden />
+          {t("customers.rewardReady")}
         </span>
       ) : (
         <p

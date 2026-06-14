@@ -71,7 +71,12 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
         return;
       }
 
-      const parsed = data as PublicBookingContext;
+      const raw = data as PublicBookingContext;
+      const parsed: PublicBookingContext = {
+        ...raw,
+        services: Array.isArray(raw.services) ? raw.services : [],
+        staff: Array.isArray(raw.staff) ? raw.staff : [],
+      };
       setContext(parsed);
       setSelectedService(parsed.services[0] ?? null);
       setSelectedStaff(parsed.staff[0] ?? null);
