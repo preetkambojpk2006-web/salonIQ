@@ -61,25 +61,6 @@ export function TodayView({
       {showOwnerInsights && bookingSlug ? (
         <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
       ) : null}
-      {showOwnerInsights && lowStockProducts.length > 0 ? (
-        <LowStockAlerts lowStockProducts={lowStockProducts} />
-      ) : null}
-      <OsHero
-        nextAppointment={upcoming[0] ?? null}
-        revenueToday={metrics.revenueToday}
-        dailyRevenueTarget={dailyRevenueTarget}
-        showRevenue={showOwnerInsights}
-      />
-      <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
-      {showOwnerInsights ? (
-        <CoachTeaser topInsightTitle={coachTeaserTitle} />
-      ) : null}
-      {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
-
-      {showOwnerInsights && onlinePending.length > 0 ? (
-        <OnlinePendingRequests appointments={onlinePending} />
-      ) : null}
-
       {showOwnerInsights && businessId ? (
         <WalkinQueuePanelClient
           businessId={businessId}
@@ -87,15 +68,30 @@ export function TodayView({
           initialQueue={initialWalkinQueue}
         />
       ) : null}
-
       {showOwnerInsights && bookingSlug ? (
         <WalkinQrCard slug={bookingSlug} businessName={salonName} />
       ) : null}
-
+      <OsHero
+        nextAppointment={upcoming[0] ?? null}
+        revenueToday={metrics.revenueToday}
+        dailyRevenueTarget={dailyRevenueTarget}
+        showRevenue={showOwnerInsights}
+      />
       <div className="two-column">
         <NextAppointments appointments={upcoming} />
         {isNewSalon ? <GettingStartedPanel /> : null}
       </div>
+      <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
+      {showOwnerInsights ? (
+        <CoachTeaser topInsightTitle={coachTeaserTitle} />
+      ) : null}
+      {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
+      {showOwnerInsights && lowStockProducts.length > 0 ? (
+        <LowStockAlerts lowStockProducts={lowStockProducts} />
+      ) : null}
+      {showOwnerInsights && onlinePending.length > 0 ? (
+        <OnlinePendingRequests appointments={onlinePending} />
+      ) : null}
     </div>
   );
 }
