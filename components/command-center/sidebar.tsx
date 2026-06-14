@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, CalendarCheck } from "lucide-react";
+import { Bot, CalendarCheck, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
@@ -40,7 +40,9 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
               prefetch
               className={isActive ? "nav-item active" : "nav-item"}
               style={
-                item.id === "coach" || item.id === "attendance"
+                item.id === "coach" ||
+                item.id === "attendance" ||
+                item.id === "inventory"
                   ? { display: "flex", alignItems: "center", gap: 8, lineHeight: 1.3, paddingTop: 10, paddingBottom: 10 }
                   : undefined
               }
@@ -54,6 +56,13 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
               ) : null}
               {item.id === "attendance" ? (
                 <CalendarCheck
+                  className="h-4 w-4 shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+              ) : null}
+              {item.id === "inventory" ? (
+                <Package
                   className="h-4 w-4 shrink-0"
                   strokeWidth={1.75}
                   aria-hidden

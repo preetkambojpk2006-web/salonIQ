@@ -15,6 +15,7 @@ const titleByNav = {
   customers: "Customer CRM",
   money: "Business Finance Tracker",
   attendance: "Staff Attendance",
+  inventory: "Stock & Inventory",
   insights: "AI Business Intelligence",
   automations: "Automation Engine",
   coach: "AI Business Coach",
