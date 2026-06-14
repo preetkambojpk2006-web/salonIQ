@@ -5,9 +5,7 @@ import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-pan
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
-import { resolveUiLanguage, UI_LANGUAGE_COOKIE } from "@/lib/i18n";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
-import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +30,6 @@ export default async function SettingsPage() {
         (await ensureBusinessBookingSlug(business.id, business.name)))
       : null;
 
-  const cookieLanguage = cookies().get(UI_LANGUAGE_COOKIE)?.value;
-
   return (
     <SettingsView
       initialName={business?.name ?? ""}
@@ -48,14 +44,7 @@ export default async function SettingsPage() {
           ? String(Number(business.daily_revenue_target))
           : ""
       }
-      languagePanel={
-        <LanguageSettingsPanel
-          initialLocale={resolveUiLanguage(
-            (business as { ui_language?: string | null } | null)?.ui_language,
-            cookieLanguage
-          )}
-        />
-      }
+      languagePanel={<LanguageSettingsPanel />}
       attendancePanel={
         <AttendanceSettingsPanel
           initialLateFineAmount={

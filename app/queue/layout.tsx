@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function QueueLayout({ children }: { children: React.ReactNode }) {
-  return <LanguageProvider locale="hi">{children}</LanguageProvider>;
+  return <LanguageProvider initialLocale="hi">{children}</LanguageProvider>;
 }

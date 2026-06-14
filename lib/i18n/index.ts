@@ -12,18 +12,6 @@ export function getLocale(uiLanguage: string | null | undefined): Locale {
   return uiLanguage === "en" ? "en" : "hi";
 }
 
-export const UI_LANGUAGE_COOKIE = "saloniq_ui_language";
-
-export function resolveUiLanguage(
-  dbLanguage: string | null | undefined,
-  cookieLanguage: string | undefined
-): Locale {
-  if (cookieLanguage === "en" || cookieLanguage === "hi") {
-    return cookieLanguage;
-  }
-  return getLocale(dbLanguage);
-}
-
 export function t(
   key: string,
   locale: Locale,

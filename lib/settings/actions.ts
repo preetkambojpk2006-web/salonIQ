@@ -6,10 +6,7 @@ import {
 } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-import { UI_LANGUAGE_COOKIE } from "@/lib/i18n";
 
 export type SettingsActionResult =
   | { ok: true }
@@ -231,44 +228,15 @@ export async function updateUiLanguage(
     return { ok: false, error: "Invalid language selection." };
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("businesses")
     .update({ ui_language: uiLanguage })
-    .eq("id", membership.businessId)
-    .select("ui_language")
-    .maybeSingle();
-
-  console.log("[updateUiLanguage]", {
-    businessId: membership.businessId,
-    requested: uiLanguage,
-    saved: data?.ui_language ?? null,
-    error: error?.message ?? null,
-  });
+    .eq("id", membership.businessId);
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  if (!data) {
-    return {
-      ok: false,
-      error:
-        "Language save nahi hui. Owner account se try karein, ya Supabase mein ui_language migration apply karein.",
-    };
-  }
-
-  cookies().set(UI_LANGUAGE_COOKIE, uiLanguage, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
-
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/dashboard/calendar");
-  revalidatePath("/dashboard/money");
-  revalidatePath("/dashboard/attendance");
-  revalidatePath("/dashboard/inventory");
   return { ok: true };
 }
 

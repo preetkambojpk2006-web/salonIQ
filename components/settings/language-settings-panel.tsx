@@ -1,44 +1,28 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Toast } from "@/components/ui/toast";
 import { useT } from "@/lib/i18n/LanguageContext";
 import type { Locale } from "@/lib/i18n";
 import { updateUiLanguage } from "@/lib/settings/actions";
 
-type LanguageSettingsPanelProps = {
-  initialLocale: Locale;
-};
-
-export function LanguageSettingsPanel({
-  initialLocale,
-}: LanguageSettingsPanelProps) {
-  const { t, setLocale } = useT();
-  const router = useRouter();
-  const [selected, setSelected] = useState<Locale>(initialLocale);
+export function LanguageSettingsPanel() {
+  const { t, locale, setLocale } = useT();
   const [saving, setSaving] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSelected(initialLocale);
-  }, [initialLocale]);
+  const handleSelect = async (nextLocale: Locale) => {
+    if (nextLocale === locale || saving) return;
 
-  const handleSelect = async (locale: Locale) => {
-    if (locale === selected || saving) return;
+    setLocale(nextLocale);
 
     setSaving(true);
-    const result = await updateUiLanguage(locale);
+    const result = await updateUiLanguage(nextLocale);
     setSaving(false);
 
     if (!result.ok) {
       setErrorToast(result.error);
-      return;
     }
-
-    setSelected(locale);
-    setLocale(locale);
-    router.refresh();
   };
 
   return (
@@ -56,7 +40,7 @@ export function LanguageSettingsPanel({
             type="button"
             disabled={saving}
             onClick={() => void handleSelect("hi")}
-            className={selected === "hi" ? "primary-button" : "demo-button"}
+            className={locale === "hi" ? "primary-button" : "demo-button"}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
             {t("settings.languageHi")}
@@ -65,7 +49,7 @@ export function LanguageSettingsPanel({
             type="button"
             disabled={saving}
             onClick={() => void handleSelect("en")}
-            className={selected === "en" ? "primary-button" : "demo-button"}
+            className={locale === "en" ? "primary-button" : "demo-button"}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
             {t("settings.languageEn")}

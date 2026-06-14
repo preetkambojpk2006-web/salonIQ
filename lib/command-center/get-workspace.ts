@@ -3,9 +3,6 @@ import { getUserMembership } from "@/lib/auth/membership";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getNamasteGreeting, getFirstName } from "@/lib/dashboard/greeting";
-import { cookies } from "next/headers";
-
-import { resolveUiLanguage, UI_LANGUAGE_COOKIE, type Locale } from "@/lib/i18n";
 
 export type WorkspaceContext = {
   ownerName: string;
@@ -14,7 +11,6 @@ export type WorkspaceContext = {
   branches: { id: string; name: string }[];
   greeting: string;
   appRole: AppRole;
-  uiLanguage: Locale;
 };
 
 export async function getWorkspaceContext(): Promise<WorkspaceContext> {
@@ -33,10 +29,6 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
   const displayName = meta?.full_name ?? meta?.name ?? null;
   const ownerName = getFirstName(user?.email, displayName);
 
-  const cookieLanguage = cookies().get(UI_LANGUAGE_COOKIE)?.value;
-  const dbLanguage = (business as { ui_language?: string | null } | null)
-    ?.ui_language;
-
   return {
     ownerName,
     ownerEmail: user?.email ?? null,
@@ -44,6 +36,5 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
     branches: branches.map((b) => ({ id: b.id, name: b.name })),
     greeting: getNamasteGreeting(user?.email, displayName),
     appRole: membership?.appRole ?? "owner",
-    uiLanguage: resolveUiLanguage(dbLanguage, cookieLanguage),
   };
 }

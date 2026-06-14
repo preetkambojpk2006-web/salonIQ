@@ -1,63 +1,42 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import { t as translate, type Locale } from "@/lib/i18n";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { t as translate, type Locale } from "./index";
 
-type LanguageContextValue = {
+const LanguageContext = createContext<{
   locale: Locale;
   t: (key: string, params?: Record<string, string>) => string;
-  setLocale: (locale: Locale) => void;
-};
-
-const LanguageContext = createContext<LanguageContextValue | null>(null);
-
-type LanguageProviderProps = {
-  locale: Locale;
-  children: ReactNode;
-};
+  setLocale: (l: Locale) => void;
+}>({
+  locale: "hi",
+  t: (k) => k,
+  setLocale: () => {},
+});
 
 export function LanguageProvider({
-  locale: serverLocale,
+  initialLocale,
   children,
-}: LanguageProviderProps) {
-  const [locale, setLocale] = useState<Locale>(serverLocale);
+}: {
+  initialLocale: Locale;
+  children: ReactNode;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
-  useEffect(() => {
-    setLocale(serverLocale);
-  }, [serverLocale]);
+  function setLocale(l: Locale) {
+    setLocaleState(l);
+    document.cookie = `saloniq_ui_language=${l}; path=/; max-age=31536000`;
+  }
 
-  const t = useCallback(
-    (key: string, params?: Record<string, string>) => translate(key, locale, params),
-    [locale]
-  );
-
-  const value = useMemo(
-    () => ({ locale, t, setLocale }),
-    [locale, t]
-  );
+  const t = (key: string, params?: Record<string, string>) =>
+    translate(key, locale, params);
 
   return (
-    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+    <LanguageContext.Provider value={{ locale, t, setLocale }}>
+      {children}
+    </LanguageContext.Provider>
   );
 }
 
-export function useT(): LanguageContextValue {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    return {
-      locale: "hi",
-      t: (key: string, params?: Record<string, string>) =>
-        translate(key, "hi", params),
-      setLocale: () => {},
-    };
-  }
-  return context;
+export function useT() {
+  return useContext(LanguageContext);
 }

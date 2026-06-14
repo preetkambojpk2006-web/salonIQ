@@ -1,11 +1,11 @@
 import { CommandCenterShell } from "@/components/command-center/command-center-shell";
 import { getWorkspaceContext } from "@/lib/command-center/get-workspace";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { getLocale } from "@/lib/i18n";
 import { getOnboardingStep } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({
   children,
@@ -27,9 +27,13 @@ export default async function DashboardLayout({
   }
 
   const workspace = await getWorkspaceContext();
+  const cookieLocale = cookies().get("saloniq_ui_language")?.value;
+  const initialLocale = getLocale(
+    cookieLocale === "en" || cookieLocale === "hi" ? cookieLocale : undefined
+  );
 
   return (
-    <LanguageProvider locale={workspace.uiLanguage} key={workspace.uiLanguage}>
+    <LanguageProvider initialLocale={initialLocale}>
       <CommandCenterShell workspace={workspace} appRole={workspace.appRole}>
         {children}
       </CommandCenterShell>
