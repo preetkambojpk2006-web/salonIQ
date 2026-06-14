@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { InsightsCards } from "@/components/insights/insights-cards";
 import { HeatmapSkeleton } from "@/components/ui/page-skeletons";
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { HeatmapRow, InsightCard } from "@/lib/insights/queries";
 
 const InsightsHeatmap = dynamic(
@@ -25,13 +26,15 @@ export function InsightsView({
   heatmapRows,
   showHeatmap,
 }: InsightsViewProps) {
+  const { t } = useT();
+
   return (
     <div className="view-stack">
       <section className="panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AI business intelligence</p>
-            <h2>Simple insights, direct actions</h2>
+            <p className="eyebrow">{t("insights.eyebrow")}</p>
+            <h2>{t("insights.title")}</h2>
           </div>
         </div>
         <InsightsCards cards={cards} />
@@ -41,8 +44,8 @@ export function InsightsView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Busy hours</p>
-              <h2>Demand heatmap</h2>
+              <p className="eyebrow">{t("insights.busyHours")}</p>
+              <h2>{t("insights.heatmap")}</h2>
             </div>
           </div>
           <InsightsHeatmap rows={heatmapRows} />

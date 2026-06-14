@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 
 type InventorySpendSummaryProps = {
@@ -23,6 +26,7 @@ export function InventorySpendSummary({
   summary,
   brandSpend,
 }: InventorySpendSummaryProps) {
+  const { t } = useT();
   const hasPurchaseData =
     summary.month_purchase_total > 0 || brandSpend.length > 0;
 
@@ -43,7 +47,7 @@ export function InventorySpendSummary({
           color: TOKENS.textDark,
         }}
       >
-        Inventory Kharcha
+        {t("money.inventorySpend")}
       </p>
 
       <div
@@ -70,7 +74,7 @@ export function InventorySpendSummary({
               color: TOKENS.textMuted,
             }}
           >
-            Is Mahine Purchase
+            {t("inventory.monthPurchase")}
           </p>
           <p
             style={{
@@ -101,7 +105,7 @@ export function InventorySpendSummary({
               color: TOKENS.textMuted,
             }}
           >
-            Is Mahine Usage
+            {t("inventory.monthUsage")}
           </p>
           <p
             style={{
@@ -149,7 +153,7 @@ export function InventorySpendSummary({
                       color: TOKENS.textDark,
                     }}
                   >
-                    Brand
+                    {t("inventory.brand")}
                   </th>
                   <th
                     style={{
@@ -159,7 +163,7 @@ export function InventorySpendSummary({
                       color: TOKENS.textDark,
                     }}
                   >
-                    Total Spend (₹)
+                    {t("inventory.totalSpend")}
                   </th>
                 </tr>
               </thead>
@@ -202,7 +206,7 @@ export function InventorySpendSummary({
               fontWeight: 600,
             }}
           >
-            Is mahine koi inventory purchase nahi hua
+            {t("inventory.noPurchaseThisMonth")}
           </p>
         )}
       </div>

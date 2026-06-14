@@ -5,6 +5,7 @@ import { MessageActions } from "@/components/whatsapp/MessageActions";
 import { formatTime12hInSalon } from "@/lib/format/time";
 import { SALON_TIMEZONE } from "@/lib/payments/date-utils";
 import { delayNotification } from "@/lib/whatsapp/templates";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 export type DelayAffectedEntry = {
   id: string;
@@ -44,9 +45,10 @@ function DelayCustomerCard({
   entry: DelayAffectedEntry;
   salonName: string;
 }) {
+  const { t } = useT();
   const phone = entry.customer_phone?.trim() ?? "";
-  const customer = entry.customer_name ?? "Customer";
-  const service = entry.service_name ?? "Service";
+  const customer = entry.customer_name ?? t("appointment.customer");
+  const service = entry.service_name ?? t("appointment.service");
 
   const message = useMemo(
     () =>
@@ -90,7 +92,7 @@ function DelayCustomerCard({
         </div>
       ) : (
         <p className="payment-modal-meta" style={{ marginTop: 12 }}>
-          Phone nahi hai, manually batayein.
+          {t("whatsapp.noPhone")}
         </p>
       )}
     </div>
@@ -102,6 +104,7 @@ export function DelayWhatsAppModal({
   salonName,
   onClose,
 }: DelayWhatsAppModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -120,17 +123,15 @@ export function DelayWhatsAppModal({
       <div className="payment-modal-form">
         <div className="payment-modal-header">
           <div>
-            <p className="eyebrow">WhatsApp</p>
-            <h3>Customers ko batao — Time badal gaya</h3>
-            <p className="payment-modal-meta">
-              Har customer ko delay message copy ya WhatsApp se bhej sakte ho.
-            </p>
+            <p className="eyebrow">{t("whatsapp.delayEyebrow")}</p>
+            <h3>{t("whatsapp.delayTitle")}</h3>
+            <p className="payment-modal-meta">{t("whatsapp.delayIntro")}</p>
           </div>
           <button
             type="button"
             onClick={handleClose}
             className="payment-modal-close"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
@@ -144,7 +145,7 @@ export function DelayWhatsAppModal({
 
         <div className="payment-modal-actions">
           <button type="button" className="payment-btn-mint" onClick={handleClose}>
-            Done
+            {t("common.done")}
           </button>
         </div>
       </div>

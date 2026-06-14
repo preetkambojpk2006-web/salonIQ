@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 
 type LowStockAlertsProps = {
@@ -10,6 +13,8 @@ function formatQty(value: number): string {
 }
 
 export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
+  const { t } = useT();
+
   if (lowStockProducts.length === 0) {
     return null;
   }
@@ -41,7 +46,7 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
             color: "#1A1A1A",
           }}
         >
-          ⚠️ Kam Stock Alert
+          {t("inventory.lowStock")}
         </h2>
         <span
           style={{
@@ -92,7 +97,10 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
                   color: "#8A4B00",
                 }}
               >
-                {formatQty(product.current_quantity)} {product.unit_type} bacha hai
+                {t("inventory.unitsLeft", {
+                  qty: formatQty(product.current_quantity),
+                  unit: product.unit_type,
+                })}
               </p>
             </div>
             <span
@@ -104,7 +112,7 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
                 whiteSpace: "nowrap",
               }}
             >
-              ⚠️ Kam stock
+              {t("inventory.lowStockBadge")}
             </span>
           </div>
         ))}
@@ -121,7 +129,7 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
           textDecoration: "none",
         }}
       >
-        Inventory dekho →
+        {t("inventory.viewInventory")}
       </Link>
     </section>
   );

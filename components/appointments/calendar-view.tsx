@@ -31,6 +31,7 @@ import {
 import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
 import { calendarDayInTimezone, SALON_TIMEZONE } from "@/lib/payments/date-utils";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type CalendarViewProps = {
   appointments: Appointment[];
@@ -91,7 +92,10 @@ function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
-function formatDateHeading(iso: string): string {
+function formatDateHeading(
+  iso: string,
+  t: (key: string) => string
+): string {
   const date = new Date(iso);
   const today = new Date();
   const tomorrow = new Date(today);
@@ -102,8 +106,8 @@ function formatDateHeading(iso: string): string {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
-  if (sameDay(date, today)) return "Today";
-  if (sameDay(date, tomorrow)) return "Tomorrow";
+  if (sameDay(date, today)) return t("today.title");
+  if (sameDay(date, tomorrow)) return t("today.tomorrow");
 
   return date.toLocaleDateString("en-IN", {
     weekday: "long",
@@ -117,8 +121,11 @@ function dateKey(iso: string): string {
   return calendarDayInTimezone(iso, SALON_TIMEZONE);
 }
 
-function staffLabel(appointment: Appointment): string {
-  return appointment.staff_name?.trim() || "Unassigned";
+function staffLabel(
+  appointment: Appointment,
+  t: (key: string) => string
+): string {
+  return appointment.staff_name?.trim() || t("calendar.unassigned");
 }
 
 function safeDecodeError(error: string): string {
@@ -131,7 +138,7 @@ function safeDecodeError(error: string): string {
 
 function PendingSubmitButton({
   label,
-  pendingLabel = "Saving…",
+  pendingLabel,
   className,
   style,
 }: {
@@ -140,6 +147,7 @@ function PendingSubmitButton({
   className?: string;
   style?: React.CSSProperties;
 }) {
+  const { t } = useT();
   const { pending } = useFormStatus();
   return (
     <button
@@ -148,7 +156,7 @@ function PendingSubmitButton({
       style={style}
       disabled={pending}
     >
-      {pending ? pendingLabel : label}
+      {pending ? (pendingLabel ?? t("common.saving")) : label}
     </button>
   );
 }
@@ -158,6 +166,7 @@ function ReliabilityAlert({
 }: {
   reliability: CustomerReliability;
 }) {
+  const { t } = useT();
   if (reliability === "good") return null;
 
   const isWarning = reliability === "warning";
@@ -179,8 +188,8 @@ function ReliabilityAlert({
       }}
     >
       {isWarning
-        ? "⚠️ Yeh customer pehle no-show kar chuka hai. Confirm karein."
-        : "🚫 Yeh customer baar baar no-show karta hai. Booking lena carefully."}
+        ? t("appointment.reliabilityWarning")
+        : t("appointment.reliabilityBlacklist")}
     </div>
   );
 }
@@ -207,19 +216,20 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
 }
 
 function AppointmentSourceTag({ appointment }: { appointment: Appointment }) {
+  const { t } = useT();
   if (appointment.status !== "pending") return null;
 
   if (isOnlinePendingAppointment(appointment)) {
     return (
       <span className="tag orange" style={{ marginBottom: 6, display: "inline-flex" }}>
-        Online · Confirm karein
+        {t("calendar.onlineConfirm")}
       </span>
     );
   }
 
   return (
     <span className="tag orange" style={{ marginBottom: 6, display: "inline-flex" }}>
-      Pending
+      {t("status.pending")}
     </span>
   );
 }
@@ -239,13 +249,16 @@ function AppointmentActions({
   canManageFinance?: boolean;
   compact?: boolean;
 }) {
+  const { t } = useT();
   const btnClass = compact ? "" : "";
 
   if (appointment.status === "completed") {
     return (
       <div style={{ display: "grid", gap: 6 }}>
         <p className="text-xs font-medium text-muted">
-          {appointment.payment_status === "paid" ? "Paid" : "Payment pending"}
+          {appointment.payment_status === "paid"
+            ? t("common.paid")
+            : t("status.pending")}
         </p>
         <WhatsAppCopyButtons
           appointment={appointment}
@@ -270,14 +283,14 @@ function AppointmentActions({
           <form action={confirmAppointment}>
             <input type="hidden" name="appointment_id" value={appointment.id} />
             <PendingSubmitButton
-              label="Confirm"
+              label={t("common.confirm")}
               className={`primary-button ${btnClass}`}
             />
           </form>
           <form action={rejectAppointment}>
             <input type="hidden" name="appointment_id" value={appointment.id} />
             <PendingSubmitButton
-              label="Reject"
+              label={t("common.reject")}
               className={`demo-button ${btnClass}`}
               style={{ minHeight: compact ? 32 : 40 }}
             />
@@ -291,7 +304,7 @@ function AppointmentActions({
           className={`primary-button ${btnClass}`}
           onClick={onCompletePay}
         >
-          Complete + Pay
+          {t("calendar.completePay")}
         </button>
       ) : null}
 
@@ -299,7 +312,7 @@ function AppointmentActions({
         <form action={markNoShow}>
           <input type="hidden" name="appointment_id" value={appointment.id} />
           <PendingSubmitButton
-            label="No show"
+            label={t("status.noShow")}
             className="demo-button"
             style={{ minHeight: compact ? 32 : 40 }}
           />
@@ -344,6 +357,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
   compact?: boolean;
   gridOptions?: GridBlockOptions;
 }) {
+  const { t } = useT();
   if (compact) {
     return (
       <div style={{ display: "grid", gap: 8, height: "100%" }}>
@@ -415,7 +429,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
         <strong style={{ display: "block" }}>{blockTitle(appointment)}</strong>
-        <p style={{ margin: "4px 0 0" }}>{staffLabel(appointment)}</p>
+        <p style={{ margin: "4px 0 0" }}>{staffLabel(appointment, t)}</p>
         {appointment.total_amount > 0 ? (
           <p style={{ margin: "4px 0 0" }}>{formatRs(appointment.total_amount)}</p>
         ) : null}
@@ -445,6 +459,7 @@ export function CalendarView({
   addedAppointmentId,
   showPaymentToast = false,
 }: CalendarViewProps) {
+  const { t } = useT();
   const router = useRouter();
   const [showForm, setShowForm] = useState(openBooking);
   const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(
@@ -659,8 +674,8 @@ export function CalendarView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Smart appointment system</p>
-              <h2>Daily staff calendar</h2>
+              <p className="eyebrow">{t("calendar.eyebrow")}</p>
+              <h2>{t("calendar.title")}</h2>
             </div>
             <div className="topbar-actions">
               {onlinePendingCount > 0 ? (
@@ -670,7 +685,9 @@ export function CalendarView({
                   onClick={() => setOnlinePendingOnly((value) => !value)}
                   style={{ minHeight: 40 }}
                 >
-                  Online pending ({onlinePendingCount})
+                  {t("calendar.onlinePending", {
+                    count: String(onlinePendingCount),
+                  })}
                 </button>
               ) : null}
               <div className="segmented">
@@ -686,7 +703,7 @@ export function CalendarView({
                 ))}
               </div>
               <button type="button" className="primary-button" onClick={openNewBooking}>
-                New booking
+                {t("today.newBooking")}
               </button>
             </div>
           </div>
@@ -700,14 +717,14 @@ export function CalendarView({
           {mergedAppointments.length === 0 && onlinePendingCount === 0 ? (
             <EmptyState
               icon="calendar"
-              title="Aaj koi booking nahi"
-              description="Nayi booking banayein? Sirf ek minute lagega."
-              actionLabel="Nayi booking"
+              title={t("calendar.emptyTitle")}
+              description={t("calendar.emptyDescription")}
+              actionLabel={t("calendar.newBooking")}
               onAction={openNewBooking}
             />
           ) : visibleAppointments.length === 0 ? (
             <p className="text-body" style={{ color: "var(--muted)" }}>
-              Koi online pending booking nahi. Filter hata kar saari bookings dekhein.
+              {t("calendar.noOnlinePending")}
             </p>
           ) : (
             <div className="view-stack">
@@ -718,7 +735,7 @@ export function CalendarView({
               {grouped.map(([key, dayAppointments]) => (
                 <div key={key}>
                   <p className="eyebrow" style={{ marginBottom: 12 }}>
-                    {formatDateHeading(dayAppointments[0].start_time)}
+                    {formatDateHeading(dayAppointments[0].start_time, t)}
                   </p>
                   <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
                     {dayAppointments.map((appointment) => (
@@ -828,12 +845,12 @@ export function CalendarView({
       ) : null}
 
       <Toast
-        message="Booking saved"
+        message={t("calendar.bookingSaved")}
         show={bookingToast}
         onDismiss={() => setBookingToast(false)}
       />
       <Toast
-        message="Payment saved! ✅"
+        message={t("calendar.paymentSaved")}
         show={paymentToast}
         onDismiss={() => setPaymentToast(false)}
       />
@@ -845,7 +862,7 @@ export function CalendarView({
         onDismiss={() => setPaymentErrorToast(null)}
       />
       <Toast
-        message="Copied!"
+        message={t("calendar.copied")}
         show={copyToast}
         onDismiss={() => setCopyToast(false)}
       />
@@ -857,7 +874,7 @@ export function CalendarView({
         onDismiss={() => setBookingErrorToast(null)}
       />
       <Toast
-        message="Time update ho gaya! ✅"
+        message={t("calendar.timeUpdated")}
         show={timeChangeToast}
         onDismiss={() => setTimeChangeToast(false)}
       />

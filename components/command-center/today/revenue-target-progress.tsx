@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type RevenueTargetProgressProps = {
   revenueToday: number;
@@ -13,6 +16,8 @@ export function RevenueTargetProgress({
   revenueToday,
   dailyTarget,
 }: RevenueTargetProgressProps) {
+  const { t } = useT();
+
   if (dailyTarget === null || dailyTarget <= 0) {
     return (
       <div
@@ -30,12 +35,12 @@ export function RevenueTargetProgress({
             lineHeight: 1.5,
           }}
         >
-          Revenue target set karein — progress yahan dikhega.{" "}
+          {t("today.revenueTargetPrompt")}{" "}
           <Link
             href="/dashboard/settings"
             style={{ color: "#1FA873", fontWeight: 700, textDecoration: "none" }}
           >
-            Settings kholo
+            {t("today.openSettings")}
           </Link>
         </p>
       </div>
@@ -48,6 +53,8 @@ export function RevenueTargetProgress({
   );
   const remaining = Math.max(0, dailyTarget - revenueToday);
   const targetMet = revenueToday >= dailyTarget;
+  const revenueLabel = formatRs(revenueToday);
+  const targetLabel = formatRs(dailyTarget);
 
   return (
     <div
@@ -65,7 +72,7 @@ export function RevenueTargetProgress({
           color: "#8A8A8A",
         }}
       >
-        Aaj ka revenue target
+        {t("today.dailyRevenueTarget")}
       </p>
 
       <div
@@ -101,16 +108,17 @@ export function RevenueTargetProgress({
           lineHeight: 1.45,
         }}
       >
-        {targetMet ? (
-          <>
-            {formatRs(revenueToday)} / {formatRs(dailyTarget)} — Target poora! 🎉
-          </>
-        ) : (
-          <>
-            {formatRs(revenueToday)} / {formatRs(dailyTarget)} — {percent}% done.
-            Aur {formatRs(remaining)} baaki!
-          </>
-        )}
+        {targetMet
+          ? t("today.targetProgressDone", {
+              revenue: revenueLabel,
+              target: targetLabel,
+            })
+          : t("today.targetProgressPartial", {
+              revenue: revenueLabel,
+              target: targetLabel,
+              percent: String(percent),
+              remaining: formatRs(remaining),
+            })}
       </p>
     </div>
   );

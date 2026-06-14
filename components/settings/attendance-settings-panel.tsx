@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toast } from "@/components/ui/toast";
 import { updateAttendanceSettings } from "@/lib/settings/actions";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type AttendanceSettingsPanelProps = {
   initialLateFineAmount?: string;
@@ -12,6 +13,7 @@ type AttendanceSettingsPanelProps = {
 export function AttendanceSettingsPanel({
   initialLateFineAmount = "100",
 }: AttendanceSettingsPanelProps) {
+  const { t } = useT();
   const router = useRouter();
   const [lateFineAmount, setLateFineAmount] = useState(initialLateFineAmount);
   const [saving, setSaving] = useState(false);
@@ -44,7 +46,7 @@ export function AttendanceSettingsPanel({
 
     setToast({
       show: true,
-      message: "Late fine amount save ho gaya ✓",
+      message: t("settings.lateFineSaved"),
       variant: "success",
     });
     router.refresh();
@@ -55,18 +57,18 @@ export function AttendanceSettingsPanel({
       <section className="panel" id="attendance-settings-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Staff attendance</p>
-            <h2>Late fine</h2>
+            <p className="eyebrow">{t("attendance.title")}</p>
+            <h2>{t("settings.lateFine")}</h2>
           </div>
         </div>
 
         <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
           <div>
             <label htmlFor="late-fine-amount" className="field-label">
-              Late Fine Amount (₹)
+              {t("settings.lateFineLabel")}
             </label>
             <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
-              Jab staff ko Late mark karenge tab yeh amount staff_fines mein add hoga.
+              {t("settings.lateFineHelp")}
             </p>
             <input
               id="late-fine-amount"
@@ -92,7 +94,7 @@ export function AttendanceSettingsPanel({
             className="primary-button"
             style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
           >
-            {saving ? "Saving…" : "Save late fine"}
+            {saving ? t("common.saving") : t("settings.saveLateFine")}
           </button>
         </div>
       </section>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Toast } from "@/components/ui/toast";
 import type { RewardType } from "@/lib/customers/loyalty-types";
 import { updateLoyaltySettings } from "@/lib/settings/actions";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type LoyaltySettingsPanelProps = {
   initialRewardEnabled?: boolean;
@@ -19,6 +20,7 @@ export function LoyaltySettingsPanel({
   initialRewardThreshold = "10",
   initialRewardDescription = "",
 }: LoyaltySettingsPanelProps) {
+  const { t } = useT();
   const router = useRouter();
   const [rewardEnabled, setRewardEnabled] = useState(initialRewardEnabled);
   const [rewardType, setRewardType] = useState<RewardType>(initialRewardType);
@@ -67,7 +69,7 @@ export function LoyaltySettingsPanel({
 
     setToast({
       show: true,
-      message: "Loyalty settings save ho gayi ✓",
+      message: t("settings.loyaltySaved"),
       variant: "success",
     });
     router.refresh();
@@ -78,14 +80,13 @@ export function LoyaltySettingsPanel({
       <section className="panel" id="loyalty-settings-panel">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Customer loyalty</p>
-          <h2>Repeat customers ko reward</h2>
+          <p className="eyebrow">{t("settings.loyaltyEyebrow")}</p>
+          <h2>{t("settings.loyaltyTitle")}</h2>
         </div>
       </div>
 
       <p className="text-body" style={{ margin: "0 0 16px", fontSize: 14 }}>
-        Regular customers ko visit ya spend ke hisaab se reward do — progress
-        customer card par dikhega aur WhatsApp se bhi bhej sakte ho.
+        {t("settings.loyaltyIntro")}
       </p>
 
       <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
@@ -104,7 +105,7 @@ export function LoyaltySettingsPanel({
             style={{ width: 18, height: 18, accentColor: "#1FA873" }}
           />
           <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>
-            Loyalty reward on karein
+            {t("settings.loyaltyEnable")}
           </span>
         </label>
 
@@ -120,7 +121,7 @@ export function LoyaltySettingsPanel({
           disabled={!rewardEnabled}
         >
           <legend className="field-label" style={{ marginBottom: 4 }}>
-            Reward kaise milega?
+            {t("settings.loyaltyHow")}
           </legend>
           <label
             style={{
@@ -138,7 +139,7 @@ export function LoyaltySettingsPanel({
               checked={rewardType === "visits"}
               onChange={() => setRewardType("visits")}
             />
-            Kitni visits ke baad (e.g. har 10 visits par)
+            {t("settings.loyaltyVisits")}
           </label>
           <label
             style={{
@@ -156,15 +157,15 @@ export function LoyaltySettingsPanel({
               checked={rewardType === "spend"}
               onChange={() => setRewardType("spend")}
             />
-            Kitna kharch (₹) ke baad (e.g. ₹5000 spend par)
+            {t("settings.loyaltySpend")}
           </label>
         </fieldset>
 
         <div style={{ opacity: rewardEnabled ? 1 : 0.55 }}>
           <label htmlFor="reward-threshold" className="field-label">
             {rewardType === "visits"
-              ? "Kitni visits par reward?"
-              : "Kitne ₹ kharch par reward?"}
+              ? t("settings.loyaltyVisitsThreshold")
+              : t("settings.loyaltySpendThreshold")}
           </label>
           <input
             id="reward-threshold"
@@ -182,10 +183,10 @@ export function LoyaltySettingsPanel({
 
         <div style={{ opacity: rewardEnabled ? 1 : 0.55 }}>
           <label htmlFor="reward-description" className="field-label">
-            Customer ko kya milega?
+            {t("settings.loyaltyRewardLabel")}
           </label>
           <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
-            Yeh customer card aur WhatsApp message mein dikhega.
+            {t("settings.loyaltyRewardHelp")}
           </p>
           <input
             id="reward-description"
@@ -212,7 +213,7 @@ export function LoyaltySettingsPanel({
           className="primary-button"
           style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
         >
-          {savingLoyalty ? "Saving…" : "Loyalty settings save karein"}
+          {savingLoyalty ? t("common.saving") : t("settings.saveLoyalty")}
         </button>
       </div>
       </section>

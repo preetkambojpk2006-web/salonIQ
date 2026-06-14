@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from "react";
 import { GettingStartedPanel } from "@/components/command-center/today/getting-started-panel";
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
@@ -20,6 +22,7 @@ import { OnlinePendingRequests } from "@/components/appointments/online-pending-
 import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
@@ -48,6 +51,7 @@ export function TodayView({
   dailyRevenueTarget = null,
   lowStockProducts = [],
 }: TodayViewProps) {
+  const { t } = useT();
   const showOwnerInsights = canManageFinance(appRole);
   const isNewSalon =
     metrics.revenueToday === 0 &&
@@ -93,7 +97,7 @@ export function TodayView({
                 fontSize: 14,
               }}
             >
-              Walk-in queue load ho rahi hai…
+              {t("today.queueLoading")}
             </section>
           }
         >

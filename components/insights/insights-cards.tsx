@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { InsightCard } from "@/lib/insights/queries";
 
 type InsightsCardsProps = {
@@ -5,11 +8,12 @@ type InsightsCardsProps = {
 };
 
 export function InsightsCards({ cards }: InsightsCardsProps) {
+  const { t } = useT();
+
   if (cards.length === 0) {
     return (
       <p className="text-body" style={{ color: "var(--muted)" }}>
-        Abhi koi actionable insight nahi — bookings aur payments ke baad yahan
-        suggestions dikhengi.
+        {t("insights.empty")}
       </p>
     );
   }
@@ -18,7 +22,7 @@ export function InsightsCards({ cards }: InsightsCardsProps) {
     <div className="insights-board stagger-list">
       {cards.map((insight) => (
         <article key={insight.id} className="insight-card-ref">
-          <span className="tag green">AI suggestion</span>
+          <span className="tag green">{t("insights.aiSuggestion")}</span>
           <h3 style={{ marginTop: 12, fontSize: 17, fontWeight: 800 }}>
             {insight.title}
           </h3>

@@ -1,32 +1,39 @@
+"use client";
+
 import type { UpcomingAppointment } from "@/lib/dashboard/today-queries";
+import { useT } from "@/lib/i18n/LanguageContext";
 import Link from "next/link";
 
 type NextAppointmentsProps = {
   appointments: UpcomingAppointment[];
 };
 
-function statusTag(apt: UpcomingAppointment) {
+function StatusTag({ apt }: { apt: UpcomingAppointment }) {
+  const { t } = useT();
+
   if (apt.payment_status === "paid") {
-    return <span className="tag green">Paid via GPay</span>;
+    return <span className="tag green">{t("today.paidViaGpay")}</span>;
   }
   if (apt.status === "pending" || apt.payment_status === "unpaid") {
-    return <span className="tag orange">Payment pending</span>;
+    return <span className="tag orange">{t("status.pending")}</span>;
   }
-  return <span className="tag orange">Confirmed</span>;
+  return <span className="tag orange">{t("status.confirmed")}</span>;
 }
 
 export function NextAppointments({ appointments }: NextAppointmentsProps) {
+  const { t } = useT();
+
   return (
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Live schedule</p>
-          <h2>Next appointments</h2>
+          <p className="eyebrow">{t("today.liveSchedule")}</p>
+          <h2>{t("today.nextAppointments")}</h2>
         </div>
         <Link
           href="/dashboard/calendar?booking=new"
-          title="Add appointment"
-          aria-label="Add appointment"
+          title={t("today.newBooking")}
+          aria-label={t("today.newBooking")}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -52,7 +59,7 @@ export function NextAppointments({ appointments }: NextAppointmentsProps) {
       </div>
 
       {appointments.length === 0 ? (
-        <p className="text-body">Aage koi booking nahi. Calendar se nayi booking add karein.</p>
+        <p className="text-body">{t("today.noAppointments")}</p>
       ) : (
         <div className="appointment-list stagger-list">
           {appointments.map((apt) => (
@@ -64,7 +71,7 @@ export function NextAppointments({ appointments }: NextAppointmentsProps) {
                   {apt.service} · {apt.staff}
                 </p>
               </div>
-              {statusTag(apt)}
+              <StatusTag apt={apt} />
             </article>
           ))}
         </div>

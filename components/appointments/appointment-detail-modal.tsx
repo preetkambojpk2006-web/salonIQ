@@ -5,6 +5,7 @@ import { VibeCard } from "@/components/appointments/vibe-card";
 import type { Appointment } from "@/lib/appointments/types";
 import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type AppointmentDetailModalProps = {
   appointment: Appointment;
@@ -24,6 +25,7 @@ function ReliabilityAlert({
 }: {
   reliability: CustomerReliability;
 }) {
+  const { t } = useT();
   if (reliability === "good") return null;
 
   const isWarning = reliability === "warning";
@@ -45,8 +47,8 @@ function ReliabilityAlert({
       }}
     >
       {isWarning
-        ? "⚠️ Yeh customer pehle no-show kar chuka hai. Confirm karein."
-        : "🚫 Yeh customer baar baar no-show karta hai. Booking lena carefully."}
+        ? t("appointment.reliabilityWarning")
+        : t("appointment.reliabilityBlacklist")}
     </div>
   );
 }
@@ -59,6 +61,7 @@ export function AppointmentDetailModal({
   onEditTime,
   actions,
 }: AppointmentDetailModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -72,15 +75,15 @@ export function AppointmentDetailModal({
     onClose();
   }, [onClose]);
 
-  const customer = appointment.customer_name ?? "Walk-in";
-  const service = appointment.service_name ?? "Service";
+  const customer = appointment.customer_name ?? t("appointment.walkIn");
+  const service = appointment.service_name ?? t("appointment.service");
 
   return (
     <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
       <div className="payment-modal-form">
         <div className="payment-modal-header">
           <div>
-            <p className="eyebrow">Booking detail</p>
+            <p className="eyebrow">{t("appointment.bookingDetail")}</p>
             <h3>
               {customer} · {service}
             </h3>
@@ -99,7 +102,7 @@ export function AppointmentDetailModal({
             type="button"
             onClick={handleClose}
             className="payment-modal-close"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
@@ -121,7 +124,7 @@ export function AppointmentDetailModal({
             style={{ width: "100%", minHeight: 40, marginTop: 4 }}
             onClick={onEditTime}
           >
-            Time badlo ✏️
+            {t("appointment.editTime")}
           </button>
         ) : null}
 

@@ -6,6 +6,7 @@ import type { CascadePreview } from "@/lib/appointments/cascade";
 import { applyAppointmentTimeCascade } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
 import { formatTime12hInSalon } from "@/lib/format/time";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type CascadePreviewModalProps = {
   preview: CascadePreview;
@@ -63,6 +64,7 @@ export function CascadePreviewModal({
   onConfirm,
   onConfirmed,
 }: CascadePreviewModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [loading, setLoading] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export function CascadePreviewModal({
 
       onConfirmed(result.preview);
     } catch {
-      setErrorToast("Time change save nahi ho paya. Dobara try karein.");
+      setErrorToast(t("cascade.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -109,10 +111,11 @@ export function CascadePreviewModal({
     onConfirm,
     onConfirmed,
     preview.has_hard_error,
+    t,
   ]);
 
-  const anchorCustomer = preview.anchor.customer_name ?? "Walk-in";
-  const anchorService = preview.anchor.service_name ?? "Service";
+  const anchorCustomer = preview.anchor.customer_name ?? t("appointment.walkIn");
+  const anchorService = preview.anchor.service_name ?? t("appointment.service");
 
   return (
     <>
@@ -120,15 +123,15 @@ export function CascadePreviewModal({
         <div className="payment-modal-form">
           <div className="payment-modal-header">
             <div>
-              <p className="eyebrow">Cascade preview</p>
-              <h3>Time badlav ka preview</h3>
+              <p className="eyebrow">{t("cascade.eyebrow")}</p>
+              <h3>{t("cascade.title")}</h3>
               <p className="payment-modal-meta">{businessName}</p>
             </div>
             <button
               type="button"
               onClick={handleClose}
               className="payment-modal-close"
-              aria-label="Close"
+              aria-label={t("common.close")}
               disabled={loading}
             >
               ✕
@@ -145,7 +148,7 @@ export function CascadePreviewModal({
               }}
             >
               <p className="field-label" style={{ marginBottom: 8 }}>
-                Anchor appointment
+                {t("cascade.anchor")}
               </p>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                 <tbody>
@@ -164,7 +167,7 @@ export function CascadePreviewModal({
             {preview.shifted.length > 0 ? (
               <div>
                 <p className="field-label" style={{ marginBottom: 8 }}>
-                  Ye appointments bhi shift hongi:
+                  {t("cascade.willShift")}
                 </p>
                 <div
                   style={{
@@ -180,8 +183,8 @@ export function CascadePreviewModal({
                       {preview.shifted.map((row) => (
                         <ShiftTableRow
                           key={row.id}
-                          customer={row.customer_name ?? "Walk-in"}
-                          service={row.service_name ?? "Service"}
+                          customer={row.customer_name ?? t("appointment.walkIn")}
+                          service={row.service_name ?? t("appointment.service")}
                           oldStart={row.old_start}
                           oldEnd={row.old_end}
                           newStart={row.new_start}
@@ -194,7 +197,7 @@ export function CascadePreviewModal({
               </div>
             ) : (
               <p className="text-body" style={{ color: "var(--muted)" }}>
-                Koi aur appointment shift nahi hogi.
+                {t("cascade.noShift")}
               </p>
             )}
 
@@ -235,7 +238,7 @@ export function CascadePreviewModal({
                   lineHeight: 1.4,
                 }}
               >
-                🚫 Overlap ya limit ki wajah se apply block hai. Time adjust karein.
+                {t("cascade.blocked")}
               </div>
             ) : null}
           </div>
@@ -247,7 +250,7 @@ export function CascadePreviewModal({
               onClick={handleClose}
               disabled={loading}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -255,7 +258,7 @@ export function CascadePreviewModal({
               onClick={() => void handleApply()}
               disabled={loading || preview.has_hard_error}
             >
-              {loading ? "Save ho raha hai…" : "Confirm & Apply"}
+              {loading ? t("cascade.saving") : t("cascade.confirmApply")}
             </button>
           </div>
         </div>

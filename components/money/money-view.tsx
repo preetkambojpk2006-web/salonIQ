@@ -1,7 +1,10 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
 import { InventorySpendSummary } from "@/components/money/InventorySpendSummary";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
 
@@ -11,13 +14,6 @@ function formatRs(amount: number): string {
 
 function formatInr(amount: number): string {
   return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
-
-function pendingPaymentContext(amount: number, count: number): string {
-  if (count === 0) {
-    return "Aaj ka saara hisaab clear hai!";
-  }
-  return `${formatInr(amount)} collect karna baaki hai`;
 }
 
 type MoneyViewProps = {
@@ -37,46 +33,53 @@ export function MoneyView({
   brandSpend = [],
   staffPanels,
 }: MoneyViewProps) {
+  const { t } = useT();
+
+  const pendingPaymentContext =
+    stats.pendingCount === 0
+      ? t("money.pendingClear")
+      : t("money.pendingCollect", { amount: formatInr(stats.pendingAmount) });
+
   const summaryCards = [
     {
       key: "today",
       className: "metric-card success",
-      label: "Today's revenue",
+      label: t("money.todayRevenue"),
       value: formatRs(stats.revenueToday),
-      context: "Aaj ki paid collections",
+      context: t("money.todayRevenueContext"),
     },
     {
       key: "week",
       className: "metric-card",
-      label: "This week",
+      label: t("money.thisWeek"),
       value: formatRs(stats.revenueWeek),
-      context: "Monday se aaj tak",
+      context: t("money.weekContext"),
     },
     {
       key: "pending",
       className: "metric-card warning",
-      label: "Pending payments",
+      label: t("money.pendingPayments"),
       value: formatRs(stats.pendingAmount),
-      context: pendingPaymentContext(stats.pendingAmount, stats.pendingCount),
+      context: pendingPaymentContext,
     },
     {
       key: "profit",
       className: "metric-card",
-      label: "Net profit (week)",
+      label: t("money.netProfitWeek"),
       value: formatRs(stats.netProfit),
-      context: "Expenses tracking jald aayega",
+      context: t("money.expensesComingSoon"),
     },
   ];
 
   const incomeBars = [
-    { label: "Services", value: stats.revenueWeek * 0.82 },
-    { label: "Products", value: stats.revenueWeek * 0.18 },
+    { label: t("money.services"), value: stats.revenueWeek * 0.82 },
+    { label: t("money.products"), value: stats.revenueWeek * 0.18 },
   ];
 
   const expenseBars = [
-    { label: "Salaries", value: 0 },
-    { label: "Rent", value: 0 },
-    { label: "Products", value: 0 },
+    { label: t("money.salaries"), value: 0 },
+    { label: t("money.rent"), value: 0 },
+    { label: t("money.products"), value: 0 },
   ];
 
   const maxIncome = Math.max(...incomeBars.map((b) => b.value), 1);
@@ -92,9 +95,9 @@ export function MoneyView({
         <section className="panel">
           <EmptyState
             icon="money"
-            title="Abhi koi payment record nahi hai"
-            description="Calendar se booking complete karein aur Cash ya UPI select karein — revenue yahan auto dikhegi."
-            actionLabel="Pehli booking add karein"
+            title={t("money.emptyTitle")}
+            description={t("money.emptyDescription")}
+            actionLabel={t("money.emptyAction")}
             actionHref="/dashboard/calendar?booking=new"
           />
         </section>
@@ -124,8 +127,8 @@ export function MoneyView({
       <section className="panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Real-time P&L</p>
-            <h2>Income and expenses</h2>
+            <p className="eyebrow">{t("money.plTitle")}</p>
+            <h2>{t("money.incomeExpenses")}</h2>
           </div>
         </div>
         <div className="finance-layout">
@@ -159,7 +162,6 @@ export function MoneyView({
           </div>
         </div>
       </section>
-
     </div>
   );
 }

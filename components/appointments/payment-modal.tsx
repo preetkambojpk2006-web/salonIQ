@@ -6,6 +6,7 @@ import type { Appointment } from "@/lib/appointments/types";
 import { VibeCard } from "@/components/appointments/vibe-card";
 import type { CustomerReliability } from "@/lib/customers/types";
 import type { PaymentMethod } from "@/lib/payments/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type PaymentModalProps = {
   appointment: Appointment;
@@ -23,6 +24,7 @@ function ReliabilityAlert({
 }: {
   reliability: CustomerReliability;
 }) {
+  const { t } = useT();
   if (reliability === "good") return null;
 
   const isWarning = reliability === "warning";
@@ -44,8 +46,8 @@ function ReliabilityAlert({
       }}
     >
       {isWarning
-        ? "⚠️ Yeh customer pehle no-show kar chuka hai. Confirm karein."
-        : "🚫 Yeh customer baar baar no-show karta hai. Booking lena carefully."}
+        ? t("appointment.reliabilityWarning")
+        : t("appointment.reliabilityBlacklist")}
     </div>
   );
 }
@@ -56,6 +58,7 @@ export function PaymentModal({
   onSuccess,
   onError,
 }: PaymentModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -90,7 +93,7 @@ export function PaymentModal({
       onClose();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not save payment.";
+        err instanceof Error ? err.message : t("payment.saveError");
       onError(message);
     } finally {
       setIsSaving(false);
@@ -98,7 +101,7 @@ export function PaymentModal({
   };
 
   const amount = appointment.total_amount > 0 ? appointment.total_amount : 0;
-  const customer = appointment.customer_name ?? "Customer";
+  const customer = appointment.customer_name ?? t("appointment.customer");
 
   return (
     <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
@@ -112,8 +115,8 @@ export function PaymentModal({
 
         <div className="payment-modal-header">
           <div>
-            <p className="eyebrow">Payment</p>
-            <h3>Complete & collect</h3>
+            <p className="eyebrow">{t("payment.title")}</p>
+            <h3>{t("payment.completeCollect")}</h3>
             <p className="payment-modal-meta">
               {customer}
               {appointment.service_name ? ` · ${appointment.service_name}` : ""}
@@ -124,7 +127,7 @@ export function PaymentModal({
             type="button"
             onClick={handleClose}
             className="payment-modal-close"
-            aria-label="Close"
+            aria-label={t("common.close")}
             disabled={isSaving}
           >
             ✕
@@ -138,7 +141,7 @@ export function PaymentModal({
             disabled={isSaving}
             onClick={() => handlePay("cash")}
           >
-            {isSaving ? "Saving…" : "Cash ✓"}
+            {isSaving ? t("common.saving") : t("payment.cash")}
           </button>
           <button
             type="button"
@@ -146,7 +149,7 @@ export function PaymentModal({
             disabled={isSaving}
             onClick={() => handlePay("upi")}
           >
-            {isSaving ? "Saving…" : "UPI ✓"}
+            {isSaving ? t("common.saving") : t("payment.upi")}
           </button>
           <button
             type="button"
@@ -154,7 +157,7 @@ export function PaymentModal({
             disabled={isSaving}
             onClick={() => handlePay("pending")}
           >
-            {isSaving ? "Saving…" : "Mark Pending"}
+            {isSaving ? t("common.saving") : t("payment.markPending")}
           </button>
         </div>
       </div>

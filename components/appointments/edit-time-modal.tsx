@@ -10,6 +10,7 @@ import {
   calendarDayInTimezone,
   SALON_TIMEZONE,
 } from "@/lib/payments/date-utils";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type EditTimeModalProps = {
   appointment: Appointment;
@@ -68,6 +69,7 @@ export function EditTimeModal({
   onClose,
   onPreview,
 }: EditTimeModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const istDay = useMemo(
     () => calendarDayInTimezone(appointment.start_time, SALON_TIMEZONE),
@@ -116,17 +118,17 @@ export function EditTimeModal({
 
   const handleSubmit = useCallback(async () => {
     if (!startTime.trim()) {
-      setErrorToast("Start time zaroori hai.");
+      setErrorToast(t("editTime.errorStartRequired"));
       return;
     }
 
     if (timeMode === "end" && !endTime.trim()) {
-      setErrorToast("End time zaroori hai.");
+      setErrorToast(t("editTime.errorEndRequired"));
       return;
     }
 
     if (timeMode === "duration" && (!durationMins || durationMins < 15)) {
-      setErrorToast("Duration kam se kam 15 minute honi chahiye.");
+      setErrorToast(t("editTime.errorDurationMin"));
       return;
     }
 
@@ -134,12 +136,12 @@ export function EditTimeModal({
     const newEnd = resolveEndInstant(newStart);
 
     if (Number.isNaN(newStart.getTime()) || Number.isNaN(newEnd.getTime())) {
-      setErrorToast("Valid time daalein.");
+      setErrorToast(t("editTime.errorInvalidTime"));
       return;
     }
 
     if (newEnd.getTime() <= newStart.getTime()) {
-      setErrorToast("End time start time se baad hona chahiye.");
+      setErrorToast(t("editTime.errorEndAfterStart"));
       return;
     }
 
@@ -158,7 +160,7 @@ export function EditTimeModal({
 
       onPreview(result.preview, newStart, newEnd);
     } catch {
-      setErrorToast("Preview load nahi ho paya. Dobara try karein.");
+      setErrorToast(t("editTime.errorPreviewFailed"));
     } finally {
       setLoading(false);
     }
@@ -171,10 +173,11 @@ export function EditTimeModal({
     resolveEndInstant,
     startTime,
     timeMode,
+    t,
   ]);
 
-  const customer = appointment.customer_name ?? "Walk-in";
-  const service = appointment.service_name ?? "Service";
+  const customer = appointment.customer_name ?? t("appointment.walkIn");
+  const service = appointment.service_name ?? t("appointment.service");
 
   return (
     <>
@@ -182,8 +185,8 @@ export function EditTimeModal({
         <div className="payment-modal-form">
           <div className="payment-modal-header">
             <div>
-              <p className="eyebrow">Time edit</p>
-              <h3>Time badlo ✏️</h3>
+              <p className="eyebrow">{t("editTime.eyebrow")}</p>
+              <h3>{t("editTime.title")}</h3>
               <p className="payment-modal-meta">
                 {customer} · {service}
                 {businessName ? ` · ${businessName}` : ""}
@@ -193,7 +196,7 @@ export function EditTimeModal({
               type="button"
               onClick={handleClose}
               className="payment-modal-close"
-              aria-label="Close"
+              aria-label={t("common.close")}
             >
               ✕
             </button>
@@ -201,7 +204,7 @@ export function EditTimeModal({
 
           <div style={{ display: "grid", gap: 16, marginTop: 8 }}>
             <div>
-              <p className="field-label">Date (locked)</p>
+              <p className="field-label">{t("editTime.dateLocked")}</p>
               <p
                 style={{
                   margin: "6px 0 0",
@@ -217,13 +220,13 @@ export function EditTimeModal({
                 {formatIstDateLabel(appointment.start_time)}
               </p>
               <p className="text-xs text-muted" style={{ marginTop: 6 }}>
-                Abhi sirf usi din ke andar time badal sakte ho.
+                {t("editTime.sameDayNote")}
               </p>
             </div>
 
             <div>
               <label htmlFor="edit-start-time" className="field-label">
-                Start time <span className="text-coral">*</span>
+                {t("editTime.startTime")} <span className="text-coral">*</span>
               </label>
               <input
                 id="edit-start-time"
@@ -247,7 +250,9 @@ export function EditTimeModal({
                 }}
               >
                 <p className="field-label" style={{ margin: 0 }}>
-                  {timeMode === "end" ? "End time" : "Duration (minutes)"}{" "}
+                  {timeMode === "end"
+                    ? t("editTime.endTime")
+                    : t("editTime.durationMinutes")}{" "}
                   <span className="text-coral">*</span>
                 </p>
                 <button
@@ -259,7 +264,9 @@ export function EditTimeModal({
                   }
                   disabled={loading}
                 >
-                  {timeMode === "end" ? "Duration mode" : "End time mode"}
+                  {timeMode === "end"
+                    ? t("editTime.durationMode")
+                    : t("editTime.endTimeMode")}
                 </button>
               </div>
 
@@ -298,7 +305,7 @@ export function EditTimeModal({
               onClick={handleClose}
               disabled={loading}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -306,7 +313,7 @@ export function EditTimeModal({
               onClick={() => void handleSubmit()}
               disabled={loading}
             >
-              {loading ? "Preview load ho raha hai…" : "Preview dekho"}
+              {loading ? t("editTime.previewLoading") : t("editTime.preview")}
             </button>
           </div>
         </div>

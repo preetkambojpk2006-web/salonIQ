@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer } from "@/lib/customers/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type CustomersViewProps = {
   initialCustomers: Customer[];
@@ -34,6 +35,7 @@ export function CustomersView({
   rewardConfig,
   salonName,
 }: CustomersViewProps) {
+  const { t } = useT();
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -91,23 +93,23 @@ export function CustomersView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Customer CRM</p>
-              <h2>Customer memory</h2>
+              <p className="eyebrow">{t("customers.eyebrow")}</p>
+              <h2>{t("customers.title")}</h2>
             </div>
             <div className="topbar-actions">
               <input
                 className="search-input"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search customer"
-                aria-label="Search customers"
+                placeholder={t("customers.searchPlaceholder")}
+                aria-label={t("customers.searchPlaceholder")}
               />
               <button
                 type="button"
                 className="primary-button"
                 onClick={() => setShowAddForm(true)}
               >
-                Add customer
+                {t("customers.addCustomer")}
               </button>
             </div>
           </div>
@@ -123,15 +125,15 @@ export function CustomersView({
               icon="customers"
               title={
                 initialQuery.trim()
-                  ? "No customers match your search"
-                  : "No customers yet"
+                  ? t("customers.noMatchTitle")
+                  : t("customers.emptyTitle")
               }
               description={
                 initialQuery.trim()
-                  ? "Try a different name or phone number."
-                  : "Pehla customer add karein — 30 seconds mein."
+                  ? t("customers.noMatchDescription")
+                  : t("customers.emptyDescription")
               }
-              actionLabel={initialQuery.trim() ? undefined : "Add customer"}
+              actionLabel={initialQuery.trim() ? undefined : t("customers.addCustomer")}
               onAction={
                 initialQuery.trim() ? undefined : () => setShowAddForm(true)
               }
@@ -154,7 +156,7 @@ export function CustomersView({
       {showAddForm ? <AddCustomerForm onClose={handleCloseAdd} /> : null}
 
       <Toast
-        message="Customer added!"
+        message={t("customers.addedToast")}
         show={toastVisible}
         onDismiss={() => setToastVisible(false)}
       />

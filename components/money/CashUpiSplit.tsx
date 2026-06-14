@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n/LanguageContext";
 import type { CashUpiSplit as CashUpiSplitData } from "@/lib/payments/types";
 
 type CashUpiSplitProps = {
@@ -19,6 +22,7 @@ function formatInr(amount: number): string {
 }
 
 export function CashUpiSplit({ split }: CashUpiSplitProps) {
+  const { t } = useT();
   const { cash, upi, total, cashPercent, upiPercent } = split;
 
   return (
@@ -38,7 +42,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
           color: TOKENS.textDark,
         }}
       >
-        Aaj ka collection breakdown
+        {t("money.collectionBreakdown")}
       </p>
 
       <div
@@ -65,7 +69,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
               color: TOKENS.textMuted,
             }}
           >
-            Haath mein cash
+            {t("money.cashInHand")}
           </p>
           <p
             style={{
@@ -86,7 +90,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
               color: TOKENS.textDark,
             }}
           >
-            Cash
+            {t("money.cash")}
           </p>
         </article>
 
@@ -106,7 +110,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
               color: TOKENS.textMuted,
             }}
           >
-            Digital payment
+            {t("money.digitalPayment")}
           </p>
           <p
             style={{
@@ -127,7 +131,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
               color: TOKENS.textDark,
             }}
           >
-            UPI
+            {t("money.upi")}
           </p>
         </article>
       </div>
@@ -166,7 +170,10 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
             color: TOKENS.textMuted,
           }}
         >
-          Cash {cashPercent}% · UPI {upiPercent}%
+          {t("money.splitPercent", {
+            cashPercent: String(cashPercent),
+            upiPercent: String(upiPercent),
+          })}
         </p>
       </div>
 
@@ -178,7 +185,7 @@ export function CashUpiSplit({ split }: CashUpiSplitProps) {
           color: TOKENS.textDark,
         }}
       >
-        Kul collection: {formatInr(total)}
+        {t("money.totalCollection", { amount: formatInr(total) })}
       </p>
     </section>
   );
