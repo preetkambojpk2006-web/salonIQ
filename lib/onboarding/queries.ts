@@ -28,9 +28,7 @@ export async function getOwnerBusiness() {
     .eq("id", membership.businessId)
     .maybeSingle();
 
-  return fallbackBusiness
-    ? { ...fallbackBusiness, ui_language: "hi" as const }
-    : null;
+  return fallbackBusiness ?? null;
 }
 
 export async function getOwnerBranches(businessId: string) {

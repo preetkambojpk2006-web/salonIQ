@@ -1,5 +1,6 @@
 import { CommandCenterShell } from "@/components/command-center/command-center-shell";
 import { getWorkspaceContext } from "@/lib/command-center/get-workspace";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { getOnboardingStep } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -28,8 +29,10 @@ export default async function DashboardLayout({
   const workspace = await getWorkspaceContext();
 
   return (
-    <CommandCenterShell workspace={workspace} appRole={workspace.appRole}>
-      {children}
-    </CommandCenterShell>
+    <LanguageProvider locale={workspace.uiLanguage} key={workspace.uiLanguage}>
+      <CommandCenterShell workspace={workspace} appRole={workspace.appRole}>
+        {children}
+      </CommandCenterShell>
+    </LanguageProvider>
   );
 }

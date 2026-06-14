@@ -6,7 +6,10 @@ import {
 } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { UI_LANGUAGE_COOKIE } from "@/lib/i18n";
 
 export type SettingsActionResult =
   | { ok: true }
@@ -253,6 +256,12 @@ export async function updateUiLanguage(
         "Language save nahi hui. Owner account se try karein, ya Supabase mein ui_language migration apply karein.",
     };
   }
+
+  cookies().set(UI_LANGUAGE_COOKIE, uiLanguage, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
 
   revalidatePath("/dashboard", "layout");
   revalidatePath("/dashboard/settings");
