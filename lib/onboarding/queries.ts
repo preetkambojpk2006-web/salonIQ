@@ -7,15 +7,30 @@ export async function getOwnerBusiness() {
 
   if (!membership) return null;
 
-  const { data: business } = await supabase
+  const businessFields =
+    "id, name, logo_url, phone, email, opening_hours, google_review_link, booking_slug, daily_revenue_target, late_fine_amount";
+
+  const { data: business, error } = await supabase
     .from("businesses")
-    .select(
-      "id, name, logo_url, phone, email, opening_hours, google_review_link, booking_slug, daily_revenue_target, late_fine_amount, ui_language"
-    )
+    .select(`${businessFields}, ui_language`)
     .eq("id", membership.businessId)
     .maybeSingle();
 
-  return business;
+  if (!error) {
+    return business;
+  }
+
+  console.error("[getOwnerBusiness] ui_language fetch failed:", error.message);
+
+  const { data: fallbackBusiness } = await supabase
+    .from("businesses")
+    .select(businessFields)
+    .eq("id", membership.businessId)
+    .maybeSingle();
+
+  return fallbackBusiness
+    ? { ...fallbackBusiness, ui_language: "hi" as const }
+    : null;
 }
 
 export async function getOwnerBranches(businessId: string) {

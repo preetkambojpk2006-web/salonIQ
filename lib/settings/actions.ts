@@ -228,16 +228,33 @@ export async function updateUiLanguage(
     return { ok: false, error: "Invalid language selection." };
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("businesses")
     .update({ ui_language: uiLanguage })
-    .eq("id", membership.businessId);
+    .eq("id", membership.businessId)
+    .select("ui_language")
+    .maybeSingle();
+
+  console.log("[updateUiLanguage]", {
+    businessId: membership.businessId,
+    requested: uiLanguage,
+    saved: data?.ui_language ?? null,
+    error: error?.message ?? null,
+  });
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/dashboard");
+  if (!data) {
+    return {
+      ok: false,
+      error:
+        "Language save nahi hui. Owner account se try karein, ya Supabase mein ui_language migration apply karein.",
+    };
+  }
+
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard/money");

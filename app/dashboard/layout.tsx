@@ -4,6 +4,8 @@ import { getOnboardingStep } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {

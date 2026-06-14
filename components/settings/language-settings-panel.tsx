@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toast } from "@/components/ui/toast";
 import { useT } from "@/lib/i18n/LanguageContext";
 import type { Locale } from "@/lib/i18n";
@@ -14,11 +14,15 @@ type LanguageSettingsPanelProps = {
 export function LanguageSettingsPanel({
   initialLocale,
 }: LanguageSettingsPanelProps) {
-  const { t } = useT();
+  const { t, setLocale } = useT();
   const router = useRouter();
   const [selected, setSelected] = useState<Locale>(initialLocale);
   const [saving, setSaving] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelected(initialLocale);
+  }, [initialLocale]);
 
   const handleSelect = async (locale: Locale) => {
     if (locale === selected || saving) return;
@@ -33,6 +37,7 @@ export function LanguageSettingsPanel({
     }
 
     setSelected(locale);
+    setLocale(locale);
     router.refresh();
   };
 
