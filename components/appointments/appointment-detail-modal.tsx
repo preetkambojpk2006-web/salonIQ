@@ -8,7 +8,10 @@ import { formatTime12h } from "@/lib/format/time";
 
 type AppointmentDetailModalProps = {
   appointment: Appointment;
+  businessName: string;
+  canEditTime?: boolean;
   onClose: () => void;
+  onEditTime?: () => void;
   actions: React.ReactNode;
 };
 
@@ -50,7 +53,10 @@ function ReliabilityAlert({
 
 export function AppointmentDetailModal({
   appointment,
+  businessName,
+  canEditTime = false,
   onClose,
+  onEditTime,
   actions,
 }: AppointmentDetailModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -81,6 +87,7 @@ export function AppointmentDetailModal({
             <p className="payment-modal-meta">
               {formatTime12h(appointment.start_time)}
               {appointment.staff_name ? ` · ${appointment.staff_name}` : ""}
+              {businessName ? ` · ${businessName}` : ""}
             </p>
             {appointment.total_amount > 0 ? (
               <p className="payment-modal-amount">
@@ -104,6 +111,19 @@ export function AppointmentDetailModal({
         ) : null}
 
         <VibeCard notes={appointment.customer_notes} />
+
+        {canEditTime &&
+        onEditTime &&
+        (appointment.status === "pending" || appointment.status === "confirmed") ? (
+          <button
+            type="button"
+            className="demo-button"
+            style={{ width: "100%", minHeight: 40, marginTop: 4 }}
+            onClick={onEditTime}
+          >
+            Time badlo ✏️
+          </button>
+        ) : null}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
           {actions}

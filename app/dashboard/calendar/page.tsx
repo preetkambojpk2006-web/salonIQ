@@ -1,5 +1,5 @@
 import { CalendarView } from "@/components/appointments/calendar-view";
-import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
+import { canManageFinance, getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import {
   listAppointments,
   listOnlinePendingAppointments,
@@ -34,6 +34,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       businessName={business?.name ?? "Your salon"}
       googleReviewLink={business?.google_review_link ?? null}
       canManageFinance={canManageFinance(appRole)}
+      canEditAppointmentTime={isOwnerOrAdmin(appRole)}
       openBooking={searchParams?.booking === "new"}
       error={searchParams?.error}
       showAddedToast={searchParams?.added === "1"}

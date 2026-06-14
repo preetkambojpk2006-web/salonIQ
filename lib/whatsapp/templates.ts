@@ -282,6 +282,44 @@ export function rewardEarned(params: RewardEarnedParams): string {
   return message;
 }
 
+export interface DelayNotificationParams {
+  customerName: string;
+  salonName: string;
+  serviceName: string;
+  staffName: string;
+  oldDateStr: string;
+  oldTimeStr: string;
+  newDateStr: string;
+  newTimeStr: string;
+}
+
+export function delayNotification(params: DelayNotificationParams): string {
+  const customer = params.customerName?.trim() || "Customer";
+  const salon = params.salonName?.trim() || "Salon";
+  const service = params.serviceName?.trim() || "Service";
+  const staff = params.staffName?.trim() || "Team";
+  const oldDate = params.oldDateStr?.trim();
+  const oldTime = params.oldTimeStr?.trim();
+  const newDate = params.newDateStr?.trim();
+  const newTime = params.newTimeStr?.trim();
+
+  let message = `Namaste ${customer}! 🙏\n`;
+  message += `${salon} se update — aapki appointment shift ho gayi hai.\n`;
+
+  if (oldDate || oldTime) {
+    message += `Pehle: 📅 ${oldDate ?? "—"} · ⏰ ${oldTime ?? "—"}\n`;
+  }
+  if (newDate || newTime) {
+    message += `Ab: 📅 ${newDate ?? "—"} · ⏰ ${newTime ?? "—"}\n`;
+  }
+
+  message += `💇 Service: ${service}\n`;
+  message += `👤 Staff: ${staff}\n`;
+  message += `Inconvenience ke liye maafi chahenge. Hum ready hain! ✨`;
+
+  return message;
+}
+
 export interface QueueYourTurnParams {
   customerName: string;
   salonName: string;

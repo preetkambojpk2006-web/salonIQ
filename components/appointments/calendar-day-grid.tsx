@@ -1,7 +1,9 @@
 "use client";
 
-import { Fragment, memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import type { Appointment } from "@/lib/appointments/types";
+import { effectiveEndTime } from "@/lib/appointments/cascade";
+import { formatTime12hInSalon } from "@/lib/format/time";
 import { SALON_TIMEZONE } from "@/lib/payments/date-utils";
 
 const TIME_SLOTS = [
@@ -17,27 +19,84 @@ const TIME_SLOTS = [
   { hour: 19, label: "7 PM" },
 ];
 
+/** Matches `.calendar-cell { min-height: 74px }` in globals.css — one hour row */
+const SLOT_HEIGHT_PX = 74;
+const GRID_START_HOUR = TIME_SLOTS[0]?.hour ?? 10;
+const MIN_BLOCK_HEIGHT_PX = SLOT_HEIGHT_PX / 2;
+const SHORT_BLOCK_HEIGHT_PX = MIN_BLOCK_HEIGHT_PX;
+
+export type GridBlockOptions = {
+  showTimes: boolean;
+  timeLabel: string;
+  serviceLabel: string;
+};
+
 function staffLabel(appointment: Appointment): string {
   return appointment.staff_name?.trim() || "Unassigned";
 }
 
-function appointmentHourInSalon(iso: string): number {
-  const hour = new Intl.DateTimeFormat("en-US", {
+function appointmentStartParts(iso: string): { hour: number; minute: number } {
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: SALON_TIMEZONE,
     hour: "numeric",
+    minute: "2-digit",
     hour12: false,
-  }).format(new Date(iso));
+  }).formatToParts(date);
 
-  return Number.parseInt(hour, 10);
+  const hour = Number.parseInt(
+    parts.find((part) => part.type === "hour")?.value ?? "0",
+    10
+  );
+  const minute = Number.parseInt(
+    parts.find((part) => part.type === "minute")?.value ?? "0",
+    10
+  );
+
+  return { hour, minute };
 }
 
-function nearestSlotHour(hour: number): number {
-  const exact = TIME_SLOTS.find((s) => s.hour === hour);
-  if (exact) return exact.hour;
+function minutesFromGridStart(iso: string): number {
+  const { hour, minute } = appointmentStartParts(iso);
+  return (hour - GRID_START_HOUR) * 60 + minute;
+}
 
-  return TIME_SLOTS.reduce((prev, cur) =>
-    Math.abs(cur.hour - hour) < Math.abs(prev.hour - hour) ? cur : prev
-  ).hour;
+function durationMinutes(startIso: string, endIso: string | null): number {
+  const start = new Date(startIso);
+  const end = effectiveEndTime(start, endIso ? new Date(endIso) : null);
+  return Math.max(30, (end.getTime() - start.getTime()) / (60 * 1000));
+}
+
+function blockLayout(appointment: Appointment): {
+  topPx: number;
+  heightPx: number;
+  gridOptions: GridBlockOptions;
+} {
+  const topPx = (minutesFromGridStart(appointment.start_time) / 60) * SLOT_HEIGHT_PX;
+  const durationMins = durationMinutes(
+    appointment.start_time,
+    appointment.end_time
+  );
+  const heightPx = Math.max(
+    MIN_BLOCK_HEIGHT_PX,
+    (durationMins / 60) * SLOT_HEIGHT_PX
+  );
+  const end = effectiveEndTime(
+    new Date(appointment.start_time),
+    appointment.end_time ? new Date(appointment.end_time) : null
+  );
+  const showTimes = heightPx > SHORT_BLOCK_HEIGHT_PX;
+  const serviceLabel = appointment.service_name?.trim() || "Service";
+
+  return {
+    topPx: Math.max(0, topPx),
+    heightPx,
+    gridOptions: {
+      showTimes,
+      timeLabel: `${formatTime12hInSalon(appointment.start_time)} – ${formatTime12hInSalon(end.toISOString())}`,
+      serviceLabel,
+    },
+  };
 }
 
 type CalendarDayGridProps = {
@@ -45,7 +104,8 @@ type CalendarDayGridProps = {
   onCompletePay: (appointment: Appointment) => void;
   renderBlock: (
     appointment: Appointment,
-    onCompletePay: () => void
+    onCompletePay: () => void,
+    gridOptions?: GridBlockOptions
   ) => React.ReactNode;
 };
 
@@ -56,8 +116,8 @@ function CalendarDayGridInner({
 }: CalendarDayGridProps) {
   const staffColumns = useMemo(() => {
     const names = new Set<string>();
-    for (const a of dayAppointments) {
-      names.add(staffLabel(a));
+    for (const appointment of dayAppointments) {
+      names.add(staffLabel(appointment));
     }
     if (names.size === 0) {
       return ["Unassigned"];
@@ -65,55 +125,116 @@ function CalendarDayGridInner({
     return Array.from(names).sort();
   }, [dayAppointments]);
 
-  const cellMap = useMemo(() => {
+  const appointmentsByStaff = useMemo(() => {
     const map = new Map<string, Appointment[]>();
-    const columnIndex = new Map(staffColumns.map((name, index) => [name, index]));
 
-    for (const a of dayAppointments) {
-      const label = staffLabel(a);
-      const col = columnIndex.get(label) ?? 0;
+    for (const appointment of dayAppointments) {
+      const label = staffLabel(appointment);
+      const list = map.get(label) ?? [];
+      list.push(appointment);
+      map.set(label, list);
+    }
 
-      const hour = appointmentHourInSalon(a.start_time);
-      const slot = nearestSlotHour(hour);
-      const key = `${slot}-${col}`;
-      const list = map.get(key) ?? [];
-      list.push(a);
-      map.set(key, list);
+    for (const list of Array.from(map.values())) {
+      list.sort((a: Appointment, b: Appointment) =>
+        a.start_time.localeCompare(b.start_time)
+      );
     }
 
     return map;
-  }, [dayAppointments, staffColumns]);
+  }, [dayAppointments]);
+
+  const gridHeightPx = TIME_SLOTS.length * SLOT_HEIGHT_PX;
+  const bodyRowStart = 2;
+  const bodyRowEnd = bodyRowStart + TIME_SLOTS.length;
 
   return (
     <div
       className="calendar-grid"
       style={{
         gridTemplateColumns: `86px repeat(${staffColumns.length}, minmax(160px, 1fr))`,
+        gridTemplateRows: `46px repeat(${TIME_SLOTS.length}, ${SLOT_HEIGHT_PX}px)`,
       }}
     >
-      <div className="calendar-cell header">Time</div>
-      {staffColumns.map((name) => (
-        <div key={name} className="calendar-cell header">
+      <div className="calendar-cell header" style={{ gridColumn: 1, gridRow: 1 }}>
+        Time
+      </div>
+      {staffColumns.map((name, index) => (
+        <div
+          key={name}
+          className="calendar-cell header"
+          style={{ gridColumn: index + 2, gridRow: 1 }}
+        >
           {name}
         </div>
       ))}
 
-      {TIME_SLOTS.map((slot) => (
-        <Fragment key={slot.hour}>
-          <div className="calendar-cell time">{slot.label}</div>
-          {staffColumns.map((name, colIndex) => {
-            const items = cellMap.get(`${slot.hour}-${colIndex}`) ?? [];
+      {TIME_SLOTS.map((slot, index) => (
+        <div
+          key={slot.hour}
+          className="calendar-cell time"
+          style={{ gridColumn: 1, gridRow: bodyRowStart + index }}
+        >
+          {slot.label}
+        </div>
+      ))}
+
+      {staffColumns.map((name, colIndex) => (
+        <div
+          key={name}
+          className="calendar-cell"
+          style={{
+            gridColumn: colIndex + 2,
+            gridRow: `${bodyRowStart} / ${bodyRowEnd}`,
+            position: "relative",
+            minHeight: gridHeightPx,
+            height: gridHeightPx,
+            padding: 0,
+            overflow: "visible",
+            background: "#fff",
+          }}
+        >
+          {TIME_SLOTS.map((slot, index) => (
+            <div
+              key={slot.hour}
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: index * SLOT_HEIGHT_PX,
+                height: SLOT_HEIGHT_PX,
+                borderBottom: "1px solid var(--line)",
+                pointerEvents: "none",
+              }}
+            />
+          ))}
+
+          {(appointmentsByStaff.get(name) ?? []).map((appointment) => {
+            const layout = blockLayout(appointment);
+
             return (
-              <div key={`${slot.hour}-${name}`} className="calendar-cell">
-                {items.map((appointment) => (
-                  <div key={appointment.id}>
-                    {renderBlock(appointment, () => onCompletePay(appointment))}
-                  </div>
-                ))}
+              <div
+                key={appointment.id}
+                style={{
+                  position: "absolute",
+                  left: 8,
+                  right: 8,
+                  top: layout.topPx + 4,
+                  height: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
+                  zIndex: 1,
+                  overflow: "hidden",
+                }}
+              >
+                {renderBlock(
+                  appointment,
+                  () => onCompletePay(appointment),
+                  layout.gridOptions
+                )}
               </div>
             );
           })}
-        </Fragment>
+        </div>
       ))}
     </div>
   );

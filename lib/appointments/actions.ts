@@ -1,10 +1,21 @@
 "use server";
 
+import {
+  getUserMembership,
+  isOwnerOrAdmin,
+} from "@/lib/auth/membership";
+import { computeCascadePreview } from "@/lib/appointments/cascade";
+import type { CascadePreview } from "@/lib/appointments/cascade";
+import {
+  getAppointmentById,
+  listAppointments,
+  listStaffDayAppointments,
+} from "@/lib/appointments/queries";
 import { incrementCustomerNoShowCount } from "@/lib/customers/reliability";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { AppointmentStatus } from "@/lib/appointments/types";
-import { listAppointments } from "@/lib/appointments/queries";
 import { getOwnerBranches } from "@/lib/onboarding/queries";
+import { calendarDayInTimezone } from "@/lib/payments/date-utils";
 import {
   recordAppointmentPayment,
   type RecordPaymentResult,
@@ -12,6 +23,181 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+export type PreviewTimeChangeResult =
+  | { ok: true; preview: CascadePreview }
+  | { ok: false; error: string };
+
+export type ApplyTimeCascadeResult =
+  | { ok: true; success: true; shifted_count: number; preview: CascadePreview }
+  | { ok: false; error: string };
+
+async function requireOwnerOrAdmin(): Promise<
+  { ok: true; businessId: string } | { ok: false; error: string }
+> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin appointment time edit kar sakte hain.",
+    };
+  }
+
+  return { ok: true, businessId: membership.businessId };
+}
+
+function parseIsoDate(value: string): Date | null {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+async function buildTimeChangePreview(
+  appointmentId: string,
+  newStartISO: string,
+  newEndISO: string
+): Promise<PreviewTimeChangeResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  const appointment = await getAppointmentById(appointmentId);
+  if (!appointment) {
+    return { ok: false, error: "Appointment nahi mili." };
+  }
+
+  if (appointment.business_id !== access.businessId) {
+    return { ok: false, error: "Appointment access nahi hai." };
+  }
+
+  if (appointment.status !== "pending" && appointment.status !== "confirmed") {
+    return {
+      ok: false,
+      error: "Completed/cancelled appointments ka time edit nahi ho sakta.",
+    };
+  }
+
+  const newStart = parseIsoDate(newStartISO);
+  const newEnd = parseIsoDate(newEndISO);
+
+  if (!newStart || !newEnd) {
+    return { ok: false, error: "Valid start aur end time daalein." };
+  }
+
+  if (newEnd.getTime() <= newStart.getTime()) {
+    return { ok: false, error: "End time start time se baad hona chahiye." };
+  }
+
+  const originalDay = calendarDayInTimezone(appointment.start_time);
+  const newStartDay = calendarDayInTimezone(newStart);
+  const newEndDay = calendarDayInTimezone(newEnd);
+
+  if (newStartDay !== originalDay || newEndDay !== originalDay) {
+    return {
+      ok: false,
+      error: "Abhi sirf usi din ke andar time edit ho sakta hai.",
+    };
+  }
+
+  const dayAppointments = await listStaffDayAppointments(
+    access.businessId,
+    appointment.staff_name ?? "",
+    originalDay
+  );
+
+  const preview = computeCascadePreview(
+    appointment,
+    dayAppointments,
+    newStart,
+    newEnd
+  );
+
+  return { ok: true, preview };
+}
+
+export async function previewAppointmentTimeChange(
+  appointmentId: string,
+  newStartISO: string,
+  newEndISO: string
+): Promise<PreviewTimeChangeResult> {
+  return buildTimeChangePreview(appointmentId, newStartISO, newEndISO);
+}
+
+export async function applyAppointmentTimeCascade(
+  appointmentId: string,
+  newStartISO: string,
+  newEndISO: string
+): Promise<ApplyTimeCascadeResult> {
+  const previewResult = await buildTimeChangePreview(
+    appointmentId,
+    newStartISO,
+    newEndISO
+  );
+
+  if (!previewResult.ok) {
+    return previewResult;
+  }
+
+  if (previewResult.preview.has_hard_error) {
+    return {
+      ok: false,
+      error:
+        previewResult.preview.warnings[0] ??
+        "Overlap ki wajah se time change apply nahi ho sakta.",
+    };
+  }
+
+  const supabase = createClient();
+  const { preview } = previewResult;
+
+  const { error: anchorError } = await supabase
+    .from("appointments")
+    .update({
+      start_time: preview.anchor.new_start,
+      end_time: preview.anchor.new_end,
+    })
+    .eq("id", preview.anchor.id);
+
+  if (anchorError) {
+    console.error("applyAppointmentTimeCascade anchor:", anchorError.message);
+    return { ok: false, error: anchorError.message };
+  }
+
+  for (const row of preview.shifted) {
+    const { error } = await supabase
+      .from("appointments")
+      .update({
+        start_time: row.new_start,
+        end_time: row.new_end,
+      })
+      .eq("id", row.id);
+
+    if (error) {
+      console.error("applyAppointmentTimeCascade shifted:", error.message);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard");
+
+  return {
+    ok: true,
+    success: true,
+    shifted_count: preview.shifted.length,
+    preview,
+  };
+}
 
 export async function getAppointments() {
   return listAppointments();

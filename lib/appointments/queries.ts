@@ -5,6 +5,7 @@ import type {
   AppointmentPaymentMethod,
   AppointmentStatus,
 } from "@/lib/appointments/types";
+import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import { createClient } from "@/lib/supabase/server";
 
 type PaymentJoin = {
@@ -165,6 +166,74 @@ export async function listAppointments(): Promise<Appointment[]> {
 
   if (error) {
     console.error("listAppointments:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => mapRow(row as AppointmentRow));
+}
+
+const APPOINTMENT_DETAIL_SELECT = `
+  *,
+  customers ( name, phone, notes ),
+  branches ( address ),
+  payments ( method, status, amount, paid_at, created_at )
+`;
+
+export async function getAppointmentById(
+  id: string
+): Promise<Appointment | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(APPOINTMENT_DETAIL_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getAppointmentById:", error.message);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return mapRow(data as AppointmentRow);
+}
+
+export async function listStaffDayAppointments(
+  businessId: string,
+  staffName: string,
+  istDay: string
+): Promise<Appointment[]> {
+  const supabase = createClient();
+  const trimmedStaff = staffName.trim();
+  const { startIso, endIsoExclusive } = getDayBoundsIso(istDay);
+
+  let query = supabase
+    .from("appointments")
+    .select(
+      `
+      *,
+      customers ( name, phone, notes ),
+      branches ( address )
+    `
+    )
+    .eq("business_id", businessId)
+    .gte("start_time", startIso)
+    .lt("start_time", endIsoExclusive)
+    .in("status", ["pending", "confirmed"])
+    .order("start_time", { ascending: true });
+
+  if (trimmedStaff) {
+    query = query.ilike("staff_name", trimmedStaff);
+  } else {
+    query = query.or("staff_name.is.null,staff_name.eq.");
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("listStaffDayAppointments:", error.message);
     return [];
   }
 

@@ -3,13 +3,17 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { CalendarDayGrid } from "@/components/appointments/calendar-day-grid";
+import { CalendarDayGrid, type GridBlockOptions } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
 import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
 import { AppointmentDetailModal } from "@/components/appointments/appointment-detail-modal";
+import { CascadePreviewModal } from "@/components/appointments/cascade-preview-modal";
+import { EditTimeModal } from "@/components/appointments/edit-time-modal";
 import { PaymentModal } from "@/components/appointments/payment-modal";
 import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
+import { DelayWhatsAppModal, type DelayAffectedEntry } from "@/components/whatsapp/DelayWhatsAppModal";
 import { PaymentWhatsAppModal } from "@/components/whatsapp/PaymentWhatsAppModal";
+import type { CascadePreview } from "@/lib/appointments/cascade";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
@@ -34,12 +38,54 @@ type CalendarViewProps = {
   businessName: string;
   googleReviewLink?: string | null;
   canManageFinance?: boolean;
+  canEditAppointmentTime?: boolean;
   openBooking?: boolean;
   error?: string;
   showAddedToast?: boolean;
   addedAppointmentId?: string;
   showPaymentToast?: boolean;
 };
+
+type CascadeFlowState = {
+  appointment: Appointment;
+  preview: CascadePreview;
+  newStart: Date;
+  newEnd: Date;
+};
+
+function buildDelayAffected(
+  preview: CascadePreview,
+  appointment: Appointment
+): DelayAffectedEntry[] {
+  return [
+    {
+      id: preview.anchor.id,
+      customer_name: preview.anchor.customer_name,
+      customer_phone: appointment.customer_phone,
+      service_name: preview.anchor.service_name,
+      staff_name: preview.anchor.staff_name,
+      old_start: preview.anchor.old_start,
+      old_end: preview.anchor.old_end,
+      new_start: preview.anchor.new_start,
+      new_end: preview.anchor.new_end,
+    },
+    ...preview.shifted.map((row) => ({
+      id: row.id,
+      customer_name: row.customer_name,
+      customer_phone: row.customer_phone,
+      service_name: row.service_name,
+      staff_name: row.staff_name,
+      old_start: row.old_start,
+      old_end: row.old_end,
+      new_start: row.new_start,
+      new_end: row.new_end,
+    })),
+  ];
+}
+
+function hasAnyCustomerPhone(entries: DelayAffectedEntry[]): boolean {
+  return entries.some((entry) => Boolean(entry.customer_phone?.trim()));
+}
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -287,6 +333,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
   onOpenDetail,
   canManageFinance = true,
   compact = false,
+  gridOptions,
 }: {
   appointment: Appointment;
   businessName: string;
@@ -295,10 +342,11 @@ const AppointmentBlock = memo(function AppointmentBlock({
   onOpenDetail: () => void;
   canManageFinance?: boolean;
   compact?: boolean;
+  gridOptions?: GridBlockOptions;
 }) {
   if (compact) {
     return (
-      <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ display: "grid", gap: 8, height: "100%" }}>
         {shouldShowReliabilityAlert(appointment) &&
         appointment.customer_reliability ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
@@ -306,11 +354,34 @@ const AppointmentBlock = memo(function AppointmentBlock({
         <button
           type="button"
           className="booking-block"
-          style={openDetailButtonStyle}
+          style={{
+            ...openDetailButtonStyle,
+            height: gridOptions ? "100%" : undefined,
+            display: "grid",
+            alignContent: "start",
+            gap: 4,
+          }}
           onClick={onOpenDetail}
           aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
         >
-          {blockTitle(appointment)}
+          {gridOptions ? (
+            gridOptions.showTimes ? (
+              <>
+                <strong style={{ display: "block", lineHeight: 1.3 }}>
+                  {blockTitle(appointment)}
+                </strong>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#666" }}>
+                  {gridOptions.timeLabel}
+                </span>
+              </>
+            ) : (
+              <strong style={{ display: "block", lineHeight: 1.3 }}>
+                {gridOptions.serviceLabel}
+              </strong>
+            )
+          ) : (
+            blockTitle(appointment)
+          )}
         </button>
         <AppointmentActions
           appointment={appointment}
@@ -367,6 +438,7 @@ export function CalendarView({
   businessName,
   googleReviewLink = null,
   canManageFinance = true,
+  canEditAppointmentTime = false,
   openBooking = false,
   error,
   showAddedToast = false,
@@ -395,6 +467,14 @@ export function CalendarView({
   );
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
   const [onlinePendingOnly, setOnlinePendingOnly] = useState(false);
+  const [editTimeAppointment, setEditTimeAppointment] = useState<Appointment | null>(
+    null
+  );
+  const [cascadeFlow, setCascadeFlow] = useState<CascadeFlowState | null>(null);
+  const [delayAffected, setDelayAffected] = useState<DelayAffectedEntry[] | null>(
+    null
+  );
+  const [timeChangeToast, setTimeChangeToast] = useState(false);
 
   const mergedAppointments = useMemo(
     () => mergeAppointments(appointments, onlinePending),
@@ -489,8 +569,66 @@ export function CalendarView({
     router.refresh();
   }, [router]);
 
+  const handleOpenEditTime = useCallback(() => {
+    if (!detailAppointment) return;
+    setEditTimeAppointment(detailAppointment);
+  }, [detailAppointment]);
+
+  const handleEditTimeClose = useCallback(() => {
+    setEditTimeAppointment(null);
+  }, []);
+
+  const handleTimePreview = useCallback(
+    (preview: CascadePreview, newStart: Date, newEnd: Date) => {
+      if (!editTimeAppointment) return;
+      setEditTimeAppointment(null);
+      setCascadeFlow({
+        appointment: editTimeAppointment,
+        preview,
+        newStart,
+        newEnd,
+      });
+    },
+    [editTimeAppointment]
+  );
+
+  const handleCascadeClose = useCallback(() => {
+    setCascadeFlow(null);
+  }, []);
+
+  const handleCascadeConfirm = useCallback(() => {
+    // Reserved for parent-side side effects before apply completes.
+  }, []);
+
+  const handleCascadeConfirmed = useCallback(
+    (preview: CascadePreview) => {
+      const appointment = cascadeFlow?.appointment;
+      setCascadeFlow(null);
+      setDetailAppointment(null);
+      setTimeChangeToast(true);
+      router.refresh();
+
+      if (!appointment) return;
+
+      const affected = buildDelayAffected(preview, appointment);
+      if (hasAnyCustomerPhone(affected)) {
+        setDelayAffected(affected);
+      }
+    },
+    [cascadeFlow?.appointment, router]
+  );
+
+  const handleCloseDelayNotify = useCallback(() => {
+    setDelayAffected(null);
+    router.refresh();
+  }, [router]);
+
   const renderGridBlock = useCallback(
-    (appointment: Appointment, onPay: () => void) => (
+    (
+      appointment: Appointment,
+      onPay: () => void,
+      gridOptions?: GridBlockOptions
+    ) => (
       <AppointmentBlock
         appointment={appointment}
         businessName={businessName}
@@ -499,6 +637,7 @@ export function CalendarView({
         onOpenDetail={() => handleOpenDetail(appointment)}
         canManageFinance={canManageFinance}
         compact
+        gridOptions={gridOptions}
       />
     ),
     [businessName, canManageFinance, handleCopied, handleOpenDetail]
@@ -615,6 +754,9 @@ export function CalendarView({
       {detailAppointment ? (
         <AppointmentDetailModal
           appointment={detailAppointment}
+          businessName={businessName}
+          canEditTime={canEditAppointmentTime}
+          onEditTime={handleOpenEditTime}
           onClose={() => setDetailAppointment(null)}
           actions={
             <AppointmentActions
@@ -625,6 +767,36 @@ export function CalendarView({
               canManageFinance={canManageFinance}
             />
           }
+        />
+      ) : null}
+
+      {editTimeAppointment ? (
+        <EditTimeModal
+          appointment={editTimeAppointment}
+          businessName={businessName}
+          onClose={handleEditTimeClose}
+          onPreview={handleTimePreview}
+        />
+      ) : null}
+
+      {cascadeFlow ? (
+        <CascadePreviewModal
+          preview={cascadeFlow.preview}
+          newStart={cascadeFlow.newStart}
+          newEnd={cascadeFlow.newEnd}
+          appointment={cascadeFlow.appointment}
+          businessName={businessName}
+          onClose={handleCascadeClose}
+          onConfirm={handleCascadeConfirm}
+          onConfirmed={handleCascadeConfirmed}
+        />
+      ) : null}
+
+      {delayAffected ? (
+        <DelayWhatsAppModal
+          affected={delayAffected}
+          salonName={businessName}
+          onClose={handleCloseDelayNotify}
         />
       ) : null}
 
@@ -683,6 +855,11 @@ export function CalendarView({
         variant="error"
         durationMs={5000}
         onDismiss={() => setBookingErrorToast(null)}
+      />
+      <Toast
+        message="Time update ho gaya! ✅"
+        show={timeChangeToast}
+        onDismiss={() => setTimeChangeToast(false)}
       />
     </>
   );
