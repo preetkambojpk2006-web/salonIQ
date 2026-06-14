@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseOpeningHours } from "@/lib/onboarding/skips";
 
 export type OnboardingStep =
   | "business"
@@ -30,13 +31,15 @@ export async function getOnboardingStep(
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id, opening_hours")
     .eq("owner_id", user.id)
     .maybeSingle();
 
   if (!business) {
     return "business";
   }
+
+  const skips = parseOpeningHours(business.opening_hours).onboarding_skips ?? {};
 
   const { data: branch } = await supabase
     .from("branches")
@@ -54,7 +57,7 @@ export async function getOnboardingStep(
     .select("id", { count: "exact", head: true })
     .eq("business_id", business.id);
 
-  if (!staffCount) {
+  if (!staffCount && !skips.staff) {
     return "staff";
   }
 
@@ -63,7 +66,7 @@ export async function getOnboardingStep(
     .select("id", { count: "exact", head: true })
     .eq("business_id", business.id);
 
-  if (!serviceCount) {
+  if (!serviceCount && !skips.services) {
     return "services";
   }
 

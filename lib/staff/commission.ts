@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 
 const DEFAULT_COMMISSION_PERCENT = 30;
 
+export type CommissionResult = { ok: true } | { ok: false; error: string };
+
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
@@ -14,9 +16,9 @@ function normalizeStaffName(staffName: string | null | undefined): string {
 async function resolveCommissionPercent(
   businessId: string,
   staffName: string
-): Promise<number> {
+): Promise<{ percent: number; matched: boolean }> {
   if (staffName === "Unassigned") {
-    return DEFAULT_COMMISSION_PERCENT;
+    return { percent: DEFAULT_COMMISSION_PERCENT, matched: false };
   }
 
   const supabase = createClient();
@@ -32,15 +34,19 @@ async function resolveCommissionPercent(
 
   if (error) {
     console.error("resolveCommissionPercent:", error.message);
-    return DEFAULT_COMMISSION_PERCENT;
+    return { percent: DEFAULT_COMMISSION_PERCENT, matched: false };
   }
 
-  const percent = Number(data?.commission_percent);
+  if (!data) {
+    return { percent: DEFAULT_COMMISSION_PERCENT, matched: false };
+  }
+
+  const percent = Number(data.commission_percent);
   if (!Number.isFinite(percent)) {
-    return DEFAULT_COMMISSION_PERCENT;
+    return { percent: DEFAULT_COMMISSION_PERCENT, matched: true };
   }
 
-  return percent;
+  return { percent, matched: true };
 }
 
 export async function recordStaffCommissionForPayment(params: {
@@ -49,7 +55,7 @@ export async function recordStaffCommissionForPayment(params: {
   staffName: string | null;
   serviceAmount: number;
   earnedAt: string;
-}): Promise<void> {
+}): Promise<CommissionResult> {
   const supabase = createClient();
   const staffName = normalizeStaffName(params.staffName);
   const serviceAmount = Math.max(0, params.serviceAmount);
@@ -63,17 +69,24 @@ export async function recordStaffCommissionForPayment(params: {
 
   if (existingError) {
     console.error("recordStaffCommissionForPayment lookup:", existingError.message);
-    return;
+    return { ok: false, error: existingError.message };
   }
 
   if (existing?.id) {
-    return;
+    return { ok: true };
   }
 
-  const commissionPercent = await resolveCommissionPercent(
+  const { percent: commissionPercent, matched } = await resolveCommissionPercent(
     params.businessId,
     staffName
   );
+
+  if (!matched && staffName !== "Unassigned") {
+    console.warn(
+      `Commission fallback for unmatched staff "${staffName}" on appointment ${params.appointmentId}`
+    );
+  }
+
   const commissionAmount = roundMoney(
     serviceAmount * (commissionPercent / 100)
   );
@@ -91,5 +104,8 @@ export async function recordStaffCommissionForPayment(params: {
 
   if (insertError) {
     console.error("recordStaffCommissionForPayment insert:", insertError.message);
+    return { ok: false, error: insertError.message };
   }
+
+  return { ok: true };
 }

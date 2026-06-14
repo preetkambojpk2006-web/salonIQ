@@ -273,6 +273,11 @@ function StockModal({
       title={kind === "stockIn" ? t("inventory.stockIn") : t("inventory.stockUse")}
       onClose={onClose}
     >
+      {activeProducts.length === 0 ? (
+        <p className="text-body" style={{ margin: 0, color: TOKENS.textMuted }}>
+          {t("inventory.noProduct")}
+        </p>
+      ) : (
       <div style={{ display: "grid", gap: 12 }}>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
@@ -371,6 +376,7 @@ function StockModal({
               : t("inventory.useRecord")}
         </button>
       </div>
+      )}
     </ModalOverlay>
   );
 }
@@ -695,12 +701,25 @@ export function InventoryView({
     0
   );
 
+  const activeProducts = useMemo(
+    () => products.filter((product) => product.is_active),
+    [products]
+  );
+
   const openStockIn = (product: InventoryProductWithBrand | null = null) => {
+    if (activeProducts.length === 0) {
+      showToast(t("inventory.noProduct"), "error");
+      return;
+    }
     setModalProduct(product);
     setModalKind("stockIn");
   };
 
   const openStockUse = (product: InventoryProductWithBrand | null = null) => {
+    if (activeProducts.length === 0) {
+      showToast(t("inventory.noProduct"), "error");
+      return;
+    }
     setModalProduct(product);
     setModalKind("stockUse");
   };
@@ -861,6 +880,7 @@ export function InventoryView({
             <button
               type="button"
               onClick={() => openStockIn(null)}
+              disabled={activeProducts.length === 0}
               style={{
                 minHeight: 40,
                 padding: "0 14px",
@@ -868,7 +888,8 @@ export function InventoryView({
                 border: `1px solid ${TOKENS.borderSubtle}`,
                 background: "#fff",
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: activeProducts.length === 0 ? "not-allowed" : "pointer",
+                opacity: activeProducts.length === 0 ? 0.55 : 1,
               }}
             >
               {t("inventory.stockIn")}
@@ -876,6 +897,7 @@ export function InventoryView({
             <button
               type="button"
               onClick={() => openStockUse(null)}
+              disabled={activeProducts.length === 0}
               style={{
                 minHeight: 40,
                 padding: "0 14px",
@@ -883,7 +905,8 @@ export function InventoryView({
                 border: `1px solid ${TOKENS.borderSubtle}`,
                 background: "#fff",
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: activeProducts.length === 0 ? "not-allowed" : "pointer",
+                opacity: activeProducts.length === 0 ? 0.55 : 1,
               }}
             >
               {t("inventory.stockUse")}

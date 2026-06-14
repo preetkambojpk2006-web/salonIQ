@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createAppointment } from "@/lib/appointments/actions";
+import { todayDateIso } from "@/lib/booking/slots";
 import { Toast } from "@/components/ui/toast";
 
 type NewBookingFormProps = {
@@ -26,7 +27,7 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
   );
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayDateIso();
 
   useEffect(() => {
     const dialog = dialogRef.current;

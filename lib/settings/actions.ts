@@ -54,7 +54,7 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
         error: "Aaj ka revenue target valid number hona chahiye (0 ya usse zyada).",
       };
     }
-    daily_revenue_target = parsed;
+    daily_revenue_target = parsed > 0 ? parsed : null;
   }
 
   const opening_hours = openingHoursNote

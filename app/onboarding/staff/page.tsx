@@ -5,6 +5,7 @@ import { SelectField } from "@/components/onboarding/select-field";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { createStaff, skipStaff } from "@/lib/onboarding/actions";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 type StaffPageProps = {
@@ -22,6 +23,16 @@ export default async function StaffOnboardingPage({
   const branches = await getOwnerBranches(business.id);
   if (branches.length === 0) {
     redirect("/onboarding/branch");
+  }
+
+  const supabase = createClient();
+  const { count: staffCount } = await supabase
+    .from("staff")
+    .select("id", { count: "exact", head: true })
+    .eq("business_id", business.id);
+
+  if (staffCount && staffCount > 0) {
+    redirect("/onboarding/services");
   }
 
   return (

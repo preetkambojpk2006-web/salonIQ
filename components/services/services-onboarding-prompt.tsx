@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 export function ServicesOnboardingPrompt() {
@@ -8,7 +9,13 @@ export function ServicesOnboardingPrompt() {
   return (
     <div className="view-stack">
       <section className="panel">
-        <p className="text-body">{t("services.completeOnboarding")}</p>
+        <EmptyState
+          icon="calendar"
+          title={t("services.setupTitle")}
+          description={t("services.completeOnboarding")}
+          actionLabel={t("services.setupAction")}
+          actionHref="/onboarding"
+        />
       </section>
     </div>
   );

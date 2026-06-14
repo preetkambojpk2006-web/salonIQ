@@ -97,7 +97,12 @@ export async function performWalkinQueueAction(
       return { ok: false, error: "Invalid action" };
   }
 
-  const result = await updateWalkinStatus(trimmedId, status, extraFields);
+  const result = await updateWalkinStatus(
+    access.businessId,
+    trimmedId,
+    status,
+    extraFields
+  );
   if (!result.ok) {
     return result;
   }

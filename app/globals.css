@@ -1598,12 +1598,14 @@
   /* Payment modal */
   .payment-modal {
     width: min(100%, 24rem);
+    max-height: min(90vh, 640px);
     padding: 0;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--panel);
     color: var(--ink);
     box-shadow: var(--shadow);
+    overflow: hidden;
   }
 
   .payment-modal::backdrop {
@@ -1612,6 +1614,8 @@
 
   .payment-modal-form {
     padding: 20px;
+    max-height: min(90vh, 640px);
+    overflow-y: auto;
     background: linear-gradient(
         180deg,
         rgba(223, 244, 235, 0.35),

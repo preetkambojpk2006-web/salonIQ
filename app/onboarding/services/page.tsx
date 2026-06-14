@@ -3,7 +3,7 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { FormField } from "@/components/onboarding/form-field";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { createService, skipServices } from "@/lib/onboarding/actions";
-import { getOwnerBusiness } from "@/lib/onboarding/queries";
+import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { redirect } from "next/navigation";
 
 type ServicesPageProps = {
@@ -16,6 +16,11 @@ export default async function ServicesOnboardingPage({
   const business = await getOwnerBusiness();
   if (!business) {
     redirect("/onboarding/business");
+  }
+
+  const branches = await getOwnerBranches(business.id);
+  if (branches.length === 0) {
+    redirect("/onboarding/branch");
   }
 
   return (

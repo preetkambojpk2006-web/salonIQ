@@ -39,7 +39,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   const membership = await getUserMembership();
 
   if (!membership?.businessId) {
-    redirect("/login");
+    redirect("/onboarding");
   }
 
   if (!isOwnerOrAdmin(membership.appRole)) {

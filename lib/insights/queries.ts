@@ -85,7 +85,7 @@ async function countInactiveCustomers(businessId: string): Promise<number> {
   const [customersRes, appointmentsRes] = await Promise.all([
     supabase
       .from("customers")
-      .select("id, last_visit_at")
+      .select("id, last_visit_at, visit_count")
       .eq("business_id", businessId),
     supabase
       .from("appointments")
@@ -114,12 +114,21 @@ async function countInactiveCustomers(businessId: string): Promise<number> {
 
   let inactiveCount = 0;
   for (const customer of customersRes.data ?? []) {
+    const visitCount = Number(customer.visit_count ?? 0);
     const lastVisit =
       customer.last_visit_at ??
       lastAppointmentByCustomer.get(customer.id) ??
       null;
 
-    if (!lastVisit || lastVisit < cutoffIso) {
+    if (!lastVisit) {
+      if (visitCount === 0) {
+        continue;
+      }
+      inactiveCount += 1;
+      continue;
+    }
+
+    if (lastVisit < cutoffIso) {
       inactiveCount += 1;
     }
   }

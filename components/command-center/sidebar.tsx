@@ -29,6 +29,7 @@ import { useT } from "@/lib/i18n/LanguageContext";
 
 const NAV_I18N_KEY: Partial<Record<CommandNavId, string>> = {
   today: "nav.today",
+  receptionist: "nav.receptionist",
   calendar: "nav.calendar",
   customers: "nav.customers",
   money: "nav.money",

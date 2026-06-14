@@ -37,7 +37,7 @@ export function SummaryGrid({ metrics, showFinance = true }: SummaryGridProps) {
       key: "repeat",
       className: "metric-card",
       label: "Repeat customers",
-      value: `${metrics.repeatPercent}%`,
+      value: metrics.totalCustomers === 0 ? "—" : `${metrics.repeatPercent}%`,
       context: metrics.repeatContext,
     },
   ].filter((card) => {

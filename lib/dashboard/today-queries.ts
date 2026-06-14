@@ -1,5 +1,6 @@
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { formatTime12h } from "@/lib/format/time";
+import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import { getTodayPaymentTotals } from "@/lib/payments/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,6 +14,7 @@ export type TodayMetrics = {
   pendingContext: string;
   repeatPercent: number;
   repeatContext: string;
+  totalCustomers: number;
 };
 
 export type UpcomingAppointment = {
@@ -31,16 +33,12 @@ export type LiveFlowItem = {
   detail: string;
 };
 
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+function startOfToday(): string {
+  return getDayBoundsIso().startIso;
 }
 
-function endOfToday(): Date {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d;
+function endOfToday(): string {
+  return getDayBoundsIso().endIsoExclusive;
 }
 
 function formatRs(amount: number): string {
@@ -77,6 +75,7 @@ export async function getTodayDashboardData(): Promise<{
     pendingContext: "Aaj ka saara hisaab clear hai!",
     repeatPercent: 0,
     repeatContext: "Customers add karte jayein",
+    totalCustomers: 0,
   };
 
   const businessId = await getOwnerBusinessId();
@@ -86,8 +85,8 @@ export async function getTodayDashboardData(): Promise<{
 
   const supabase = createClient();
   const nowIso = new Date().toISOString();
-  const todayStart = startOfToday().toISOString();
-  const todayEnd = endOfToday().toISOString();
+  const todayStart = startOfToday();
+  const todayEnd = endOfToday();
 
   const [
     { data: todayAppointments },
@@ -100,7 +99,7 @@ export async function getTodayDashboardData(): Promise<{
       .select("id, status, total_amount, payment_status, start_time")
       .eq("business_id", businessId)
       .gte("start_time", todayStart)
-      .lte("start_time", todayEnd),
+      .lt("start_time", todayEnd),
     supabase
       .from("appointments")
       .select(
@@ -170,6 +169,7 @@ export async function getTodayDashboardData(): Promise<{
         : repeatPercent >= 50
           ? "Acchi customer loyalty"
           : `${repeatCustomers} of ${totalCustomers} repeat customers`,
+    totalCustomers,
   };
 
   const upcoming: UpcomingAppointment[] = (upcomingRows ?? []).map((row) => ({

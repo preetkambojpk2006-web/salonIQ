@@ -1,5 +1,6 @@
 "use server";
 
+import { withOnboardingSkip } from "@/lib/onboarding/skips";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -180,6 +181,26 @@ export async function createStaff(formData: FormData) {
 }
 
 export async function skipStaff() {
+  const { supabase } = await requireUser();
+  const business = await getBusinessForOwner(supabase);
+
+  if (!business) {
+    redirect("/onboarding/business");
+  }
+
+  const { data: row } = await supabase
+    .from("businesses")
+    .select("opening_hours")
+    .eq("id", business.id)
+    .maybeSingle();
+
+  await supabase
+    .from("businesses")
+    .update({
+      opening_hours: withOnboardingSkip(row?.opening_hours, "staff"),
+    })
+    .eq("id", business.id);
+
   redirect("/onboarding/services");
 }
 
@@ -231,6 +252,26 @@ export async function createService(formData: FormData) {
 }
 
 export async function skipServices() {
+  const { supabase } = await requireUser();
+  const business = await getBusinessForOwner(supabase);
+
+  if (!business) {
+    redirect("/onboarding/business");
+  }
+
+  const { data: row } = await supabase
+    .from("businesses")
+    .select("opening_hours")
+    .eq("id", business.id)
+    .maybeSingle();
+
+  await supabase
+    .from("businesses")
+    .update({
+      opening_hours: withOnboardingSkip(row?.opening_hours, "services"),
+    })
+    .eq("id", business.id);
+
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }

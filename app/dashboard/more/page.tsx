@@ -10,7 +10,7 @@ export default async function MorePage() {
     data: { user },
   } = await supabase.auth.getUser();
   const membership = await getUserMembership();
-  const appRole = membership?.appRole ?? "owner";
+  const appRole = membership?.appRole ?? "staff";
 
   const extraNav = getNavItemsForRole(appRole).filter(
     (item) => !item.mobile && item.id !== "today"

@@ -89,9 +89,9 @@ export function MoneyView({
     stats.pendingCount === 0 &&
     cashUpiSplit.total === 0;
 
-  return (
-    <div className="view-stack">
-      {isEmptySalon ? (
+  if (isEmptySalon) {
+    return (
+      <div className="view-stack">
         <section className="panel">
           <EmptyState
             icon="money"
@@ -101,8 +101,14 @@ export function MoneyView({
             actionHref="/dashboard/calendar?booking=new"
           />
         </section>
-      ) : null}
+      </div>
+    );
+  }
 
+  const showProfitBreakdown = stats.revenueWeek > 0;
+
+  return (
+    <div className="view-stack">
       <div className="summary-grid stagger-metrics">
         {summaryCards.map((card) => (
           <article key={card.key} className={card.className}>
@@ -124,6 +130,7 @@ export function MoneyView({
 
       {staffPanels}
 
+      {showProfitBreakdown ? (
       <section className="panel">
         <div className="panel-header">
           <div>
@@ -162,6 +169,7 @@ export function MoneyView({
           </div>
         </div>
       </section>
+      ) : null}
     </div>
   );
 }

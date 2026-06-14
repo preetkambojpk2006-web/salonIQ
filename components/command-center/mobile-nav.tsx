@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import type { AppRole } from "@/lib/auth/types";
 import { canAccessNavItem } from "@/lib/auth/route-access";
 import { getActiveNavId } from "@/lib/command-center/navigation";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 const items = [
-  { id: "today" as const, label: "Today", href: "/dashboard" },
-  { id: "calendar" as const, label: "Calendar", href: "/dashboard/calendar" },
-  { id: "customers" as const, label: "Customers", href: "/dashboard/customers" },
-  { id: "money" as const, label: "Money", href: "/dashboard/money" },
-  { id: "more" as const, label: "More", href: "/dashboard/more" },
-];
+  { id: "today" as const, labelKey: "nav.today", href: "/dashboard" },
+  { id: "calendar" as const, labelKey: "nav.calendar", href: "/dashboard/calendar" },
+  { id: "customers" as const, labelKey: "nav.customers", href: "/dashboard/customers" },
+  { id: "money" as const, labelKey: "nav.money", href: "/dashboard/money" },
+  { id: "more" as const, labelKey: "nav.more", href: "/dashboard/more" },
+] as const;
 
 type CommandMobileNavProps = {
   appRole: AppRole;
@@ -21,6 +22,7 @@ type CommandMobileNavProps = {
 export function CommandMobileNav({ appRole }: CommandMobileNavProps) {
   const pathname = usePathname();
   const activeId = getActiveNavId(pathname);
+  const { t } = useT();
   const visibleItems = items.filter(
     (item) => item.id === "more" || canAccessNavItem(appRole, item.id)
   );
@@ -48,7 +50,7 @@ export function CommandMobileNav({ appRole }: CommandMobileNavProps) {
             prefetch
             className={isActive ? "active" : undefined}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

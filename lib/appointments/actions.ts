@@ -6,6 +6,7 @@ import {
 } from "@/lib/auth/membership";
 import { computeCascadePreview } from "@/lib/appointments/cascade";
 import type { CascadePreview } from "@/lib/appointments/cascade";
+import { hasAppointmentOverlap } from "@/lib/appointments/overlap";
 import {
   getAppointmentById,
   listAppointments,
@@ -239,16 +240,13 @@ async function resolveCustomerId(
 
 function parseStartTime(date: string, time: string): string | null {
   if (!date || !time) return null;
-  const iso = `${date}T${time}:00`;
-  const parsed = new Date(iso);
+  const parsed = new Date(`${date}T${time}:00+05:30`);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
 }
 
 function defaultEndTime(startIso: string): string {
-  const start = new Date(startIso);
-  start.setHours(start.getHours() + 1);
-  return start.toISOString();
+  return new Date(new Date(startIso).getTime() + 3_600_000).toISOString();
 }
 
 export type CreateAppointmentResult =
@@ -297,6 +295,24 @@ export async function createAppointment(
   if (amountRaw && Number.isNaN(totalAmount)) {
     return { ok: false, error: "Sahi amount daalein." };
   }
+  if (totalAmount < 0) {
+    return { ok: false, error: "Amount 0 se kam nahi ho sakta." };
+  }
+
+  const endTime = defaultEndTime(startTime);
+
+  const overlap = await hasAppointmentOverlap({
+    businessId,
+    staffName,
+    startTime,
+    endTime,
+  });
+  if (overlap) {
+    return {
+      ok: false,
+      error: "Is staff ke liye yeh time slot pehle se booked hai.",
+    };
+  }
 
   const customerId = await resolveCustomerId(businessId, customerName);
   const branches = await getOwnerBranches(businessId);
@@ -311,7 +327,7 @@ export async function createAppointment(
       staff_name: staffName,
       service_name: serviceName,
       start_time: startTime,
-      end_time: defaultEndTime(startTime),
+      end_time: endTime,
       status: "pending",
       notes,
       total_amount: totalAmount >= 0 ? totalAmount : 0,
@@ -369,6 +385,38 @@ export async function confirmAppointment(formData: FormData) {
 
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not confirm");
+
+  const businessId = await getOwnerBusinessId();
+  const { data: appointment } = businessId
+    ? await supabase
+        .from("appointments")
+        .select("id, business_id, staff_name, start_time, end_time, status")
+        .eq("id", appointmentId)
+        .eq("business_id", businessId)
+        .maybeSingle()
+    : { data: null };
+
+  if (!appointment || appointment.status !== "pending") {
+    redirect("/dashboard/calendar?error=Could not confirm");
+  }
+
+  const confirmEnd =
+    appointment.end_time ??
+    new Date(new Date(appointment.start_time).getTime() + 3_600_000).toISOString();
+
+  const overlap = await hasAppointmentOverlap({
+    businessId: appointment.business_id,
+    staffName: appointment.staff_name,
+    startTime: appointment.start_time,
+    endTime: confirmEnd,
+    excludeAppointmentId: appointment.id,
+  });
+  if (overlap) {
+    redirect(
+      "/dashboard/calendar?error=" +
+        encodeURIComponent("Slot overlap — confirm nahi ho sakta.")
+    );
+  }
 
   const error = await setAppointmentStatus(appointmentId, "confirmed");
   if (error) {

@@ -3,9 +3,11 @@ import { LanguageSettingsPanel } from "@/components/settings/language-settings-p
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
+import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,16 @@ function openingHoursDisplay(
 }
 
 export default async function SettingsPage() {
+  const membership = await getUserMembership();
+
+  if (!membership?.businessId) {
+    redirect("/onboarding");
+  }
+
+  if (!isOwnerOrAdmin(membership.appRole)) {
+    redirect("/dashboard");
+  }
+
   const businessId = await getOwnerBusinessId();
   const [business, rewardConfig] = await Promise.all([
     getOwnerBusiness(),

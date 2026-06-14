@@ -111,6 +111,8 @@ export function PaymentModal({
     }
   };
 
+  const canMarkPending =
+    appointment.payment_status !== "paid" && appointment.status !== "completed";
   const amount = appointment.total_amount > 0 ? appointment.total_amount : 0;
   const customer = appointment.customer_name ?? t("appointment.customer");
 
@@ -193,7 +195,7 @@ export function PaymentModal({
           <button
             type="button"
             className="payment-btn-ghost"
-            disabled={isSaving}
+            disabled={isSaving || !canMarkPending}
             onClick={() => handlePay("pending")}
           >
             {isSaving ? t("common.saving") : t("payment.markPending")}

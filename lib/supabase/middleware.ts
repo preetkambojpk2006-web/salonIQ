@@ -1,5 +1,6 @@
 import { canAccessDashboardPath } from "@/lib/auth/route-access";
 import { resolveAppRole } from "@/lib/auth/resolve-role";
+import { getOnboardingRedirect } from "@/lib/onboarding/status";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -51,15 +52,22 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const appRole = (await resolveAppRole(supabase, user.id)) ?? "owner";
+    const appRole = await resolveAppRole(supabase, user.id);
 
-    if (pathname.startsWith("/onboarding") && appRole !== "owner") {
+    if (pathname.startsWith("/dashboard") && !appRole) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/onboarding";
+      return NextResponse.redirect(url);
+    }
+
+    if (pathname.startsWith("/onboarding") && appRole && appRole !== "owner") {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);
     }
 
     if (
+      appRole &&
       pathname.startsWith("/dashboard") &&
       !canAccessDashboardPath(appRole, pathname)
     ) {
@@ -70,7 +78,7 @@ export async function updateSession(request: NextRequest) {
 
     if (isAuthRoute) {
       const url = request.nextUrl.clone();
-      url.pathname = appRole === "owner" ? "/onboarding" : "/dashboard";
+      url.pathname = await getOnboardingRedirect(supabase);
       return NextResponse.redirect(url);
     }
   }

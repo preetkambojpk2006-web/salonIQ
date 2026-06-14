@@ -17,7 +17,7 @@ export default async function AttendancePage() {
   const membership = await getUserMembership();
 
   if (!membership?.businessId) {
-    redirect("/login");
+    redirect("/onboarding");
   }
 
   if (!isOwnerOrAdmin(membership.appRole)) {

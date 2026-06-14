@@ -1,6 +1,6 @@
 "use server";
 
-import { getOnboardingRedirect } from "@/lib/onboarding/status";
+import { getOnboardingRedirect, getOnboardingStep } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -30,6 +30,11 @@ export async function signIn(formData: FormData) {
 
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  const step = await getOnboardingStep(supabase);
+  if (step !== "complete") {
+    redirect(await getOnboardingRedirect(supabase));
   }
 
   if (

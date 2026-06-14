@@ -40,7 +40,7 @@ export async function recordAppointmentPayment(
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
     .select(
-      "id, business_id, total_amount, staff_name, customer_id, loyalty_counted_at, customers ( name )"
+      "id, business_id, status, payment_status, total_amount, staff_name, customer_id, loyalty_counted_at, customers ( name )"
     )
     .eq("id", appointmentId)
     .eq("business_id", businessId)
@@ -55,6 +55,14 @@ export async function recordAppointmentPayment(
     return { ok: false, error: "Booking not found." };
   }
 
+  if (
+    appointment.status === "cancelled" ||
+    appointment.status === "no_show" ||
+    appointment.status === "completed"
+  ) {
+    return { ok: false, error: "Is booking par payment record nahi ho sakti." };
+  }
+
   const customers = appointment.customers as
     | { name: string }
     | { name: string }[]
@@ -64,13 +72,21 @@ export async function recordAppointmentPayment(
     : customers?.name ?? null;
 
   const amount = Number(appointment.total_amount ?? 0);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return { ok: false, error: "Invalid payment amount." };
+  }
+
   const isPaid = method === "cash" || method === "upi";
+  if (isPaid && amount <= 0) {
+    return { ok: false, error: "Paid amount 0 se zyada hona chahiye." };
+  }
+
   const now = new Date().toISOString();
   const rowBusinessId = appointment.business_id as string;
 
   const { data: existingPayment, error: existingError } = await supabase
     .from("payments")
-    .select("id")
+    .select("id, status")
     .eq("appointment_id", appointmentId)
     .eq("business_id", rowBusinessId)
     .order("created_at", { ascending: false })
@@ -82,17 +98,25 @@ export async function recordAppointmentPayment(
     return { ok: false, error: existingError.message };
   }
 
+  if (
+    !isPaid &&
+    (existingPayment?.status === "paid" || appointment.payment_status === "paid")
+  ) {
+    return {
+      ok: false,
+      error: "Paid booking ko pending mark nahi kar sakte.",
+    };
+  }
+
   const paymentPayload = {
     business_id: rowBusinessId,
     appointment_id: appointmentId,
     customer_name: customerName,
-    amount: amount >= 0 ? amount : 0,
+    amount,
     method,
     status: isPaid ? ("paid" as const) : ("unpaid" as const),
     paid_at: isPaid ? now : null,
   };
-
-  console.log("recordAppointmentPayment payload:", paymentPayload);
 
   let paymentError: { message: string } | null = null;
 
@@ -114,13 +138,17 @@ export async function recordAppointmentPayment(
   }
 
   if (isPaid) {
-    await recordStaffCommissionForPayment({
+    const commissionResult = await recordStaffCommissionForPayment({
       businessId: rowBusinessId,
       appointmentId,
       staffName: appointment.staff_name as string | null,
-      serviceAmount: amount >= 0 ? amount : 0,
+      serviceAmount: amount,
       earnedAt: now,
     });
+
+    if (!commissionResult.ok) {
+      return { ok: false, error: commissionResult.error };
+    }
 
     const customerId = appointment.customer_id as string | null;
     if (customerId) {
@@ -128,7 +156,7 @@ export async function recordAppointmentPayment(
         businessId: rowBusinessId,
         appointmentId,
         customerId,
-        amount: amount >= 0 ? amount : 0,
+        amount,
         paidAt: now,
       });
     }

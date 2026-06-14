@@ -3,13 +3,10 @@ import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
 
 export type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
 
-const VALID_STATUSES: WalkinQueueStatus[] = [
+const ACTIVE_QUEUE_STATUSES: WalkinQueueStatus[] = [
   "waiting",
   "called",
   "in_service",
-  "done",
-  "left",
-  "no_show",
 ];
 
 export async function listTodayWalkinQueue(
@@ -27,7 +24,7 @@ export async function listTodayWalkinQueue(
     .from("walkin_queue")
     .select("*")
     .eq("business_id", businessId)
-    .in("status", VALID_STATUSES)
+    .in("status", ACTIVE_QUEUE_STATUSES)
     .gte("joined_at", startOfTodayUtc.toISOString())
     .order("joined_at", { ascending: true });
 
@@ -40,10 +37,20 @@ export async function listTodayWalkinQueue(
 }
 
 export async function updateWalkinStatus(
+  businessId: string,
   id: string,
   status: string,
   extraFields?: Partial<WalkinQueueRow>
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const VALID_STATUSES: WalkinQueueStatus[] = [
+    "waiting",
+    "called",
+    "in_service",
+    "done",
+    "left",
+    "no_show",
+  ];
+
   if (!VALID_STATUSES.includes(status as WalkinQueueStatus)) {
     return { ok: false, error: "Invalid walk-in status" };
   }
@@ -58,6 +65,7 @@ export async function updateWalkinStatus(
     .from("walkin_queue")
     .update(payload)
     .eq("id", id)
+    .eq("business_id", businessId)
     .select("id")
     .maybeSingle();
 

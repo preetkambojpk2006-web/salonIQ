@@ -19,7 +19,7 @@ export function RevenueTargetProgress({
 }: RevenueTargetProgressProps) {
   const { t } = useT();
 
-  if (dailyTarget === null || dailyTarget <= 0) {
+  if (dailyTarget === null || !Number.isFinite(dailyTarget) || dailyTarget <= 0) {
     return (
       <div
         style={{

@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     getUserMembership(),
     listOnlinePendingAppointments(),
   ]);
-  const appRole = membership?.appRole ?? "owner";
+  const appRole = membership?.appRole ?? "staff";
 
   const [insights, leaderboard, business, lowStockProducts, walkinQueue] =
     await Promise.all([
@@ -70,11 +70,12 @@ export default async function DashboardPage() {
       businessId={businessId}
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
-      dailyRevenueTarget={
-        business?.daily_revenue_target != null
-          ? Number(business.daily_revenue_target)
-          : null
-      }
+      dailyRevenueTarget={(() => {
+        const raw = business?.daily_revenue_target;
+        if (raw == null) return null;
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      })()}
       lowStockProducts={lowStockProducts}
       initialWalkinQueue={walkinQueue}
     />

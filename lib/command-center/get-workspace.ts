@@ -35,6 +35,6 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
     businessName: business?.name ?? "Your salon",
     branches: branches.map((b) => ({ id: b.id, name: b.name })),
     greeting: getNamasteGreeting(user?.email, displayName),
-    appRole: membership?.appRole ?? "owner",
+    appRole: membership?.appRole ?? "staff",
   };
 }

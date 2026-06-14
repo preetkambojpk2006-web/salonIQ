@@ -25,7 +25,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     getOwnerBusiness(),
     getUserMembership(),
   ]);
-  const appRole = membership?.appRole ?? "owner";
+  const appRole = membership?.appRole ?? "staff";
 
   return (
     <CalendarView

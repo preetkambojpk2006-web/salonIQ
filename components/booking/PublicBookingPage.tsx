@@ -108,8 +108,10 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
 
       if (rpcError || !data) {
         setBusyStarts([]);
+        setError("Could not load available slots. Please try again.");
       } else {
         setBusyStarts((data as string[]) ?? []);
+        setError(null);
       }
       setSelectedSlot(null);
       setLoadingSlots(false);

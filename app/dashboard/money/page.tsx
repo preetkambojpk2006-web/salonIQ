@@ -1,7 +1,7 @@
 import { MoneyView } from "@/components/money/money-view";
 import { StaffAdvances } from "@/components/money/StaffAdvances";
 import { StaffPayouts } from "@/components/money/StaffPayouts";
-import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
+import { canManageFinance, getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import {
   currentIstYearMonth,
@@ -19,6 +19,7 @@ import { listStaffMembers } from "@/lib/salon/queries";
 import { listStaffAdvances } from "@/lib/staff/advances";
 import { getStaffPayouts } from "@/lib/staff/payouts";
 import type { StaffAdvance, StaffPayoutsSummary } from "@/lib/staff/types";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +48,21 @@ const EMPTY_INVENTORY_SUMMARY: InventorySummary = {
 };
 
 export default async function MoneyPage() {
-  const [stats, businessId, membership] = await Promise.all([
+  const membership = await getUserMembership();
+
+  if (!membership?.businessId) {
+    redirect("/onboarding");
+  }
+
+  if (!isOwnerOrAdmin(membership.appRole)) {
+    redirect("/dashboard");
+  }
+
+  const [stats, businessId] = await Promise.all([
     getMoneyDashboardStats(),
     getOwnerBusinessId(),
-    getUserMembership(),
   ]);
-  const appRole = membership?.appRole ?? "owner";
+  const appRole = membership.appRole;
   const showInventorySpend = canManageFinance(appRole);
   const { year, month } = currentIstYearMonth();
 

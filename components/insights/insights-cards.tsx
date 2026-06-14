@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { useT } from "@/lib/i18n/LanguageContext";
 import type { InsightCard } from "@/lib/insights/types";
 
@@ -12,9 +13,13 @@ export function InsightsCards({ cards }: InsightsCardsProps) {
 
   if (cards.length === 0) {
     return (
-      <p className="text-body" style={{ color: "var(--muted)" }}>
-        {t("insights.empty")}
-      </p>
+      <EmptyState
+        icon="calendar"
+        title={t("insights.emptyTitle")}
+        description={t("insights.empty")}
+        actionLabel={t("insights.emptyAction")}
+        actionHref="/dashboard/calendar?booking=new"
+      />
     );
   }
 

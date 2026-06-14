@@ -61,7 +61,8 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
-  }>({ show: false, message: "" });
+    variant: "success" | "error";
+  }>({ show: false, message: "", variant: "success" });
 
   const canSettle = row.grossUnpaid > 0;
 
@@ -76,12 +77,14 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
       const result = await settleStaffPayout(formData);
       if (!result.ok) {
         setError(result.error);
+        setToast({ show: true, message: result.error, variant: "error" });
         return;
       }
 
       setToast({
         show: true,
         message: `${row.staffName}: ${formatInr(result.grossUnpaid)} commission, ${formatInr(result.fineApplied)} fine, ${formatInr(result.advanceApplied)} advance adjust, net ${formatInr(result.netPaid)} ✓`,
+        variant: "success",
       });
       router.refresh();
     });
@@ -138,8 +141,8 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
       <Toast
         message={toast.message}
         show={toast.show}
-        variant="success"
-        onDismiss={() => setToast({ show: false, message: "" })}
+        variant={toast.variant}
+        onDismiss={() => setToast({ show: false, message: "", variant: "success" })}
       />
     </>
   );
