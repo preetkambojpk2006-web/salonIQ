@@ -18,6 +18,7 @@ type SettingsViewProps = {
   initialOpeningHours: string;
   initialGoogleReviewLink: string;
   initialDailyRevenueTarget?: string;
+  attendancePanel?: ReactNode;
   loyaltyPanel?: ReactNode;
   bookingSlug?: string | null;
   salonName: string;
@@ -30,6 +31,7 @@ export function SettingsView({
   initialOpeningHours,
   initialGoogleReviewLink,
   initialDailyRevenueTarget = "",
+  attendancePanel,
   loyaltyPanel,
   bookingSlug = null,
   salonName,
@@ -140,6 +142,7 @@ export function SettingsView({
           </section>
         ) : null}
 
+        {attendancePanel}
         {loyaltyPanel}
 
         <section className="panel">

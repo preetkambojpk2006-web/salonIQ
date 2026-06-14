@@ -159,6 +159,51 @@ export async function updateLoyaltySettings(
   return { ok: true };
 }
 
+export async function updateAttendanceSettings(
+  formData: FormData
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin attendance settings update kar sakte hain.",
+    };
+  }
+
+  const raw = (formData.get("late_fine_amount") as string)?.trim();
+  const parsed = parseFloat(raw || "0");
+
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return {
+      ok: false,
+      error: "Late fine amount 0 ya usse zyada hona chahiye.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({ late_fine_amount: parsed })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/attendance");
+  revalidatePath("/dashboard/money");
+  return { ok: true };
+}
+
 export async function changePassword(formData: FormData): Promise<SettingsActionResult> {
   const supabase = createClient();
   const {

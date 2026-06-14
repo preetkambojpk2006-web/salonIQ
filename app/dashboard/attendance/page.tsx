@@ -1,0 +1,48 @@
+import { AttendanceView } from "@/components/attendance/attendance-view";
+import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
+import {
+  currentIstYearMonth,
+  formatIstDateHeader,
+  formatIstMonthLabel,
+  getActiveStaff,
+  getBusinessLateFineAmount,
+  getMonthAttendance,
+  getTodayAttendance,
+} from "@/lib/attendance/queries";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
+export default async function AttendancePage() {
+  const membership = await getUserMembership();
+
+  if (!membership?.businessId) {
+    redirect("/login");
+  }
+
+  if (!isOwnerOrAdmin(membership.appRole)) {
+    redirect("/dashboard");
+  }
+
+  const businessId = membership.businessId;
+  const { year, month } = currentIstYearMonth();
+
+  const [staff, todayAttendance, monthData, lateFineAmount] = await Promise.all([
+    getActiveStaff(businessId),
+    getTodayAttendance(businessId),
+    getMonthAttendance(businessId, year, month),
+    getBusinessLateFineAmount(businessId),
+  ]);
+
+  return (
+    <AttendanceView
+      staff={staff}
+      todayAttendance={todayAttendance}
+      monthSummaries={monthData.summaries}
+      totalOutstandingFines={monthData.totalOutstandingFines}
+      todayLabel={formatIstDateHeader()}
+      monthLabel={formatIstMonthLabel(year, month)}
+      lateFineAmount={lateFineAmount}
+    />
+  );
+}

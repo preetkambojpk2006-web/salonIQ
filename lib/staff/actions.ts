@@ -11,6 +11,7 @@ import {
   roundMoney,
   settleOutstandingAdvancesForStaff,
 } from "@/lib/staff/advances";
+import { settleOutstandingFinesForStaff } from "@/lib/staff/fines";
 import { getGrossUnpaidCommissionForStaff } from "@/lib/staff/payouts";
 import type {
   RecordStaffAdvanceResult,
@@ -144,19 +145,30 @@ export async function settleStaffPayout(
     return { ok: false, error: earningsError.message };
   }
 
-  const advanceApplied = await settleOutstandingAdvancesForStaff({
+  const fineApplied = await settleOutstandingFinesForStaff({
     businessId,
     staffName,
     deductionBudget: grossUnpaid,
+    deductedAt: settledAt,
+  });
+
+  const advanceApplied = await settleOutstandingAdvancesForStaff({
+    businessId,
+    staffName,
+    deductionBudget: roundMoney(grossUnpaid - fineApplied),
     settledAt,
   });
 
-  const netPaid = roundMoney(Math.max(0, grossUnpaid - advanceApplied));
+  const netPaid = roundMoney(
+    Math.max(0, grossUnpaid - fineApplied - advanceApplied)
+  );
 
   revalidatePath("/dashboard/money");
+  revalidatePath("/dashboard/attendance");
   return {
     ok: true,
     grossUnpaid,
+    fineApplied,
     advanceApplied,
     netPaid,
   };

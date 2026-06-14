@@ -3,12 +3,14 @@ import {
   roundMoney,
   normalizeStaffName,
 } from "@/lib/staff/advances";
+import { getOutstandingFinesByStaff } from "@/lib/staff/fines";
 import type { StaffPayoutsSummary } from "@/lib/staff/types";
 import { createClient } from "@/lib/supabase/server";
 
 const EMPTY_PAYOUTS: StaffPayoutsSummary = {
   rows: [],
   totalGrossUnpaid: 0,
+  totalFineOutstanding: 0,
   totalAdvanceOutstanding: 0,
   totalNetPayable: 0,
   totalUnpaid: 0,
@@ -24,13 +26,14 @@ export async function getStaffPayouts(
 ): Promise<StaffPayoutsSummary> {
   const supabase = createClient();
 
-  const [{ data, error }, advanceByStaff] = await Promise.all([
+  const [{ data, error }, advanceByStaff, fineByStaff] = await Promise.all([
     supabase
       .from("staff_earnings")
       .select("staff_name, commission_amount")
       .eq("business_id", businessId)
       .eq("status", "unpaid"),
     getOutstandingAdvancesByStaff(businessId),
+    getOutstandingFinesByStaff(businessId),
   ]);
 
   if (error) {
@@ -49,29 +52,40 @@ export async function getStaffPayouts(
   const staffNames = new Set<string>([
     ...Array.from(grossByStaff.keys()),
     ...Array.from(advanceByStaff.keys()),
+    ...Array.from(fineByStaff.keys()),
   ]);
 
   const rows = Array.from(staffNames)
     .map((staffName) => {
       const grossUnpaid = roundMoney(grossByStaff.get(staffName) ?? 0);
+      const fineOutstanding = roundMoney(fineByStaff.get(staffName) ?? 0);
       const advanceOutstanding = roundMoney(advanceByStaff.get(staffName) ?? 0);
-      const netPayable = roundMoney(Math.max(0, grossUnpaid - advanceOutstanding));
+      const netPayable = roundMoney(
+        Math.max(0, grossUnpaid - fineOutstanding - advanceOutstanding)
+      );
 
       return {
         staffName,
         grossUnpaid,
+        fineOutstanding,
         advanceOutstanding,
         netPayable,
         unpaidAmount: grossUnpaid,
       };
     })
     .filter(
-      (row) => row.grossUnpaid > 0 || row.advanceOutstanding > 0
+      (row) =>
+        row.grossUnpaid > 0 ||
+        row.advanceOutstanding > 0 ||
+        row.fineOutstanding > 0
     )
     .sort((a, b) => b.netPayable - a.netPayable || b.grossUnpaid - a.grossUnpaid);
 
   const totalGrossUnpaid = roundMoney(
     rows.reduce((sum, row) => sum + row.grossUnpaid, 0)
+  );
+  const totalFineOutstanding = roundMoney(
+    rows.reduce((sum, row) => sum + row.fineOutstanding, 0)
   );
   const totalAdvanceOutstanding = roundMoney(
     rows.reduce((sum, row) => sum + row.advanceOutstanding, 0)
@@ -83,6 +97,7 @@ export async function getStaffPayouts(
   return {
     rows,
     totalGrossUnpaid,
+    totalFineOutstanding,
     totalAdvanceOutstanding,
     totalNetPayable,
     totalUnpaid: totalGrossUnpaid,

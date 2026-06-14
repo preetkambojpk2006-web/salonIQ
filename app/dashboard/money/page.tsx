@@ -26,6 +26,7 @@ const EMPTY_SPLIT: CashUpiSplit = {
 const EMPTY_PAYOUTS: StaffPayoutsSummary = {
   rows: [],
   totalGrossUnpaid: 0,
+  totalFineOutstanding: 0,
   totalAdvanceOutstanding: 0,
   totalNetPayable: 0,
   totalUnpaid: 0,

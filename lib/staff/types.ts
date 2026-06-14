@@ -30,6 +30,7 @@ export type StaffAdvance = {
 export type StaffPayoutRow = {
   staffName: string;
   grossUnpaid: number;
+  fineOutstanding: number;
   advanceOutstanding: number;
   netPayable: number;
   /** Gross unpaid commission — kept for existing Money UI until Step 3 refresh */
@@ -39,6 +40,7 @@ export type StaffPayoutRow = {
 export type StaffPayoutsSummary = {
   rows: StaffPayoutRow[];
   totalGrossUnpaid: number;
+  totalFineOutstanding: number;
   totalAdvanceOutstanding: number;
   totalNetPayable: number;
   /** Gross unpaid total — kept for existing Money UI until Step 3 refresh */
@@ -53,6 +55,7 @@ export type SettleStaffPayoutResult =
   | {
       ok: true;
       grossUnpaid: number;
+      fineApplied: number;
       advanceApplied: number;
       netPaid: number;
     }

@@ -29,6 +29,11 @@ function PayoutBreakdown({ row }: { row: StaffPayoutRow }) {
       <p style={{ margin: 0, fontSize: 12, color: TOKENS.textMuted }}>
         Commission: {formatInr(row.grossUnpaid)}
       </p>
+      {row.fineOutstanding > 0 ? (
+        <p style={{ margin: 0, fontSize: 12, color: TOKENS.accentCoral }}>
+          Fines: −{formatInr(row.fineOutstanding)}
+        </p>
+      ) : null}
       {row.advanceOutstanding > 0 ? (
         <p style={{ margin: 0, fontSize: 12, color: TOKENS.accentCoral }}>
           Advance: −{formatInr(row.advanceOutstanding)}
@@ -75,7 +80,7 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
 
       setToast({
         show: true,
-        message: `${row.staffName}: ${formatInr(result.grossUnpaid)} commission, ${formatInr(result.advanceApplied)} advance adjust, net ${formatInr(result.netPaid)} ✓`,
+        message: `${row.staffName}: ${formatInr(result.grossUnpaid)} commission, ${formatInr(result.fineApplied)} fine, ${formatInr(result.advanceApplied)} advance adjust, net ${formatInr(result.netPaid)} ✓`,
       });
       router.refresh();
     });
@@ -143,6 +148,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
   const {
     rows,
     totalGrossUnpaid,
+    totalFineOutstanding,
     totalAdvanceOutstanding,
     totalNetPayable,
   } = payouts;
@@ -188,7 +194,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
             lineHeight: 1.45,
           }}
         >
-          Sab staff commission settle ho chuka hai aur koi outstanding advance nahi hai.
+          Sab staff commission settle ho chuka hai aur koi outstanding fine ya advance nahi hai.
         </p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
@@ -244,6 +250,18 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
           <span style={{ fontSize: 14, color: TOKENS.textMuted }}>Kul commission</span>
           <strong style={{ fontSize: 15, color: TOKENS.textDark }}>
             {formatInr(totalGrossUnpaid)}
+          </strong>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>Kul fines</span>
+          <strong style={{ fontSize: 15, color: TOKENS.accentCoral }}>
+            −{formatInr(totalFineOutstanding)}
           </strong>
         </div>
         <div

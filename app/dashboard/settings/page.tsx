@@ -1,3 +1,4 @@
+import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
@@ -41,6 +42,15 @@ export default async function SettingsPage() {
         business?.daily_revenue_target != null
           ? String(Number(business.daily_revenue_target))
           : ""
+      }
+      attendancePanel={
+        <AttendanceSettingsPanel
+          initialLateFineAmount={
+            business?.late_fine_amount != null
+              ? String(Number(business.late_fine_amount))
+              : "100"
+          }
+        />
       }
       loyaltyPanel={
         <LoyaltySettingsPanel

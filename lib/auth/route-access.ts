@@ -3,6 +3,7 @@ import type { CommandNavId } from "@/lib/command-center/navigation";
 
 const STAFF_BLOCKED_PATHS = [
   "/dashboard/money",
+  "/dashboard/attendance",
   "/dashboard/insights",
   "/dashboard/automations",
   "/dashboard/coach",
@@ -13,6 +14,7 @@ const STAFF_BLOCKED_PATHS = [
 
 const FINANCE_NAV_IDS = new Set<CommandNavId>([
   "money",
+  "attendance",
   "insights",
   "automations",
   "coach",
