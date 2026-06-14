@@ -30,7 +30,7 @@ import {
 } from "@/lib/appointments/utils";
 import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
-import { calendarDayInTimezone, SALON_TIMEZONE } from "@/lib/payments/date-utils";
+import { calendarDayInTimezone, SALON_TIMEZONE, todayCalendarDay, mondayOfWeekCalendarDay, addCalendarDays } from "@/lib/payments/date-utils";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type CalendarViewProps = {
@@ -212,7 +212,41 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
     map.set(key, list);
   }
 
+  for (const list of Array.from(map.values())) {
+    list.sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+  }
+
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
+function filterAppointmentsForView(
+  appointments: Appointment[],
+  viewMode: "day" | "week" | "month"
+): Appointment[] {
+  const today = todayCalendarDay(SALON_TIMEZONE);
+
+  if (viewMode === "day") {
+    return appointments.filter(
+      (appointment) => dateKey(appointment.start_time) === today
+    );
+  }
+
+  if (viewMode === "week") {
+    const weekStart = mondayOfWeekCalendarDay(SALON_TIMEZONE);
+    const weekEnd = addCalendarDays(weekStart, 6, SALON_TIMEZONE);
+    return appointments.filter((appointment) => {
+      const key = dateKey(appointment.start_time);
+      return key >= weekStart && key <= weekEnd;
+    });
+  }
+
+  const monthPrefix = today.slice(0, 7);
+  return appointments.filter((appointment) =>
+    dateKey(appointment.start_time).startsWith(monthPrefix)
+  );
 }
 
 function AppointmentSourceTag({ appointment }: { appointment: Appointment }) {
@@ -543,7 +577,15 @@ export function CalendarView({
     });
   }, [showPaymentToast, router]);
 
-  const grouped = useMemo(() => groupByDate(visibleAppointments), [visibleAppointments]);
+  const filteredAppointments = useMemo(
+    () => filterAppointmentsForView(visibleAppointments, viewMode),
+    [visibleAppointments, viewMode]
+  );
+
+  const grouped = useMemo(
+    () => groupByDate(filteredAppointments),
+    [filteredAppointments]
+  );
 
   const handleOpenDetail = useCallback((appointment: Appointment) => {
     setDetailAppointment(appointment);
@@ -726,6 +768,19 @@ export function CalendarView({
             <p className="text-body" style={{ color: "var(--muted)" }}>
               {t("calendar.noOnlinePending")}
             </p>
+          ) : filteredAppointments.length === 0 ? (
+            <div className="view-stack">
+              {onlinePendingCount > 0 ? (
+                <OnlinePendingRequests appointments={onlinePending} />
+              ) : null}
+              <p className="text-body" style={{ color: "var(--muted)" }}>
+                {viewMode === "day"
+                  ? t("calendar.noDayAppointments")
+                  : viewMode === "week"
+                    ? t("calendar.noWeekAppointments")
+                    : t("calendar.noMonthAppointments")}
+              </p>
+            </div>
           ) : (
             <div className="view-stack">
               {onlinePendingCount > 0 ? (
@@ -736,6 +791,11 @@ export function CalendarView({
                 <div key={key}>
                   <p className="eyebrow" style={{ marginBottom: 12 }}>
                     {formatDateHeading(dayAppointments[0].start_time, t)}
+                    {viewMode === "month"
+                      ? ` — ${dayAppointments.length} ${
+                          dayAppointments.length === 1 ? "booking" : "bookings"
+                        }`
+                      : null}
                   </p>
                   <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
                     {dayAppointments.map((appointment) => (
@@ -747,16 +807,19 @@ export function CalendarView({
                         onCopied={handleCopied}
                         onOpenDetail={() => handleOpenDetail(appointment)}
                         canManageFinance={canManageFinance}
+                        compact={viewMode === "month"}
                       />
                     ))}
                   </div>
-                  <div className="hidden desktop:block">
-                    <CalendarDayGrid
-                      dayAppointments={dayAppointments}
-                      onCompletePay={handleCompletePay}
-                      renderBlock={renderGridBlock}
-                    />
-                  </div>
+                  {viewMode !== "month" ? (
+                    <div className="hidden desktop:block">
+                      <CalendarDayGrid
+                        dayAppointments={dayAppointments}
+                        onCompletePay={handleCompletePay}
+                        renderBlock={renderGridBlock}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
