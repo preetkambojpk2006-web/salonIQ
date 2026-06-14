@@ -15,6 +15,7 @@ import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer, CustomerReliability } from "@/lib/customers/types";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import { rewardEarned } from "@/lib/whatsapp/templates";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 function formatRs(amount: number): string {
   return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -146,6 +147,7 @@ function LoyaltyProgressSection({
   rewardConfig: BusinessRewardConfig;
   salonName: string;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -295,13 +297,13 @@ function LoyaltyProgressSection({
               />
               {customer.reward_notified_at ? (
                 <p style={{ margin: 0, fontSize: 12, color: "#1FA873", fontWeight: 700 }}>
-                  WhatsApp bhej diya ✓
+                  {t("customers.whatsappSent")}
                 </p>
               ) : null}
             </>
           ) : (
             <p style={{ margin: 0, fontSize: 12, color: "#8A8A8A" }}>
-              WhatsApp ke liye customer ka phone number add karein.
+              {t("customers.addPhoneForWhatsApp")}
             </p>
           )}
           <button
@@ -337,6 +339,7 @@ function LoyaltyProgressSection({
 }
 
 function CustomerCardInner({ customer, rewardConfig, salonName }: CustomerCardProps) {
+  const { t } = useT();
   const tag = getCustomerDisplayTag(customer);
 
   return (
@@ -346,7 +349,7 @@ function CustomerCardInner({ customer, rewardConfig, salonName }: CustomerCardPr
       <p className="customer-name">{customer.name}</p>
       {customer.phone ? <p>{customer.phone}</p> : null}
       <strong>{formatRs(customer.total_spend)}</strong>
-      <p>{getCustomerVisitLine(customer)}</p>
+      <p>{getCustomerVisitLine(customer, t("customers.addVisitNotes"))}</p>
       <LoyaltyProgressSection
         customer={customer}
         rewardConfig={rewardConfig}

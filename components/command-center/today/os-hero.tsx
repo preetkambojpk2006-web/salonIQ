@@ -1,5 +1,8 @@
+"use client";
+
 import type { UpcomingAppointment } from "@/lib/dashboard/today-queries";
 import { RevenueTargetProgress } from "@/components/command-center/today/revenue-target-progress";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type OsHeroProps = {
   nextAppointment: UpcomingAppointment | null;
@@ -18,6 +21,8 @@ export function OsHero({
   dailyRevenueTarget = null,
   showRevenue = true,
 }: OsHeroProps) {
+  const { t } = useT();
+
   return (
     <section
       aria-label="Live operational status"
@@ -38,7 +43,7 @@ export function OsHero({
           color: "#8A8A8A",
         }}
       >
-        Live operational status
+        {t("today.liveSchedule")}
       </p>
 
       <div
@@ -51,7 +56,7 @@ export function OsHero({
       >
         <div>
           <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#8A8A8A" }}>
-            Agli appointment
+            {t("today.nextAppointments")}
           </p>
           <p
             style={{
@@ -64,7 +69,7 @@ export function OsHero({
           >
             {nextAppointment
               ? `${nextAppointment.time} · ${nextAppointment.customer}`
-              : "Aaj koi upcoming booking nahi"}
+              : t("today.noUpcomingBooking")}
           </p>
           {nextAppointment ? (
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8A8A8A" }}>
@@ -77,7 +82,7 @@ export function OsHero({
         {showRevenue ? (
           <div style={{ textAlign: "right" }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#8A8A8A" }}>
-              Aaj ki revenue
+              {t("today.todayRevenueLabel")}
             </p>
             <p
               style={{

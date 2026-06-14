@@ -18,6 +18,7 @@ import type {
   SalonService,
   SalonStaff,
 } from "@/lib/salon/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type SalonSetupViewProps = {
   services: SalonService[];
@@ -411,6 +412,7 @@ export function SalonSetupView({
   branches,
   bookingSlug = null,
 }: SalonSetupViewProps) {
+  const { t } = useT();
   const router = useRouter();
   const [showServiceForm, setShowServiceForm] = useState(services.length === 0);
   const [showStaffForm, setShowStaffForm] = useState(staff.length === 0);
@@ -493,7 +495,7 @@ export function SalonSetupView({
               Online booking
             </p>
             <h2 style={{ marginTop: 4, fontSize: 18 }}>
-              Public booking ke liye setup complete karein
+              {t("services.publicBookingSetup")}
             </h2>
             <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8A8A8A", lineHeight: 1.5 }}>
               Kam se kam 1 active service aur 1 active staff member chahiye.
@@ -511,7 +513,7 @@ export function SalonSetupView({
           <div className="panel-header">
             <div>
               <p className="eyebrow">Services</p>
-              <h2>Aapki services</h2>
+              <h2>{t("services.yours")}</h2>
             </div>
             {services.length > 0 ? (
               <button
@@ -520,7 +522,7 @@ export function SalonSetupView({
                 onClick={() => setShowServiceForm((value) => !value)}
                 style={{ minHeight: 40, borderRadius: 10 }}
               >
-                {showServiceForm ? "Form band karein" : "Nayi service"}
+                {showServiceForm ? t("services.closeForm") : t("services.newService")}
               </button>
             ) : null}
           </div>
@@ -528,9 +530,9 @@ export function SalonSetupView({
           {services.length === 0 && !showServiceForm ? (
             <EmptyState
               icon="calendar"
-              title="Abhi koi service nahi"
-              description="Pehli service add karein — price aur duration yahan set hoga."
-              actionLabel="Pehli service add karein"
+              title={t("services.noServices")}
+              description={t("services.noServicesDesc")}
+              actionLabel={t("services.addFirstService")}
               onAction={() => setShowServiceForm(true)}
             />
           ) : null}
@@ -609,7 +611,7 @@ export function SalonSetupView({
                 className="primary-button"
                 style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
               >
-                {savingService ? "Saving…" : "Service save karein"}
+                {savingService ? t("common.saving") : t("services.saveService")}
               </button>
             </form>
           ) : null}
@@ -635,7 +637,7 @@ export function SalonSetupView({
           <div className="panel-header">
             <div>
               <p className="eyebrow">Staff</p>
-              <h2>Aapki team</h2>
+              <h2>{t("services.team")}</h2>
             </div>
             {staff.length > 0 && branches.length > 0 ? (
               <button
@@ -644,7 +646,7 @@ export function SalonSetupView({
                 onClick={() => setShowStaffForm((value) => !value)}
                 style={{ minHeight: 40, borderRadius: 10 }}
               >
-                {showStaffForm ? "Form band karein" : "Naya staff"}
+                {showStaffForm ? t("services.closeForm") : t("services.newStaff")}
               </button>
             ) : null}
           </div>
@@ -660,9 +662,9 @@ export function SalonSetupView({
           ) : staff.length === 0 && !showStaffForm ? (
             <EmptyState
               icon="customers"
-              title="Abhi koi staff nahi"
-              description="Pehla staff add karein — online booking aur calendar dono ke liye zaroori hai."
-              actionLabel="Pehla staff add karein"
+              title={t("services.noStaff")}
+              description={t("services.noStaffDesc")}
+              actionLabel={t("services.addFirstStaff")}
               onAction={() => setShowStaffForm(true)}
             />
           ) : null}
@@ -758,7 +760,7 @@ export function SalonSetupView({
                 className="primary-button"
                 style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
               >
-                {savingStaff ? "Saving…" : "Staff save karein"}
+                {savingStaff ? t("common.saving") : t("services.saveStaff")}
               </button>
             </form>
           ) : null}
@@ -782,11 +784,11 @@ export function SalonSetupView({
 
           {branches.length > 0 ? (
             <p className="text-body" style={{ marginTop: 16, fontSize: 14 }}>
-              Branch details badalne ke liye{" "}
+              {t("services.branchHintBefore")}{" "}
               <Link href="/dashboard/branches" style={{ color: "#1FA873", fontWeight: 700 }}>
                 Branches
               </Link>{" "}
-              kholo.
+              {t("services.branchHintAfter")}
             </p>
           ) : null}
         </section>

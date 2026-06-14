@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 const STORAGE_KEY = "saloniq_welcome_dismissed";
 
 export function WelcomeBanner() {
+  const { t } = useT();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -54,10 +56,10 @@ export function WelcomeBanner() {
             lineHeight: 1.35,
           }}
         >
-          SalonIQ mein swagat hai! Pehli booking add karein 🎉
+          {t("welcome.title")}
         </p>
         <p style={{ margin: "6px 0 0", fontSize: 13, color: "#8A8A8A" }}>
-          Calendar kholo, customer select karo, aur aaj ka schedule shuru karo.
+          {t("welcome.subtitle")}
         </p>
       </div>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
@@ -76,7 +78,7 @@ export function WelcomeBanner() {
             textDecoration: "none",
           }}
         >
-          Pehli booking
+          {t("welcome.firstBooking")}
         </Link>
         <button
           type="button"
@@ -93,7 +95,7 @@ export function WelcomeBanner() {
             cursor: "pointer",
           }}
         >
-          Theek hai
+          {t("welcome.dismiss")}
         </button>
       </div>
     </section>

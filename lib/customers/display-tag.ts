@@ -49,9 +49,12 @@ export function getCustomerDisplayTag(customer: Customer): CustomerTagDisplay {
   return { label: "Regular", className: "tag" };
 }
 
-export function getCustomerVisitLine(customer: Customer): string {
+export function getCustomerVisitLine(
+  customer: Customer,
+  notesFallback = "Add visit notes"
+): string {
   const visits = customer.visit_count;
   const visitWord = visits === 1 ? "visit" : "visits";
-  const detail = customer.notes?.trim() || "Visit notes add karein";
+  const detail = customer.notes?.trim() || notesFallback;
   return `${visits} ${visitWord} · ${detail}`;
 }

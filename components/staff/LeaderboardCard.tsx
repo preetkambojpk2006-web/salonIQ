@@ -1,4 +1,7 @@
+"use client";
+
 import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type LeaderboardCardProps = {
   entries: StaffLeaderboardEntry[];
@@ -35,6 +38,8 @@ function rankMedal(rank: number): string {
 }
 
 export function LeaderboardCard({ entries }: LeaderboardCardProps) {
+  const { t } = useT();
+
   return (
     <article
       style={{
@@ -61,7 +66,7 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
           color: TOKENS.textMuted,
         }}
       >
-        Is mahine ki top staff — paid revenue ke hisaab se
+        {t("leaderboard.subtitle")}
       </p>
 
       {entries.length === 0 ? (
@@ -72,7 +77,7 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
             color: TOKENS.textMuted,
           }}
         >
-          Abhi data kam hai, baad mein dekhein
+          {t("leaderboard.noData")}
         </p>
       ) : (
         <ul

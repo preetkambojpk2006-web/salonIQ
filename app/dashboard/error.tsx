@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type DashboardErrorProps = {
   error: Error & { digest?: string };
@@ -8,6 +9,8 @@ type DashboardErrorProps = {
 };
 
 export default function DashboardError({ error, reset }: DashboardErrorProps) {
+  const { t } = useT();
+
   useEffect(() => {
     console.error("Dashboard error:", error);
   }, [error]);
@@ -25,7 +28,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
         }}
       >
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#1A1A1A" }}>
-          Kuch gadbad ho gayi
+          {t("error.title")}
         </h2>
         <p
           style={{
@@ -36,8 +39,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
             lineHeight: 1.5,
           }}
         >
-          Page load nahi ho paya. Please refresh karein — agar phir bhi issue ho to
-          thodi der baad try karein.
+          {t("error.description")}
         </p>
         <button
           type="button"
@@ -45,7 +47,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
           className="primary-button"
           style={{ marginTop: 18, minHeight: 44, borderRadius: 10 }}
         >
-          Refresh karein
+          {t("error.refresh")}
         </button>
       </section>
     </div>

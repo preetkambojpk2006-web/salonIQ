@@ -1,33 +1,38 @@
-import Link from "next/link";
+"use client";
 
-const tips = [
-  {
-    title: "Pehli booking add karein",
-    body: "Calendar se nayi appointment banao — cash/UPI payment ke baad revenue auto track hogi.",
-    href: "/dashboard/calendar?booking=new",
-    cta: "Calendar kholo",
-  },
-  {
-    title: "Customers save karein",
-    body: "Regular clients ka record rakho — visit history aur notes baad mein kaam aayenge.",
-    href: "/dashboard/customers",
-    cta: "Customers dekho",
-  },
-  {
-    title: "Salon details update karo",
-    body: "Naam, phone, aur opening hours Settings mein kabhi bhi edit kar sakte ho.",
-    href: "/dashboard/settings",
-    cta: "Settings",
-  },
-];
+import Link from "next/link";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 export function GettingStartedPanel() {
+  const { t } = useT();
+
+  const tips = [
+    {
+      title: t("gettingStarted.tip1Title"),
+      body: t("gettingStarted.tip1Body"),
+      href: "/dashboard/calendar?booking=new",
+      cta: t("gettingStarted.tip1Cta"),
+    },
+    {
+      title: t("gettingStarted.tip2Title"),
+      body: t("gettingStarted.tip2Body"),
+      href: "/dashboard/customers",
+      cta: t("gettingStarted.tip2Cta"),
+    },
+    {
+      title: t("gettingStarted.tip3Title"),
+      body: t("gettingStarted.tip3Body"),
+      href: "/dashboard/settings",
+      cta: t("gettingStarted.tip3Cta"),
+    },
+  ];
+
   return (
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">Shuruat</p>
-          <h2>Aaj kya karein</h2>
+          <p className="eyebrow">{t("gettingStarted.eyebrow")}</p>
+          <h2>{t("gettingStarted.title")}</h2>
         </div>
       </div>
       <div className="insight-stack stagger-list">

@@ -17,7 +17,8 @@ type AttendanceViewProps = {
   todayAttendance: StaffAttendanceRow[];
   monthSummaries: MonthStaffAttendanceSummary[];
   totalOutstandingFines: number;
-  todayLabel: string;
+  todayDate: string;
+  todayWeekday: string;
   monthLabel: string;
   lateFineAmount: number;
 };
@@ -197,12 +198,17 @@ export function AttendanceView({
   todayAttendance,
   monthSummaries,
   totalOutstandingFines,
-  todayLabel,
+  todayDate,
+  todayWeekday,
   monthLabel,
   lateFineAmount,
 }: AttendanceViewProps) {
   const { t } = useT();
   const [tab, setTab] = useState<"today" | "month">("today");
+  const todayHeader = t("attendance.todayHeader", {
+    date: todayDate,
+    day: todayWeekday,
+  });
 
   const attendanceByStaffId = new Map(
     todayAttendance.map((row) => [row.staff_id, row.status])
@@ -276,7 +282,7 @@ export function AttendanceView({
               color: TOKENS.textDark,
             }}
           >
-            {todayLabel}
+            {todayHeader}
           </h2>
 
           {staff.length === 0 ? (
@@ -288,7 +294,7 @@ export function AttendanceView({
                 lineHeight: 1.45,
               }}
             >
-              Koi active staff nahi hai. Pehle Services & Staff se staff add karein.
+              {t("attendance.noStaff")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
@@ -380,7 +386,7 @@ export function AttendanceView({
                 color: TOKENS.textMuted,
               }}
             >
-              Is mahine abhi koi attendance mark nahi hui.
+              {t("attendance.noMonthData")}
             </p>
           ) : (
             <div

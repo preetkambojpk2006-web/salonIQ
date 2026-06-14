@@ -4,6 +4,9 @@ import { type FormEvent, useState } from "react";
 import { Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Insight } from "@/lib/coach/insights";
+import { useT } from "@/lib/i18n/LanguageContext";
+
+type TranslateFn = (key: string, params?: Record<string, string>) => string;
 
 type CoachPageProps = {
   insights: Insight[];
@@ -34,15 +37,24 @@ const TOKENS = {
   accentGreenSoft: "#D4E8DD",
 };
 
-const SUGGESTED_QUESTIONS = [
-  "Revenue kaisi hai?",
-  "Kaunsi service best hai?",
-  "Kaun sa staff top hai?",
-  "Kya improve karu?",
+const SUGGESTED_QUESTION_KEYS = [
+  "coach.qRevenue",
+  "coach.qBestService",
+  "coach.qTopStaff",
+  "coach.qImprove",
 ] as const;
 
-const MISSING_DATA_ANSWER =
-  "Is topic par abhi data kam hai — thodi aur bookings ke baad yahan answer milega.";
+function missingDataAnswer(t: TranslateFn): string {
+  return t("coach.missingData");
+}
+
+function joinAnswer(
+  t: TranslateFn,
+  parts: Array<string | null | undefined>
+): string {
+  const lines = parts.filter((part): part is string => Boolean(part));
+  return lines.length > 0 ? lines.join("\n\n") : missingDataAnswer(t);
+}
 
 function isLowData(insights: Insight[]): boolean {
   return insights.length === 1 && insights[0]?.id === "low-data";
@@ -52,19 +64,22 @@ function getInsight(insights: Insight[], id: string): Insight | null {
   return insights.find((insight) => insight.id === id) ?? null;
 }
 
-function joinAnswer(parts: Array<string | null | undefined>): string {
-  const lines = parts.filter((part): part is string => Boolean(part));
-  return lines.length > 0 ? lines.join("\n\n") : MISSING_DATA_ANSWER;
+function localizeInsight(insight: Insight, t: TranslateFn): Insight {
+  if (insight.id !== "low-data") return insight;
+  return {
+    ...insight,
+    title: t("coach.insightsBuilding"),
+    detail: t("coach.lowDataDetail"),
+    actionLabel: t("coach.openCalendar"),
+  };
 }
 
-function formatNoMatch(): string {
-  return joinAnswer([
-    "Yeh sawaal abhi clear nahi hua. Aap yeh try kar sakte hain:",
-    '• "Revenue kaisi hai?"',
-    '• "Kaunsi service best hai?"',
-    '• "Kya improve karu?"',
-    '• "Sab batao — quick report"',
-    '• "Kaun se din slow hain?"',
+function formatNoMatch(t: TranslateFn): string {
+  return joinAnswer(t, [
+    t("coach.noMatchIntro"),
+    `• "${t("coach.qRevenue")}"`,
+    `• "${t("coach.qBestService")}"`,
+    `• "${t("coach.qImprove")}"`,
   ]);
 }
 
@@ -158,110 +173,85 @@ function detectTopic(question: string): CoachTopic | null {
   return null;
 }
 
-function answerRevenue(insights: Insight[]): string {
+function answerRevenue(insights: Insight[], t: TranslateFn): string {
   const revenue = getInsight(insights, "revenue-trend");
-  if (!revenue) return MISSING_DATA_ANSWER;
+  if (!revenue) return missingDataAnswer(t);
 
-  return joinAnswer([
-    revenue.title + ".",
-    revenue.detail,
-    "Recommendation: agar week soft hai to slow slots par comeback offer test karein.",
-  ]);
+  return joinAnswer(t, [revenue.title + ".", revenue.detail]);
 }
 
-function answerSlots(insights: Insight[]): string {
+function answerSlots(insights: Insight[], t: TranslateFn): string {
   const slow = getInsight(insights, "slow-slot");
   const busy = getInsight(insights, "busy-slot");
 
-  if (!slow && !busy) return MISSING_DATA_ANSWER;
+  if (!slow && !busy) return missingDataAnswer(t);
 
-  return joinAnswer([
+  return joinAnswer(t, [
     slow ? `Slow slot: ${slow.detail}` : null,
     busy ? `Busy slot: ${busy.detail}` : null,
-    "Strategy: slow slots fill karein offers se, busy slots par high-value services aur buffer time rakhein.",
   ]);
 }
 
-function answerService(insights: Insight[]): string {
+function answerService(insights: Insight[], t: TranslateFn): string {
   const bookings = getInsight(insights, "top-service-bookings");
   const revenue = getInsight(insights, "top-service-revenue");
 
-  if (!bookings && !revenue) return MISSING_DATA_ANSWER;
+  if (!bookings && !revenue) return missingDataAnswer(t);
 
-  return joinAnswer([
+  return joinAnswer(t, [
     bookings ? `Bookings leader: ${bookings.detail}` : null,
     revenue ? `Revenue leader: ${revenue.detail}` : null,
-    bookings && revenue
-      ? "Dono metrics alag ho sakti hain — high-booking service ko upsell karein, high-revenue service ko front-page par promote karein."
-      : null,
   ]);
 }
 
-function answerStaff(insights: Insight[]): string {
+function answerStaff(insights: Insight[], t: TranslateFn): string {
   const staff = getInsight(insights, "top-staff-revenue");
-  if (!staff) return MISSING_DATA_ANSWER;
+  if (!staff) return missingDataAnswer(t);
 
-  return joinAnswer([
-    staff.title + ".",
-    staff.detail,
-    "Recommendation: unke peak hours protect karein aur walk-in overflow ke liye backup staff plan karein.",
-  ]);
+  return joinAnswer(t, [staff.title + ".", staff.detail]);
 }
 
-function answerCustomers(insights: Insight[]): string {
+function answerCustomers(insights: Insight[], t: TranslateFn): string {
   const inactive = getInsight(insights, "inactive-customers");
-  if (!inactive) {
-    return joinAnswer([
-      "Abhi koi inactive customer flag nahi — retention healthy lag rahi hai.",
-      "Suggestion: regular customers ko priority slots aur small loyalty perks se engage rakhein.",
-    ]);
-  }
+  if (!inactive) return missingDataAnswer(t);
 
-  return joinAnswer([
-    inactive.title + ".",
-    inactive.detail,
-    "Suggestion: gentle WhatsApp comeback offer bhejein — 10-15% off often strong results deta hai.",
-  ]);
+  return joinAnswer(t, [inactive.title + ".", inactive.detail]);
 }
 
-function answerNoshow(insights: Insight[]): string {
+function answerNoshow(insights: Insight[], t: TranslateFn): string {
   const repeat = getInsight(insights, "repeat-no-show");
-  if (!repeat) return MISSING_DATA_ANSWER;
+  if (!repeat) return missingDataAnswer(t);
 
   const parts = repeat.detail.split(" — ");
   const noShowPart =
     parts.find((part) => part.toLowerCase().includes("no-show")) ?? repeat.detail;
 
-  return joinAnswer([
+  return joinAnswer(t, [
     repeat.title + ".",
     noShowPart.endsWith(".") ? noShowPart : `${noShowPart}.`,
-    "Advice: booking confirm ke baad 24 ghante pehle WhatsApp reminder bhejein aur high-risk slots par deposit policy consider karein.",
   ]);
 }
 
-function answerRepeat(insights: Insight[]): string {
+function answerRepeat(insights: Insight[], t: TranslateFn): string {
   const repeat = getInsight(insights, "repeat-no-show");
-  if (!repeat) return MISSING_DATA_ANSWER;
+  if (!repeat) return missingDataAnswer(t);
 
   const parts = repeat.detail.split(" — ");
   const repeatPart =
     parts.find((part) => part.toLowerCase().includes("repeat")) ?? repeat.detail;
 
-  return joinAnswer([
+  return joinAnswer(t, [
     repeat.title + ".",
     repeatPart.endsWith(".") ? repeatPart : `${repeatPart}.`,
-    repeat.severity === "good"
-      ? "Loyal customers ko priority slots aur small perks se reward karein."
-      : "First-time visitors ko follow-up message se repeat visit encourage karein.",
   ]);
 }
 
-function answerImprove(insights: Insight[]): string {
+function answerImprove(insights: Insight[], t: TranslateFn): string {
   const actions = insights.filter((insight) => insight.severity === "action");
 
   if (actions.length > 0) {
-    return joinAnswer([
-      "Aapke data ke hisaab se top smart moves:",
+    return joinAnswer(t, [
+      "Top smart moves from your data:",
       ...actions.slice(0, 2).map(
         (insight, index) =>
           `${index + 1}. ${insight.title} — ${insight.detail}`
@@ -271,8 +261,8 @@ function answerImprove(insights: Insight[]): string {
 
   const watch = insights.filter((insight) => insight.severity === "watch");
   if (watch.length > 0) {
-    return joinAnswer([
-      "Abhi urgent red flags nahi, lekin yeh areas watch karein:",
+    return joinAnswer(t, [
+      "No urgent red flags, but watch these areas:",
       ...watch.slice(0, 2).map(
         (insight, index) =>
           `${index + 1}. ${insight.title} — ${insight.detail}`
@@ -280,13 +270,13 @@ function answerImprove(insights: Insight[]): string {
     ]);
   }
 
-  return joinAnswer([
-    "Metrics stable lag rahi hain — consistency maintain karein.",
-    "Weekly ek baar revenue aur slot report review karna best habit hai.",
+  return joinAnswer(t, [
+    "Metrics look stable — keep up the consistency.",
+    "Review revenue and slot reports once a week.",
   ]);
 }
 
-function answerSummary(insights: Insight[]): string {
+function answerSummary(insights: Insight[], t: TranslateFn): string {
   const keyIds = [
     "revenue-trend",
     "top-service-bookings",
@@ -303,48 +293,49 @@ function answerSummary(insights: Insight[]): string {
     .filter((insight): insight is Insight => insight !== null)
     .map((insight) => `• ${insight.title}: ${insight.detail}`);
 
-  if (bullets.length === 0) return MISSING_DATA_ANSWER;
+  if (bullets.length === 0) return missingDataAnswer(t);
 
-  return joinAnswer(["Quick business overview:", ...bullets]);
+  return joinAnswer(t, ["Quick business overview:", ...bullets]);
 }
 
-function answerQuestion(question: string, insights: Insight[]): string {
+function answerQuestion(
+  question: string,
+  insights: Insight[],
+  t: TranslateFn
+): string {
   const trimmed = question.trim();
   if (!trimmed) {
-    return joinAnswer([
-      "Kuch likh ke poochhen — jaise revenue kaisi chal rahi hai?",
-      'Ya neeche suggested questions par tap karein.',
-    ]);
+    return joinAnswer(t, [t("coach.emptyQuestion"), t("coach.tapSuggestions")]);
   }
 
   if (isLowData(insights)) {
-    return insights[0]?.detail ?? MISSING_DATA_ANSWER;
+    return t("coach.lowDataDetail");
   }
 
   const topic = detectTopic(trimmed);
-  if (!topic) return formatNoMatch();
+  if (!topic) return formatNoMatch(t);
 
   switch (topic) {
     case "summary":
-      return answerSummary(insights);
+      return answerSummary(insights, t);
     case "improve":
-      return answerImprove(insights);
+      return answerImprove(insights, t);
     case "slots":
-      return answerSlots(insights);
+      return answerSlots(insights, t);
     case "revenue":
-      return answerRevenue(insights);
+      return answerRevenue(insights, t);
     case "service":
-      return answerService(insights);
+      return answerService(insights, t);
     case "staff":
-      return answerStaff(insights);
+      return answerStaff(insights, t);
     case "customers":
-      return answerCustomers(insights);
+      return answerCustomers(insights, t);
     case "noshow":
-      return answerNoshow(insights);
+      return answerNoshow(insights, t);
     case "repeat":
-      return answerRepeat(insights);
+      return answerRepeat(insights, t);
     default:
-      return formatNoMatch();
+      return formatNoMatch(t);
   }
 }
 
@@ -374,15 +365,17 @@ function actionHref(actionType: NonNullable<Insight["actionType"]>): string {
 }
 
 export function CoachPage({ insights }: CoachPageProps) {
+  const { t } = useT();
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [exchanges, setExchanges] = useState<QaExchange[]>([]);
+  const localizedInsights = insights.map((insight) => localizeInsight(insight, t));
 
   const submitQuestion = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return;
 
-    const answer = answerQuestion(trimmed, insights);
+    const answer = answerQuestion(trimmed, insights, t);
     setExchanges((prev) => [...prev, { question: trimmed, answer }]);
     setQuestion("");
   };
@@ -403,18 +396,17 @@ export function CoachPage({ insights }: CoachPageProps) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">AI business coach</p>
-            <h2>Aapke salon ka smart advisor</h2>
+            <h2>{t("coach.smartAdvisor")}</h2>
           </div>
         </div>
 
-        {insights.length === 0 ? (
+        {localizedInsights.length === 0 ? (
           <p className="text-body" style={{ color: TOKENS.textMuted }}>
-            Abhi koi insight nahi — kuch bookings aur payments ke baad yahan smart
-            suggestions dikhengi.
+            {t("coach.noInsights")}
           </p>
         ) : (
           <div className="view-stack" style={{ gap: 14 }}>
-            {insights.map((insight) => {
+            {localizedInsights.map((insight) => {
               const style = SEVERITY_STYLES[insight.severity];
               return (
                 <article
@@ -481,8 +473,8 @@ export function CoachPage({ insights }: CoachPageProps) {
       <section className="panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Coach se poochho</p>
-            <h2>Kuch sawaal hai?</h2>
+            <p className="eyebrow">{t("coach.askCoachEyebrow")}</p>
+            <h2>{t("coach.askCoachTitle")}</h2>
           </div>
         </div>
 
@@ -508,7 +500,7 @@ export function CoachPage({ insights }: CoachPageProps) {
                       letterSpacing: "0.02em",
                     }}
                   >
-                    Aapne poocha:
+                    {t("coach.youAsked")}
                   </p>
                   <p
                     style={{
@@ -582,11 +574,11 @@ export function CoachPage({ insights }: CoachPageProps) {
             marginBottom: 12,
           }}
         >
-          {SUGGESTED_QUESTIONS.map((suggestion) => (
+          {SUGGESTED_QUESTION_KEYS.map((key) => (
             <button
-              key={suggestion}
+              key={key}
               type="button"
-              onClick={() => setQuestion(suggestion)}
+              onClick={() => setQuestion(t(key))}
               style={{
                 padding: "6px 14px",
                 borderRadius: 999,
@@ -600,7 +592,7 @@ export function CoachPage({ insights }: CoachPageProps) {
               }}
               className="active:scale-[0.98] motion-reduce:active:scale-100"
             >
-              {suggestion}
+              {t(key)}
             </button>
           ))}
         </div>
@@ -617,8 +609,8 @@ export function CoachPage({ insights }: CoachPageProps) {
             className="input-field"
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
-            placeholder="Try: revenue kaisi chal rahi hai?"
-            aria-label="Coach ko sawaal poochho"
+            placeholder={t("coach.inputPlaceholder")}
+            aria-label={t("coach.askCoachTitle")}
             style={{
               borderRadius: 10,
               borderColor: TOKENS.borderSubtle,
@@ -643,7 +635,7 @@ export function CoachPage({ insights }: CoachPageProps) {
             }}
             className="active:scale-[0.98] motion-reduce:active:scale-100"
           >
-            Pooch
+            {t("coach.ask")}
           </button>
         </form>
       </section>

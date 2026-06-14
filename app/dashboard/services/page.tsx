@@ -1,4 +1,5 @@
 import { SalonSetupView } from "@/components/salon/salon-setup-view";
+import { ServicesOnboardingPrompt } from "@/components/services/services-onboarding-prompt";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import {
@@ -13,16 +14,7 @@ export default async function ServicesPage() {
   const business = await getOwnerBusiness();
 
   if (!business?.id) {
-    return (
-      <div className="view-stack">
-        <section className="panel">
-          <p className="text-body">
-            Pehle onboarding complete karein — phir services aur staff yahan manage kar
-            sakte ho.
-          </p>
-        </section>
-      </div>
-    );
+    return <ServicesOnboardingPrompt />;
   }
 
   const bookingSlug =

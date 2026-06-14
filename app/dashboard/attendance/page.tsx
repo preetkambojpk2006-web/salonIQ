@@ -2,12 +2,12 @@ import { AttendanceView } from "@/components/attendance/attendance-view";
 import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import {
   currentIstYearMonth,
-  formatIstDateHeader,
   formatIstMonthLabel,
   getActiveStaff,
   getBusinessLateFineAmount,
   getMonthAttendance,
   getTodayAttendance,
+  getIstDateParts,
 } from "@/lib/attendance/queries";
 import { redirect } from "next/navigation";
 
@@ -34,13 +34,16 @@ export default async function AttendancePage() {
     getBusinessLateFineAmount(businessId),
   ]);
 
+  const { formatted: todayDate, weekdayLabel: todayWeekday } = getIstDateParts();
+
   return (
     <AttendanceView
       staff={staff}
       todayAttendance={todayAttendance}
       monthSummaries={monthData.summaries}
       totalOutstandingFines={monthData.totalOutstandingFines}
-      todayLabel={formatIstDateHeader()}
+      todayDate={todayDate}
+      todayWeekday={todayWeekday}
       monthLabel={formatIstMonthLabel(year, month)}
       lateFineAmount={lateFineAmount}
     />

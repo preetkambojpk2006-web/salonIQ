@@ -329,6 +329,14 @@ export function currentIstYearMonth(): { year: number; month: number } {
 }
 
 export function formatIstDateHeader(day: string = todayCalendarDay()): string {
+  const { formatted, weekdayLabel } = getIstDateParts(day);
+  return `Aaj — ${formatted}, ${weekdayLabel}`;
+}
+
+export function getIstDateParts(day: string = todayCalendarDay()): {
+  formatted: string;
+  weekdayLabel: string;
+} {
   const date = new Date(`${day}T12:00:00+05:30`);
   const weekday = date.toLocaleDateString("hi-IN", {
     weekday: "long",
@@ -340,9 +348,8 @@ export function formatIstDateHeader(day: string = todayCalendarDay()): string {
     year: "numeric",
     timeZone: "Asia/Kolkata",
   });
-  const weekdayLabel =
-    weekday.charAt(0).toUpperCase() + weekday.slice(1);
-  return `Aaj — ${formatted}, ${weekdayLabel}`;
+  const weekdayLabel = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  return { formatted, weekdayLabel };
 }
 
 export function formatIstMonthLabel(year: number, month: number): string {

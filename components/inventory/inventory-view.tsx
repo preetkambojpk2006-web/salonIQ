@@ -151,6 +151,7 @@ function ModalOverlay({
 }
 
 function SummaryCards({ summary }: { summary: InventorySummary }) {
+  const { t } = useT();
   const cards = [
     {
       key: "value",
@@ -160,13 +161,13 @@ function SummaryCards({ summary }: { summary: InventorySummary }) {
     },
     {
       key: "purchase",
-      label: "Is Mahine Purchase",
+      label: t("inventory.monthPurchase"),
       value: formatInr(summary.month_purchase_total),
       color: TOKENS.accentGreen,
     },
     {
       key: "usage",
-      label: "Is Mahine Usage",
+      label: t("inventory.monthUsage"),
       value: formatInr(summary.month_usage_total),
       color: TOKENS.accentOrange,
     },
@@ -366,7 +367,7 @@ function StockModal({
             ? "Saving…"
             : kind === "stockIn"
               ? t("inventory.stockAdd")
-              : "Use record karo"}
+              : t("inventory.useRecord")}
         </button>
       </div>
     </ModalOverlay>
@@ -471,7 +472,7 @@ function ProductRow({
                   padding: "2px 8px",
                 }}
               >
-                ⚠️ Kam stock
+                {t("inventory.lowStockBadge")}
               </span>
             ) : null}
           </div>
@@ -769,7 +770,7 @@ export function InventoryView({
         {(
           [
             { id: "stock" as const, label: "Stock" },
-            { id: "kharcha" as const, label: "Kharcha" },
+            { id: "kharcha" as const, label: t("inventory.tabExpenses") },
             { id: "history" as const, label: "History" },
           ] as const
         ).map(({ id, label }) => (
@@ -1002,7 +1003,7 @@ export function InventoryView({
                     <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
                       {section.products.length === 0 ? (
                         <p style={{ margin: 0, fontSize: 13, color: TOKENS.textMuted }}>
-                          Is brand ke liye abhi koi product nahi.
+                          {t("inventory.noBrandProducts")}
                         </p>
                       ) : (
                         section.products.map((product) => (
@@ -1192,7 +1193,7 @@ export function InventoryView({
 
           {brandSpend.length === 0 ? (
             <p style={{ margin: "14px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
-              Is mahine abhi koi purchase record nahi hai.
+              {t("inventory.noPurchaseRecords")}
             </p>
           ) : (
             <div
@@ -1319,7 +1320,7 @@ export function InventoryView({
 
           {transactions.length === 0 ? (
             <p style={{ margin: "14px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
-              Abhi koi stock transaction nahi hai.
+              {t("inventory.noTransactions")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: 10, marginTop: 14 }}>

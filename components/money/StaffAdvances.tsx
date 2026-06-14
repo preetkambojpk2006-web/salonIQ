@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Toast } from "@/components/ui/toast";
 import { recordStaffAdvance } from "@/lib/staff/actions";
 import type { StaffAdvance } from "@/lib/staff/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type StaffOption = {
   id: string;
@@ -41,6 +42,7 @@ export function StaffAdvances({
   advances = [],
   staffMembers = [],
 }: StaffAdvancesProps) {
+  const { t } = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [staffId, setStaffId] = useState("");
@@ -64,13 +66,13 @@ export function StaffAdvances({
     setError(null);
 
     if (!selectedStaff) {
-      setError("Staff choose karein.");
+      setError(t("money.chooseStaffError"));
       return;
     }
 
     const parsedAmount = parseFloat(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("Valid amount daalein.");
+      setError(t("money.validAmountError"));
       return;
     }
 
@@ -94,7 +96,10 @@ export function StaffAdvances({
       setNote("");
       setToast({
         show: true,
-        message: `${selectedStaff.name} ko ${formatInr(parsedAmount)} advance record ho gaya ✓`,
+        message: t("money.advanceRecorded", {
+          name: selectedStaff.name,
+          amount: formatInr(parsedAmount),
+        }),
         variant: "success",
       });
       router.refresh();
@@ -131,7 +136,7 @@ export function StaffAdvances({
             color: TOKENS.textDark,
           }}
         >
-          Advance / loan record karein
+          {t("money.advancesTitle")}
         </h2>
         <p
           style={{
@@ -141,17 +146,16 @@ export function StaffAdvances({
             lineHeight: 1.45,
           }}
         >
-          Staff ko diya advance yahan likhein — payout settle karte waqt commission se
-          adjust hoga.
+          {t("money.advancesIntro")}
         </p>
 
         {activeStaff.length === 0 ? (
           <p style={{ margin: 0, fontSize: 14, color: TOKENS.textMuted }}>
-            Pehle{" "}
+            {t("money.addStaffBefore")}{" "}
             <a href="/dashboard/services" style={{ color: TOKENS.accentGreen, fontWeight: 700 }}>
               Services & Staff
             </a>{" "}
-            se staff add karein.
+            {t("money.addStaffAfter")}
           </p>
         ) : (
           <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
@@ -163,7 +167,7 @@ export function StaffAdvances({
                 onChange={(e) => setStaffId(e.target.value)}
                 style={{ borderRadius: 10, borderColor: TOKENS.borderSubtle }}
               >
-                <option value="">Staff choose karein</option>
+                <option value="">{t("money.chooseStaff")}</option>
                 {activeStaff.map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
@@ -216,7 +220,7 @@ export function StaffAdvances({
                 opacity: isPending ? 0.7 : 1,
               }}
             >
-              {isPending ? "Saving…" : "Advance record karein"}
+              {isPending ? t("common.saving") : t("money.recordAdvance")}
             </button>
           </div>
         )}
@@ -235,7 +239,7 @@ export function StaffAdvances({
 
           {advances.length === 0 ? (
             <p style={{ margin: 0, fontSize: 14, color: TOKENS.textMuted }}>
-              Abhi koi advance record nahi hai.
+              {t("money.noAdvances")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: 8 }}>

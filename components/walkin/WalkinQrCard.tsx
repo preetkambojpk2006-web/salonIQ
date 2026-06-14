@@ -3,6 +3,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import QRCode from "react-qr-code";
 import { buildPublicQueueUrl } from "@/lib/walkin/url";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type WalkinQrCardProps = {
   slug: string;
@@ -53,6 +54,7 @@ function ensurePrintStyles() {
 }
 
 export function WalkinQrCard({ slug, businessName }: WalkinQrCardProps) {
+  const { t } = useT();
   const [queueUrl, setQueueUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -149,7 +151,7 @@ export function WalkinQrCard({ slug, businessName }: WalkinQrCardProps) {
           lineHeight: 1.45,
         }}
       >
-        Scan karke queue mein join karo
+        {t("settings.walkinScan")}
       </p>
 
       <div

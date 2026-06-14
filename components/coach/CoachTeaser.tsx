@@ -2,12 +2,15 @@
 
 import { Bot } from "lucide-react";
 import Link from "next/link";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type CoachTeaserProps = {
   topInsightTitle: string | null;
 };
 
 export function CoachTeaser({ topInsightTitle }: CoachTeaserProps) {
+  const { t } = useT();
+
   return (
     <article
       style={{
@@ -39,7 +42,7 @@ export function CoachTeaser({ topInsightTitle }: CoachTeaserProps) {
       </div>
 
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8A8A8A" }}>
-        Aapka smart business advisor
+        {t("coach.teaserSubtitle")}
       </p>
 
       <p
@@ -51,8 +54,7 @@ export function CoachTeaser({ topInsightTitle }: CoachTeaserProps) {
           lineHeight: 1.4,
         }}
       >
-        {topInsightTitle ??
-          "Abhi data kam hai — bookings ke baad insights yahan dikhengi."}
+        {topInsightTitle ?? t("coach.teaserEmpty")}
       </p>
 
       <Link
@@ -73,7 +75,7 @@ export function CoachTeaser({ topInsightTitle }: CoachTeaserProps) {
         }}
         className="active:scale-[0.98] motion-reduce:active:scale-100"
       >
-        Full insights dekho →
+        {t("coach.teaserLink")}
       </Link>
     </article>
   );

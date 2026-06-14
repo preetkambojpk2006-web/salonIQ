@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { buildPublicBookingUrl, buildWhatsAppShareUrl } from "@/lib/booking/url";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type BookingLinkCardProps = {
   slug: string;
@@ -23,6 +24,7 @@ export function BookingLinkCard({
   salonName,
   compact = false,
 }: BookingLinkCardProps) {
+  const { t } = useT();
   const [bookingUrl, setBookingUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -74,10 +76,10 @@ export function BookingLinkCard({
           color: TOKENS.textDark,
         }}
       >
-        Customers yahan book karein
+        {t("settings.bookingTitle")}
       </h2>
       <p style={{ margin: "8px 0 12px", fontSize: 13, color: TOKENS.textMuted, lineHeight: 1.45 }}>
-        Link WhatsApp par bhejein — booking seedha calendar mein pending aayegi.
+        {t("settings.bookingHint")}
       </p>
       <div
         style={{

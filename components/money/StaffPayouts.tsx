@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Toast } from "@/components/ui/toast";
 import { settleStaffPayout } from "@/lib/staff/actions";
 import type { StaffPayoutRow, StaffPayoutsSummary } from "@/lib/staff/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type StaffPayoutsProps = {
   payouts: StaffPayoutsSummary;
@@ -145,6 +146,7 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
 }
 
 export function StaffPayouts({ payouts }: StaffPayoutsProps) {
+  const { t } = useT();
   const {
     rows,
     totalGrossUnpaid,
@@ -182,7 +184,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
           color: TOKENS.textDark,
         }}
       >
-        Baaki commission
+        {t("money.outstandingCommission")}
       </h2>
 
       {rows.length === 0 ? (
@@ -194,7 +196,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
             lineHeight: 1.45,
           }}
         >
-          Sab staff commission settle ho chuka hai aur koi outstanding fine ya advance nahi hai.
+          {t("money.allSettled")}
         </p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
@@ -247,7 +249,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
             alignItems: "center",
           }}
         >
-          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>Kul commission</span>
+          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>{t("money.totalCommission")}</span>
           <strong style={{ fontSize: 15, color: TOKENS.textDark }}>
             {formatInr(totalGrossUnpaid)}
           </strong>
@@ -259,7 +261,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
             alignItems: "center",
           }}
         >
-          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>Kul fines</span>
+          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>{t("money.totalFines")}</span>
           <strong style={{ fontSize: 15, color: TOKENS.accentCoral }}>
             −{formatInr(totalFineOutstanding)}
           </strong>
@@ -271,7 +273,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
             alignItems: "center",
           }}
         >
-          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>Kul advance</span>
+          <span style={{ fontSize: 14, color: TOKENS.textMuted }}>{t("money.totalAdvance")}</span>
           <strong style={{ fontSize: 15, color: TOKENS.accentCoral }}>
             −{formatInr(totalAdvanceOutstanding)}
           </strong>
@@ -284,7 +286,7 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 700, color: TOKENS.textDark }}>
-            Kul net payable
+            {t("money.totalNetPayable")}
           </span>
           <strong style={{ fontSize: 18, fontWeight: 800, color: TOKENS.accentGreen }}>
             {formatInr(totalNetPayable)}

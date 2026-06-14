@@ -8,6 +8,7 @@ import {
 } from "@/lib/appointments/actions";
 import { formatTime12hInSalon } from "@/lib/format/time";
 import { calendarDayInTimezone } from "@/lib/payments/date-utils";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 function PendingSubmitButton({
   label,
@@ -64,6 +65,8 @@ export function OnlinePendingRequests({
   appointments,
   compact = false,
 }: OnlinePendingRequestsProps) {
+  const { t } = useT();
+
   if (appointments.length === 0) {
     return null;
   }
@@ -91,7 +94,7 @@ export function OnlinePendingRequests({
           color: "#8A8A8A",
         }}
       >
-        In requests ko confirm ya reject karein — customer ko wait kar rahe hain.
+        {t("calendar.onlinePendingHint")}
       </p>
       <div className="appointment-list stagger-list">
         {appointments.map((appointment) => (
@@ -104,7 +107,7 @@ export function OnlinePendingRequests({
                 className="tag orange"
                 style={{ marginBottom: 6, display: "inline-flex" }}
               >
-                Online · Confirm karein
+                {t("calendar.onlineConfirm")}
               </span>
               <strong style={{ display: "block" }}>
                 {appointment.customer_name ?? "Walk-in"} —{" "}
@@ -128,7 +131,7 @@ export function OnlinePendingRequests({
                     name="appointment_id"
                     value={appointment.id}
                   />
-                  <PendingSubmitButton label="Confirm" className="primary-button" />
+                  <PendingSubmitButton label={t("common.confirm")} className="primary-button" />
                 </form>
                 <form action={rejectAppointment}>
                   <input
@@ -137,7 +140,7 @@ export function OnlinePendingRequests({
                     value={appointment.id}
                   />
                   <PendingSubmitButton
-                    label="Reject"
+                    label={t("common.reject")}
                     className="demo-button"
                     style={{ minHeight: 40 }}
                   />

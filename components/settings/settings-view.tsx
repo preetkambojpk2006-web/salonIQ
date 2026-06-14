@@ -10,6 +10,7 @@ import {
   changePassword,
   updateBusinessSettings,
 } from "@/lib/settings/actions";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type SettingsViewProps = {
   initialName: string;
@@ -38,6 +39,7 @@ export function SettingsView({
   bookingSlug = null,
   salonName,
 }: SettingsViewProps) {
+  const { t } = useT();
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
@@ -222,7 +224,7 @@ export function SettingsView({
                 Google Review Link
               </label>
               <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
-                Payment ke baad customers ko review request bhej sakte hain.
+                {t("settings.reviewRequestHelp")}
               </p>
               <input
                 id="google-review-link"
@@ -297,7 +299,7 @@ export function SettingsView({
             </div>
             <div>
               <label htmlFor="confirm-password" className="field-label">
-                Password confirm karein
+                {t("settings.confirmPassword")}
               </label>
               <input
                 id="confirm-password"
