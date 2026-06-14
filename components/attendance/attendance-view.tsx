@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { Check, Clock, X } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import { markStaffAttendance } from "@/lib/attendance/actions";
 import type {
@@ -133,10 +134,14 @@ function AttendanceButtons({
     });
   };
 
-  const buttons: { status: AttendanceStatus; label: string }[] = [
-    { status: "present", label: t("attendance.present") },
-    { status: "late", label: t("attendance.late") },
-    { status: "absent", label: t("attendance.absent") },
+  const buttons: {
+    status: AttendanceStatus;
+    label: string;
+    Icon: typeof Check;
+  }[] = [
+    { status: "present", label: t("attendance.present"), Icon: Check },
+    { status: "late", label: t("attendance.late"), Icon: Clock },
+    { status: "absent", label: t("attendance.absent"), Icon: X },
   ];
 
   return (
@@ -149,7 +154,7 @@ function AttendanceButtons({
           marginTop: 10,
         }}
       >
-        {buttons.map(({ status, label }) => {
+        {buttons.map(({ status, label, Icon }) => {
           const isActive = localStatus === status;
           const styles = statusStyles(isActive ? status : null);
 
@@ -173,7 +178,17 @@ function AttendanceButtons({
                 opacity: isPending ? 0.7 : 1,
               }}
             >
-              {label}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <Icon size={14} strokeWidth={2.25} aria-hidden />
+                {label}
+              </span>
             </button>
           );
         })}

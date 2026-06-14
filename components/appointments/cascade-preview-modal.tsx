@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, Ban } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import type { CascadePreview } from "@/lib/appointments/cascade";
 import { applyAppointmentTimeCascade } from "@/lib/appointments/actions";
@@ -216,9 +217,13 @@ export function CascadePreviewModal({
                       fontWeight: 600,
                       color: "#1A1A1A",
                       lineHeight: 1.4,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
                     }}
                   >
-                    ⚠️ {warning}
+                    <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+                    <span>{warning}</span>
                   </div>
                 ))}
               </div>
@@ -236,9 +241,13 @@ export function CascadePreviewModal({
                   fontWeight: 600,
                   color: "#1A1A1A",
                   lineHeight: 1.4,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
                 }}
               >
-                {t("cascade.blocked")}
+                <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+                <span>{t("cascade.blocked")}</span>
               </div>
             ) : null}
           </div>

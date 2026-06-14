@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { AlertTriangle, Ban } from "lucide-react";
 import { VibeCard } from "@/components/appointments/vibe-card";
 import type { Appointment } from "@/lib/appointments/types";
 import type { CustomerReliability } from "@/lib/customers/types";
@@ -44,11 +45,21 @@ function ReliabilityAlert({
         fontWeight: 600,
         color: "#1A1A1A",
         lineHeight: 1.4,
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
       }}
     >
-      {isWarning
-        ? t("appointment.reliabilityWarning")
-        : t("appointment.reliabilityBlacklist")}
+      {isWarning ? (
+        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      ) : (
+        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      )}
+      <span>
+        {isWarning
+          ? t("appointment.reliabilityWarning")
+          : t("appointment.reliabilityBlacklist")}
+      </span>
     </div>
   );
 }

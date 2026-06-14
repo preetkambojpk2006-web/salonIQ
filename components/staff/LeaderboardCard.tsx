@@ -1,5 +1,6 @@
 "use client";
 
+import { Medal, Star } from "lucide-react";
 import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
 import { useT } from "@/lib/i18n/LanguageContext";
 
@@ -23,18 +24,26 @@ function formatRs(amount: number): string {
 
 const RANK_STYLES: Record<
   number,
-  { accent: string; nameWeight: number; fontSize: number }
+  { accent: string; nameWeight: number; fontSize: number; medalColor: string }
 > = {
-  1: { accent: "#C9A96E", nameWeight: 800, fontSize: 15 },
-  2: { accent: "#A8A8A8", nameWeight: 700, fontSize: 14 },
-  3: { accent: "#B8860B", nameWeight: 700, fontSize: 14 },
+  1: { accent: "#C9A96E", nameWeight: 800, fontSize: 15, medalColor: "#C9A96E" },
+  2: { accent: "#A8A8A8", nameWeight: 700, fontSize: 14, medalColor: "#A8A8A8" },
+  3: { accent: "#B8860B", nameWeight: 700, fontSize: 14, medalColor: "#B8860B" },
 };
 
-function rankMedal(rank: number): string {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return `${rank}.`;
+function RankDisplay({ rank }: { rank: number }) {
+  if (rank <= 3) {
+    const style = RANK_STYLES[rank];
+    return (
+      <Medal
+        size={14}
+        strokeWidth={2}
+        color={style?.medalColor ?? TOKENS.textMuted}
+        aria-hidden
+      />
+    );
+  }
+  return <span>{rank}.</span>;
 }
 
 export function LeaderboardCard({ entries }: LeaderboardCardProps) {
@@ -55,9 +64,13 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
           fontSize: 14,
           fontWeight: 700,
           color: TOKENS.textDark,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        ⭐ Star of the Month
+        <Star size={16} strokeWidth={2} color="#C9A96E" aria-hidden />
+        Star of the Month
       </p>
       <p
         style={{
@@ -120,9 +133,14 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
                       fontSize: isTopThree ? style?.fontSize ?? 14 : 13,
                       fontWeight: isTopThree ? style?.nameWeight ?? 600 : 600,
                       color: TOKENS.textDark,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
-                    <span style={{ marginRight: 6 }}>{rankMedal(entry.rank)}</span>
+                    <span style={{ display: "inline-flex", width: 18, justifyContent: "center" }}>
+                      <RankDisplay rank={entry.rank} />
+                    </span>
                     {entry.staffName}
                   </p>
                   <p
@@ -130,6 +148,7 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
                       margin: "2px 0 0",
                       fontSize: isTopThree ? 13 : 12,
                       color: TOKENS.textMuted,
+                      paddingLeft: 24,
                     }}
                   >
                     {entry.appointmentCount} appointment

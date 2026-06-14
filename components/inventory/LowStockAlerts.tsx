@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { useT } from "@/lib/i18n/LanguageContext";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 
@@ -44,8 +45,12 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
             fontSize: 16,
             fontWeight: 700,
             color: "#1A1A1A",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
+          <AlertTriangle size={18} strokeWidth={2} color="#D94F4F" aria-hidden />
           {t("inventory.lowStock")}
         </h2>
         <span
@@ -110,8 +115,12 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
                 fontWeight: 700,
                 color: "#B42318",
                 whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
+              <AlertTriangle size={12} strokeWidth={2} aria-hidden />
               {t("inventory.lowStockBadge")}
             </span>
           </div>

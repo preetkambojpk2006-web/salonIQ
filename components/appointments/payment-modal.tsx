@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, Ban, Check, X } from "lucide-react";
 import { recordAppointmentPayment } from "@/lib/payments/actions";
 import type { Appointment } from "@/lib/appointments/types";
 import { VibeCard } from "@/components/appointments/vibe-card";
@@ -43,11 +44,21 @@ function ReliabilityAlert({
         fontWeight: 600,
         color: "#1A1A1A",
         lineHeight: 1.4,
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
       }}
     >
-      {isWarning
-        ? t("appointment.reliabilityWarning")
-        : t("appointment.reliabilityBlacklist")}
+      {isWarning ? (
+        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      ) : (
+        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      )}
+      <span>
+        {isWarning
+          ? t("appointment.reliabilityWarning")
+          : t("appointment.reliabilityBlacklist")}
+      </span>
     </div>
   );
 }
@@ -130,7 +141,7 @@ export function PaymentModal({
             aria-label={t("common.close")}
             disabled={isSaving}
           >
-            ✕
+            <X size={18} strokeWidth={2} aria-hidden />
           </button>
         </div>
 
@@ -141,7 +152,21 @@ export function PaymentModal({
             disabled={isSaving}
             onClick={() => handlePay("cash")}
           >
-            {isSaving ? t("common.saving") : t("payment.cash")}
+            {isSaving ? (
+              t("common.saving")
+            ) : (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <Check size={16} strokeWidth={2.25} aria-hidden />
+                {t("payment.cash")}
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -149,7 +174,21 @@ export function PaymentModal({
             disabled={isSaving}
             onClick={() => handlePay("upi")}
           >
-            {isSaving ? t("common.saving") : t("payment.upi")}
+            {isSaving ? (
+              t("common.saving")
+            ) : (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <Check size={16} strokeWidth={2.25} aria-hidden />
+                {t("payment.upi")}
+              </span>
+            )}
           </button>
           <button
             type="button"

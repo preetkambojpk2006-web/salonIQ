@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { AlertTriangle, Ban } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CalendarDayGrid, type GridBlockOptions } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
@@ -185,11 +186,21 @@ function ReliabilityAlert({
         fontWeight: 600,
         color: "#1A1A1A",
         lineHeight: 1.4,
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
       }}
     >
-      {isWarning
-        ? t("appointment.reliabilityWarning")
-        : t("appointment.reliabilityBlacklist")}
+      {isWarning ? (
+        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      ) : (
+        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+      )}
+      <span>
+        {isWarning
+          ? t("appointment.reliabilityWarning")
+          : t("appointment.reliabilityBlacklist")}
+      </span>
     </div>
   );
 }

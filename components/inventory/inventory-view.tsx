@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { Toast } from "@/components/ui/toast";
 import {
@@ -470,8 +471,12 @@ function ProductRow({
                   border: `1px solid ${TOKENS.accentCoral}`,
                   borderRadius: 999,
                   padding: "2px 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}
               >
+                <AlertTriangle size={12} strokeWidth={2} aria-hidden />
                 {t("inventory.lowStockBadge")}
               </span>
             ) : null}

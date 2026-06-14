@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState, useTransition } from "react";
+import { AlertTriangle, Ban } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   getCustomerDisplayTag,
@@ -35,7 +36,9 @@ function ReliabilityBadge({ reliability }: { reliability: CustomerReliability })
   return (
     <span
       style={{
-        display: "inline-block",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
         marginBottom: 8,
         padding: "4px 10px",
         borderRadius: 999,
@@ -46,7 +49,12 @@ function ReliabilityBadge({ reliability }: { reliability: CustomerReliability })
         border: isWarning ? "1px solid #C9A96E" : "1px solid #D94F4F",
       }}
     >
-      {isWarning ? "⚠️ Warning" : "🚫 Blacklisted"}
+      {isWarning ? (
+        <AlertTriangle size={12} strokeWidth={2.25} aria-hidden />
+      ) : (
+        <Ban size={12} strokeWidth={2.25} aria-hidden />
+      )}
+      {isWarning ? "Warning" : "Blacklisted"}
     </span>
   );
 }

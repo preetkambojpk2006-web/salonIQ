@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CheckCircle } from "lucide-react";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type RevenueTargetProgressProps = {
@@ -106,8 +107,14 @@ export function RevenueTargetProgress({
           fontWeight: 700,
           color: "#1A1A1A",
           lineHeight: 1.45,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
+        {targetMet ? (
+          <CheckCircle size={16} strokeWidth={2.25} color="#1FA873" aria-hidden />
+        ) : null}
         {targetMet
           ? t("today.targetProgressDone", {
               revenue: revenueLabel,
