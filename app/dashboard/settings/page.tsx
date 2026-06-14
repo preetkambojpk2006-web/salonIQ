@@ -1,9 +1,11 @@
 import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
+import { LanguageSettingsPanel } from "@/components/settings/language-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
+import { getLocale } from "@/lib/i18n";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +44,13 @@ export default async function SettingsPage() {
         business?.daily_revenue_target != null
           ? String(Number(business.daily_revenue_target))
           : ""
+      }
+      languagePanel={
+        <LanguageSettingsPanel
+          initialLocale={getLocale(
+            (business as { ui_language?: string | null } | null)?.ui_language
+          )}
+        />
       }
       attendancePanel={
         <AttendanceSettingsPanel

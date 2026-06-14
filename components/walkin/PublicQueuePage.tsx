@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { walkinJoinErrorMessage } from "@/lib/walkin/errors";
+import { useT } from "@/lib/i18n/LanguageContext";
 import type {
   PublicQueueContext,
   WalkinJoinResult,
@@ -37,20 +38,23 @@ function statusBadgeStyle(status: QueueStatus): CSSProperties {
   }
 }
 
-function statusLabel(status: QueueStatus): string {
+function statusLabel(
+  status: QueueStatus,
+  t: (key: string) => string
+): string {
   switch (status) {
     case "waiting":
-      return "Waiting";
+      return t("status.waiting");
     case "called":
-      return "Called";
+      return t("status.called");
     case "in_service":
-      return "In service";
+      return t("status.inService");
     case "done":
-      return "Done";
+      return t("status.done");
     case "left":
-      return "Left";
+      return t("status.left");
     case "no_show":
-      return "No show";
+      return t("status.noShow");
     default:
       return status;
   }
@@ -156,6 +160,7 @@ function SetupIllustration() {
 }
 
 export function PublicQueuePage({ slug }: PublicQueuePageProps) {
+  const { t } = useT();
   const [context, setContext] = useState<PublicQueueContext | null>(null);
   const [joinResult, setJoinResult] = useState<WalkinJoinResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -247,7 +252,7 @@ export function PublicQueuePage({ slug }: PublicQueuePageProps) {
 
   if (loading) {
     return pageShell(
-      <p style={{ color: TOKENS.textMuted, fontSize: 14 }}>Loading…</p>
+      <p style={{ color: TOKENS.textMuted, fontSize: 14 }}>{t("common.loading")}</p>
     );
   }
 
@@ -380,7 +385,7 @@ export function PublicQueuePage({ slug }: PublicQueuePageProps) {
               ...statusBadgeStyle(status),
             }}
           >
-            {statusLabel(status)}
+            {statusLabel(status, t)}
           </span>
 
           <p
@@ -391,7 +396,7 @@ export function PublicQueuePage({ slug }: PublicQueuePageProps) {
               lineHeight: 1.5,
             }}
           >
-            Salon mein rukein — aapko bulaya jayega
+            {t("walkin.stayNote")}
           </p>
 
           <Link
@@ -593,7 +598,7 @@ export function PublicQueuePage({ slug }: PublicQueuePageProps) {
               opacity: submitting ? 0.7 : 1,
             }}
           >
-            {submitting ? "Join ho rahe hain…" : "Queue mein join karo"}
+            {submitting ? t("common.loading") : t("walkin.join")}
           </button>
         </>
       )}

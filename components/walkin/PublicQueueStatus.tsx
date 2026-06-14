@@ -7,6 +7,7 @@ import type {
   WalkinQueueStatusResult,
 } from "@/lib/walkin/types";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 const POLL_MS = 30_000;
 const STOP_POLL_STATUSES = new Set<WalkinQueueStatus>(["done", "left", "no_show"]);
@@ -103,6 +104,7 @@ function peopleAheadCopy(position: number): string {
 }
 
 function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
+  const { t } = useT();
   return (
     <StatusCard>
       <div
@@ -153,7 +155,7 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
       </p>
       <div style={{ marginTop: 14 }}>
         <StatusBadge
-          label="Intezaar mein"
+          label={t("walkin.status.waiting")}
           style={{ background: "#F5E6A8", color: "#7A5C00" }}
         />
       </div>
@@ -164,7 +166,7 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
           color: TOKENS.textMuted,
         }}
       >
-        Har 30 second mein update hota hai
+        {t("walkin.pollNote")}
       </p>
       <p
         style={{
@@ -174,13 +176,14 @@ function WaitingStatus({ status }: { status: WalkinQueueStatusResult }) {
           lineHeight: 1.5,
         }}
       >
-        Salon mein rukein — aapko bulaya jayega
+        {t("walkin.stayNote")}
       </p>
     </StatusCard>
   );
 }
 
 function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
+  const { t } = useT();
   return (
     <StatusCard>
       <div
@@ -203,7 +206,7 @@ function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
       </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
-          label="Aapko bulaya ja raha hai! 🔔"
+          label={t("walkin.status.called")}
           style={{ background: "#F5D4A8", color: "#8A4B00" }}
         />
       </div>
@@ -223,6 +226,7 @@ function CalledStatus({ status }: { status: WalkinQueueStatusResult }) {
 }
 
 function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
+  const { t } = useT();
   return (
     <StatusCard>
       <div
@@ -244,7 +248,7 @@ function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
       </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
-          label="Service chal rahi hai ✂️"
+          label={t("walkin.status.inService")}
           style={{ background: TOKENS.accentGreenSoft, color: "#0F6B4A" }}
         />
       </div>
@@ -264,6 +268,7 @@ function InServiceStatus({ status }: { status: WalkinQueueStatusResult }) {
 }
 
 function DoneStatus({ status }: { status: WalkinQueueStatusResult }) {
+  const { t } = useT();
   return (
     <StatusCard>
       <div
@@ -285,7 +290,7 @@ function DoneStatus({ status }: { status: WalkinQueueStatusResult }) {
       </div>
       <div style={{ marginBottom: 12 }}>
         <StatusBadge
-          label="Service complete ✅"
+          label={t("walkin.status.done")}
           style={{ background: "#E8E4DC", color: "#5C5C5C" }}
         />
       </div>
@@ -331,6 +336,7 @@ function RemovedStatus({ slug }: { slug: string }) {
 }
 
 export function PublicQueueStatus({ slug, token }: PublicQueueStatusProps) {
+  const { t } = useT();
   const [status, setStatus] = useState<WalkinQueueStatusResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -404,7 +410,7 @@ export function PublicQueueStatus({ slug, token }: PublicQueueStatusProps) {
 
   if (loading) {
     return pageShell(
-      <p style={{ color: TOKENS.textMuted, fontSize: 14 }}>Loading…</p>
+      <p style={{ color: TOKENS.textMuted, fontSize: 14 }}>{t("common.loading")}</p>
     );
   }
 
@@ -428,7 +434,7 @@ export function PublicQueueStatus({ slug, token }: PublicQueueStatusProps) {
             textDecoration: "none",
           }}
         >
-          Queue mein join karo →
+          {t("walkin.join")} →
         </Link>
       </div>
     );

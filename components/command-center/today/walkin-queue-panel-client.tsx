@@ -9,6 +9,7 @@ import {
 } from "@/lib/walkin/actions";
 import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/queries";
 import { queueYourTurn } from "@/lib/whatsapp/templates";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 const WHATSAPP_NOTIFY_MS = 120_000;
 
@@ -45,20 +46,23 @@ function statusBadgeStyle(status: WalkinQueueStatus): CSSProperties {
   }
 }
 
-function statusLabel(status: WalkinQueueStatus): string {
+function statusLabel(
+  status: WalkinQueueStatus,
+  t: (key: string) => string
+): string {
   switch (status) {
     case "waiting":
-      return "Waiting";
+      return t("status.waiting");
     case "called":
-      return "Called";
+      return t("status.called");
     case "in_service":
-      return "In service";
+      return t("status.inService");
     case "done":
-      return "Done";
+      return t("status.done");
     case "left":
-      return "Left";
+      return t("status.left");
     case "no_show":
-      return "No show";
+      return t("status.noShow");
     default:
       return status;
   }
@@ -92,6 +96,7 @@ function QueueRow({
   showWhatsAppNotify,
   onAction,
 }: QueueRowProps) {
+  const { t } = useT();
   const terminal = isTerminalStatus(entry.status);
   const whatsAppMessage = queueYourTurn({
     customerName: entry.customer_name,
@@ -179,7 +184,7 @@ function QueueRow({
             ...statusBadgeStyle(entry.status),
           }}
         >
-          {statusLabel(entry.status)}
+          {statusLabel(entry.status, t)}
         </span>
       </div>
 
@@ -206,7 +211,7 @@ function QueueRow({
                 cursor: updating ? "wait" : "pointer",
               }}
             >
-              Bulao
+              {t("walkin.call")}
             </button>
           ) : null}
 
@@ -223,7 +228,7 @@ function QueueRow({
                 cursor: updating ? "wait" : "pointer",
               }}
             >
-              Shuru karo
+              {t("walkin.start")}
             </button>
           ) : null}
 
@@ -241,7 +246,7 @@ function QueueRow({
                   cursor: updating ? "wait" : "pointer",
                 }}
               >
-                Done ✓
+                {t("walkin.done")}
               </button>
               <button
                 type="button"
@@ -256,7 +261,7 @@ function QueueRow({
                   cursor: updating ? "wait" : "pointer",
                 }}
               >
-                No-show
+                {t("walkin.noshow")}
               </button>
             </>
           ) : null}
@@ -275,7 +280,7 @@ function QueueRow({
                 cursor: updating ? "wait" : "pointer",
               }}
             >
-              Hata do
+              {t("walkin.remove")}
             </button>
           ) : null}
         </div>
@@ -321,6 +326,7 @@ export function WalkinQueuePanelClient({
   salonName,
   initialQueue,
 }: WalkinQueuePanelClientProps) {
+  const { t } = useT();
   const [queue, setQueue] = useState(initialQueue);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
@@ -413,7 +419,7 @@ export function WalkinQueuePanelClient({
               color: "#1A1A1A",
             }}
           >
-            Walk-in Queue
+            {t("today.walkinQueue")}
           </h2>
           <span
             style={{
@@ -425,7 +431,7 @@ export function WalkinQueuePanelClient({
               fontWeight: 600,
             }}
           >
-            {waitingCount} waiting
+            {waitingCount} {t("today.waiting")}
           </span>
         </div>
 
@@ -437,7 +443,7 @@ export function WalkinQueuePanelClient({
               color: "#5C5C5C",
             }}
           >
-            Aaj koi walk-in nahi aaya abhi
+            {t("today.noWalkins")}
           </p>
         ) : (
           <div>

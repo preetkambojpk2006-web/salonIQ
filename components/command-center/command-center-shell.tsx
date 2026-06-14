@@ -2,6 +2,7 @@ import { CommandMobileNav } from "@/components/command-center/mobile-nav";
 import { CommandSidebar } from "@/components/command-center/sidebar";
 import { CommandTopbar } from "@/components/command-center/topbar";
 import { PageTransition } from "@/components/motion/page-transition";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import type { AppRole } from "@/lib/auth/membership";
 import type { WorkspaceContext } from "@/lib/command-center/get-workspace";
 
@@ -19,13 +20,15 @@ export function CommandCenterShell({
   showTopbar = true,
 }: CommandCenterShellProps) {
   return (
-    <div className="app-shell">
-      <CommandSidebar appRole={appRole} />
-      <div className="workspace">
-        {showTopbar ? <CommandTopbar workspace={workspace} /> : null}
-        <PageTransition>{children}</PageTransition>
+    <LanguageProvider locale={workspace.uiLanguage}>
+      <div className="app-shell">
+        <CommandSidebar appRole={appRole} />
+        <div className="workspace">
+          {showTopbar ? <CommandTopbar workspace={workspace} /> : null}
+          <PageTransition>{children}</PageTransition>
+        </div>
+        <CommandMobileNav appRole={appRole} />
       </div>
-      <CommandMobileNav appRole={appRole} />
-    </div>
+    </LanguageProvider>
   );
 }

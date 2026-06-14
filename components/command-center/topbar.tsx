@@ -2,6 +2,7 @@
 
 import type { WorkspaceContext } from "@/lib/command-center/get-workspace";
 import { getActiveNavId } from "@/lib/command-center/navigation";
+import { useT } from "@/lib/i18n/LanguageContext";
 import { usePathname, useRouter } from "next/navigation";
 
 type CommandTopbarProps = {
@@ -28,6 +29,7 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const activeId = getActiveNavId(pathname);
+  const { t } = useT();
 
   return (
     <header className="topbar">
@@ -58,7 +60,7 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
           className="primary-button"
           onClick={() => router.push("/dashboard/calendar?booking=new")}
         >
-          New booking
+          {t("today.newBooking")}
         </button>
       </div>
     </header>

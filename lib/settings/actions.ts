@@ -204,6 +204,48 @@ export async function updateAttendanceSettings(
   return { ok: true };
 }
 
+export async function updateUiLanguage(
+  uiLanguage: string
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin language change kar sakte hain.",
+    };
+  }
+
+  if (uiLanguage !== "en" && uiLanguage !== "hi") {
+    return { ok: false, error: "Invalid language selection." };
+  }
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({ ui_language: uiLanguage })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard/money");
+  revalidatePath("/dashboard/attendance");
+  revalidatePath("/dashboard/inventory");
+  return { ok: true };
+}
+
 export async function changePassword(formData: FormData): Promise<SettingsActionResult> {
   const supabase = createClient();
   const {

@@ -8,8 +8,25 @@ import type { AppRole } from "@/lib/auth/membership";
 import {
   getActiveNavId,
   getNavItemsForRole,
+  type CommandNavId,
 } from "@/lib/command-center/navigation";
+import { useT } from "@/lib/i18n/LanguageContext";
 import { OwnerWhatsappBrief } from "@/components/command-center/owner-whatsapp-brief";
+
+const NAV_I18N_KEY: Partial<Record<CommandNavId, string>> = {
+  today: "nav.today",
+  calendar: "nav.calendar",
+  customers: "nav.customers",
+  money: "nav.money",
+  attendance: "nav.attendance",
+  inventory: "nav.inventory",
+  insights: "nav.insights",
+  automations: "nav.automations",
+  coach: "nav.coach",
+  branches: "nav.branches",
+  services: "nav.services",
+  settings: "nav.settings",
+};
 
 type CommandSidebarProps = {
   appRole: AppRole;
@@ -19,6 +36,7 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
   const pathname = usePathname();
   const activeId = getActiveNavId(pathname);
   const navItems = getNavItemsForRole(appRole);
+  const { t } = useT();
 
   return (
     <aside className="sidebar" aria-label="Primary navigation">
@@ -68,7 +86,7 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
                   aria-hidden
                 />
               ) : null}
-              {item.label}
+              {NAV_I18N_KEY[item.id] ? t(NAV_I18N_KEY[item.id]!) : item.label}
             </Link>
           );
         })}

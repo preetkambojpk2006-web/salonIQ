@@ -20,6 +20,7 @@ import type {
   InventorySummary,
   InventoryTransactionWithDetails,
 } from "@/lib/inventory/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type InventoryViewProps = {
   brands: InventoryBrand[];
@@ -231,6 +232,7 @@ function StockModal({
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const activeProducts = products.filter((item) => item.is_active);
@@ -266,7 +268,7 @@ function StockModal({
 
   return (
     <ModalOverlay
-      title={kind === "stockIn" ? "Stock In" : "Stock Use"}
+      title={kind === "stockIn" ? t("inventory.stockIn") : t("inventory.stockUse")}
       onClose={onClose}
     >
       <div style={{ display: "grid", gap: 12 }}>
@@ -363,7 +365,7 @@ function StockModal({
           {isPending
             ? "Saving…"
             : kind === "stockIn"
-              ? "Stock add karo"
+              ? t("inventory.stockAdd")
               : "Use record karo"}
         </button>
       </div>
@@ -384,6 +386,7 @@ function ProductRow({
   onError: (message: string) => void;
   onSuccess: (message: string) => void;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -496,7 +499,7 @@ function ProductRow({
             onChange={(event) => handleToggle(event.target.checked)}
             style={{ accentColor: TOKENS.accentGreen }}
           />
-          {product.is_active ? "Active" : "Inactive"}
+          {product.is_active ? t("common.active") : t("common.inactive")}
         </label>
       </div>
 
@@ -572,7 +575,7 @@ function ProductRow({
               opacity: product.is_active ? 1 : 0.5,
             }}
           >
-            Stock In
+            {t("inventory.stockIn")}
           </button>
           <button
             type="button"
@@ -626,6 +629,7 @@ export function InventoryView({
   spendMonthLabel,
   todayIso,
 }: InventoryViewProps) {
+  const { t } = useT();
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("stock");
   const [modalKind, setModalKind] = useState<ModalKind>(null);
@@ -846,7 +850,7 @@ export function InventoryView({
                 cursor: "pointer",
               }}
             >
-              + Add Brand
+              {t("inventory.addBrand")}
             </button>
             <button
               type="button"
@@ -861,7 +865,7 @@ export function InventoryView({
                 cursor: "pointer",
               }}
             >
-              Stock In
+              {t("inventory.stockIn")}
             </button>
             <button
               type="button"
@@ -876,7 +880,7 @@ export function InventoryView({
                 cursor: "pointer",
               }}
             >
-              Stock Use
+              {t("inventory.stockUse")}
             </button>
           </div>
 
@@ -924,7 +928,7 @@ export function InventoryView({
                 lineHeight: 1.45,
               }}
             >
-              Pehle brand add karein, phir uske under products.
+              {t("inventory.noProduct")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
@@ -1094,7 +1098,7 @@ export function InventoryView({
                           cursor: "pointer",
                         }}
                       >
-                        + Add Product
+                        {t("inventory.addProduct")}
                       </button>
                     )}
                   </div>

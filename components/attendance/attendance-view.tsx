@@ -10,6 +10,7 @@ import type {
   MonthStaffAttendanceSummary,
   StaffAttendanceRow,
 } from "@/lib/attendance/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type AttendanceViewProps = {
   staff: ActiveStaffMember[];
@@ -74,6 +75,7 @@ function AttendanceButtons({
   currentStatus: AttendanceStatus | null;
   lateFineAmount: number;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [localStatus, setLocalStatus] = useState<AttendanceStatus | null>(
@@ -131,9 +133,9 @@ function AttendanceButtons({
   };
 
   const buttons: { status: AttendanceStatus; label: string }[] = [
-    { status: "present", label: "Present ✓" },
-    { status: "late", label: "Late ⏰" },
-    { status: "absent", label: "Absent ✗" },
+    { status: "present", label: t("attendance.present") },
+    { status: "late", label: t("attendance.late") },
+    { status: "absent", label: t("attendance.absent") },
   ];
 
   return (
@@ -199,6 +201,7 @@ export function AttendanceView({
   monthLabel,
   lateFineAmount,
 }: AttendanceViewProps) {
+  const { t } = useT();
   const [tab, setTab] = useState<"today" | "month">("today");
 
   const attendanceByStaffId = new Map(
@@ -219,8 +222,8 @@ export function AttendanceView({
       >
         {(
           [
-            { id: "today" as const, label: "Aaj" },
-            { id: "month" as const, label: "Is Mahine" },
+            { id: "today" as const, label: t("attendance.today") },
+            { id: "month" as const, label: t("attendance.month") },
           ] as const
         ).map(({ id, label }) => (
           <button
@@ -401,9 +404,9 @@ export function AttendanceView({
                   <tr style={{ borderBottom: `1px solid ${TOKENS.borderSubtle}` }}>
                     {[
                       "Staff",
-                      "Present",
-                      "Late",
-                      "Absent",
+                      t("status.present"),
+                      t("status.late"),
+                      t("status.absent"),
                       "Total fines",
                     ].map((heading) => (
                       <th
