@@ -16,7 +16,6 @@ import type {
   UpcomingAppointment,
 } from "@/lib/dashboard/today-queries";
 import { OnlinePendingRequests } from "@/components/appointments/online-pending-requests";
-import { WalkinQrCard } from "@/components/walkin/WalkinQrCard";
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import type { WalkinQueueRow } from "@/lib/walkin/types";
@@ -61,16 +60,6 @@ export function TodayView({
       {showOwnerInsights && bookingSlug ? (
         <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
       ) : null}
-      {showOwnerInsights && businessId ? (
-        <WalkinQueuePanelClient
-          businessId={businessId}
-          salonName={salonName}
-          initialQueue={initialWalkinQueue}
-        />
-      ) : null}
-      {showOwnerInsights && bookingSlug ? (
-        <WalkinQrCard slug={bookingSlug} businessName={salonName} />
-      ) : null}
       <OsHero
         nextAppointment={upcoming[0] ?? null}
         revenueToday={metrics.revenueToday}
@@ -82,15 +71,22 @@ export function TodayView({
         {isNewSalon ? <GettingStartedPanel /> : null}
       </div>
       <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
+      {showOwnerInsights && businessId ? (
+        <WalkinQueuePanelClient
+          businessId={businessId}
+          salonName={salonName}
+          initialQueue={initialWalkinQueue}
+        />
+      ) : null}
+      {showOwnerInsights && onlinePending.length > 0 ? (
+        <OnlinePendingRequests appointments={onlinePending} />
+      ) : null}
       {showOwnerInsights ? (
         <CoachTeaser topInsightTitle={coachTeaserTitle} />
       ) : null}
       {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
       {showOwnerInsights && lowStockProducts.length > 0 ? (
         <LowStockAlerts lowStockProducts={lowStockProducts} />
-      ) : null}
-      {showOwnerInsights && onlinePending.length > 0 ? (
-        <OnlinePendingRequests appointments={onlinePending} />
       ) : null}
     </div>
   );
