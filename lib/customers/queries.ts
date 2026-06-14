@@ -3,7 +3,12 @@ import { getUserBusinessId as resolveUserBusinessId } from "@/lib/auth/membershi
 import { createClient } from "@/lib/supabase/server";
 
 function escapeIlike(value: string): string {
-  return value.replace(/[%_\\]/g, (char) => `\\${char}`);
+  // Escape ilike wildcards, then strip characters that have meaning in the
+  // PostgREST .or() filter grammar (comma, parens, dot, quotes, colon) so a
+  // crafted search term cannot break out of the intended filter.
+  return value
+    .replace(/[%_\\]/g, (char) => `\\${char}`)
+    .replace(/[(),."':]/g, " ");
 }
 
 export async function getOwnerBusinessId(): Promise<string | null> {
