@@ -60,26 +60,26 @@ export function TodayView({
       {showOwnerInsights && bookingSlug ? (
         <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
       ) : null}
+      <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
       <OsHero
         nextAppointment={upcoming[0] ?? null}
         revenueToday={metrics.revenueToday}
         dailyRevenueTarget={dailyRevenueTarget}
         showRevenue={showOwnerInsights}
       />
+      {showOwnerInsights && onlinePending.length > 0 ? (
+        <OnlinePendingRequests appointments={onlinePending} />
+      ) : null}
       <div className="two-column">
         <NextAppointments appointments={upcoming} />
         {isNewSalon ? <GettingStartedPanel /> : null}
       </div>
-      <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
       {showOwnerInsights && businessId ? (
         <WalkinQueuePanelClient
           businessId={businessId}
           salonName={salonName}
           initialQueue={initialWalkinQueue}
         />
-      ) : null}
-      {showOwnerInsights && onlinePending.length > 0 ? (
-        <OnlinePendingRequests appointments={onlinePending} />
       ) : null}
       {showOwnerInsights ? (
         <CoachTeaser topInsightTitle={coachTeaserTitle} />
