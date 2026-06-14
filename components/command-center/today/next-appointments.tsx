@@ -32,8 +32,8 @@ export function NextAppointments({ appointments }: NextAppointmentsProps) {
         </div>
         <Link
           href="/dashboard/calendar?booking=new"
-          className="primary-button"
-          style={{ minHeight: 40, flexShrink: 0, textDecoration: "none" }}
+          className="demo-button"
+          style={{ minHeight: 32, flexShrink: 0, textDecoration: "none" }}
         >
           {t("today.newBooking")}
         </Link>

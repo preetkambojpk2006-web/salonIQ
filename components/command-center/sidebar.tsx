@@ -98,8 +98,10 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
               }}
             >
               <Icon
-                className="h-4 w-4 shrink-0"
-                strokeWidth={1.75}
+                size={16}
+                strokeWidth={1.5}
+                className="shrink-0"
+                style={{ color: isActive ? "var(--mint)" : "currentColor" }}
                 aria-hidden
               />
               {NAV_I18N_KEY[item.id] ? t(NAV_I18N_KEY[item.id]!) : item.label}
