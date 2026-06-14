@@ -1,5 +1,3 @@
-import type { AppRole } from "@/lib/auth/membership";
-import { canManageFinance } from "@/lib/auth/membership";
 import type { TodayMetrics } from "@/lib/dashboard/today-queries";
 
 function formatRs(amount: number): string {
@@ -8,11 +6,10 @@ function formatRs(amount: number): string {
 
 type SummaryGridProps = {
   metrics: TodayMetrics;
-  appRole?: AppRole;
+  showFinance?: boolean;
 };
 
-export function SummaryGrid({ metrics, appRole = "owner" }: SummaryGridProps) {
-  const showFinance = canManageFinance(appRole);
+export function SummaryGrid({ metrics, showFinance = true }: SummaryGridProps) {
 
   const cards = [
     {

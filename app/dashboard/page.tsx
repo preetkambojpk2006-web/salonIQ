@@ -61,7 +61,7 @@ export default async function DashboardPage() {
       onlinePending={onlinePending}
       coachTeaserTitle={topInsight?.title ?? null}
       staffLeaderboard={leaderboard}
-      appRole={appRole}
+      showOwnerInsights={canManageFinance(appRole)}
       businessId={businessId}
       bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}

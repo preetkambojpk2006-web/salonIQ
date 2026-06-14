@@ -11,8 +11,6 @@ import { CoachTeaser } from "@/components/coach/CoachTeaser";
 import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
 import type { StaffLeaderboardEntry } from "@/lib/staff/leaderboard";
-import type { AppRole } from "@/lib/auth/membership";
-import { canManageFinance } from "@/lib/auth/membership";
 import type { Appointment } from "@/lib/appointments/types";
 import type {
   TodayMetrics,
@@ -30,7 +28,7 @@ type TodayViewProps = {
   onlinePending?: Appointment[];
   coachTeaserTitle?: string | null;
   staffLeaderboard?: StaffLeaderboardEntry[];
-  appRole?: AppRole;
+  showOwnerInsights?: boolean;
   businessId?: string | null;
   bookingSlug?: string | null;
   salonName?: string;
@@ -44,7 +42,7 @@ export function TodayView({
   onlinePending = [],
   coachTeaserTitle = null,
   staffLeaderboard = [],
-  appRole = "owner",
+  showOwnerInsights = true,
   businessId = null,
   bookingSlug = null,
   salonName = "Your salon",
@@ -52,7 +50,6 @@ export function TodayView({
   lowStockProducts = [],
 }: TodayViewProps) {
   const { t } = useT();
-  const showOwnerInsights = canManageFinance(appRole);
   const isNewSalon =
     metrics.revenueToday === 0 &&
     metrics.bookingsToday === 0 &&
@@ -73,7 +70,7 @@ export function TodayView({
         dailyRevenueTarget={dailyRevenueTarget}
         showRevenue={showOwnerInsights}
       />
-      <SummaryGrid metrics={metrics} appRole={appRole} />
+      <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
       {showOwnerInsights ? (
         <CoachTeaser topInsightTitle={coachTeaserTitle} />
       ) : null}
