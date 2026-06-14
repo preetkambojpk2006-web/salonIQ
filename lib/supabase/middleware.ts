@@ -1,6 +1,10 @@
 import { canAccessDashboardPath } from "@/lib/auth/route-access";
 import { resolveAppRole } from "@/lib/auth/resolve-role";
-import { getOnboardingRedirect } from "@/lib/onboarding/status";
+import {
+  getAuthenticatedLandingPath,
+  getBusinessApprovalStatus,
+} from "@/lib/auth/business-approval";
+import { getOnboardingRedirect, getOnboardingStep } from "@/lib/onboarding/status";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -38,11 +42,12 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Public routes (no login): /book/*, /queue/*, /login, /signup, etc.
   const isAuthRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
   const isProtectedRoute =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/pending");
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
@@ -53,6 +58,8 @@ export async function updateSession(request: NextRequest) {
 
   if (user) {
     const appRole = await resolveAppRole(supabase, user.id);
+    const step = await getOnboardingStep(supabase);
+    const approval = await getBusinessApprovalStatus(supabase, user.id);
 
     if (pathname.startsWith("/dashboard") && !appRole) {
       const url = request.nextUrl.clone();
@@ -60,9 +67,42 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    if (
+      pathname.startsWith("/dashboard") &&
+      (step === "business" || step === "branch")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = await getOnboardingRedirect(supabase);
+      return NextResponse.redirect(url);
+    }
+
+    if (
+      pathname.startsWith("/dashboard") &&
+      approval.onboardingComplete &&
+      !approval.isApproved
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/pending";
+      return NextResponse.redirect(url);
+    }
+
+    if (pathname.startsWith("/pending")) {
+      if (!approval.onboardingComplete) {
+        const url = request.nextUrl.clone();
+        url.pathname = await getOnboardingRedirect(supabase);
+        return NextResponse.redirect(url);
+      }
+
+      if (approval.isApproved) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+    }
+
     if (pathname.startsWith("/onboarding") && appRole && appRole !== "owner") {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = approval.isApproved ? "/dashboard" : "/pending";
       return NextResponse.redirect(url);
     }
 
@@ -78,7 +118,7 @@ export async function updateSession(request: NextRequest) {
 
     if (isAuthRoute) {
       const url = request.nextUrl.clone();
-      url.pathname = await getOnboardingRedirect(supabase);
+      url.pathname = await getAuthenticatedLandingPath(supabase);
       return NextResponse.redirect(url);
     }
   }

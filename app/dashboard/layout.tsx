@@ -1,3 +1,4 @@
+import { getBusinessApprovalStatus } from "@/lib/auth/business-approval";
 import { CommandCenterShell } from "@/components/command-center/command-center-shell";
 import { getWorkspaceContext } from "@/lib/command-center/get-workspace";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
@@ -24,6 +25,11 @@ export default async function DashboardLayout({
   const step = await getOnboardingStep(supabase);
   if (step === "business" || step === "branch") {
     redirect("/onboarding");
+  }
+
+  const approval = await getBusinessApprovalStatus(supabase, user.id);
+  if (approval.onboardingComplete && !approval.isApproved) {
+    redirect("/pending");
   }
 
   const workspace = await getWorkspaceContext();

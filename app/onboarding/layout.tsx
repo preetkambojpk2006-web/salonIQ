@@ -1,3 +1,4 @@
+import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
 import { createClient } from "@/lib/supabase/server";
 import { getOnboardingStep } from "@/lib/onboarding/status";
 import { redirect } from "next/navigation";
@@ -19,7 +20,7 @@ export default async function OnboardingLayout({
   const step = await getOnboardingStep(supabase);
 
   if (step === "complete") {
-    redirect("/dashboard");
+    redirect(await getAuthenticatedLandingPath(supabase));
   }
 
   return <>{children}</>;

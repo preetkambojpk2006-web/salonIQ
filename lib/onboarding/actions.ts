@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
 import { withOnboardingSkip } from "@/lib/onboarding/skips";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -248,7 +249,7 @@ export async function createService(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  redirect(await getAuthenticatedLandingPath(supabase));
 }
 
 export async function skipServices() {
@@ -273,5 +274,5 @@ export async function skipServices() {
     .eq("id", business.id);
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  redirect(await getAuthenticatedLandingPath(supabase));
 }

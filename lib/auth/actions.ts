@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
 import { getOnboardingRedirect, getOnboardingStep } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
@@ -37,17 +38,20 @@ export async function signIn(formData: FormData) {
     redirect(await getOnboardingRedirect(supabase));
   }
 
+  const landingPath = await getAuthenticatedLandingPath(supabase);
+
   if (
     redirectParam &&
     redirectParam.startsWith("/") &&
     !redirectParam.startsWith("//") &&
     !redirectParam.startsWith("/login") &&
-    !redirectParam.startsWith("/signup")
+    !redirectParam.startsWith("/signup") &&
+    landingPath !== "/pending"
   ) {
     redirect(redirectParam);
   }
 
-  redirect(await getOnboardingRedirect(supabase));
+  redirect(landingPath);
 }
 
 export async function signUp(formData: FormData) {
