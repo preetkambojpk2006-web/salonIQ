@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { signOut } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { getUserMembership } from "@/lib/auth/membership";
 import { getNavItemsForRole } from "@/lib/command-center/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -43,11 +43,7 @@ export default async function MorePage() {
             </Link>
           ))}
         </div>
-        <form action={signOut} style={{ marginTop: 18 }}>
-          <button type="submit" className="primary-button" style={{ width: "100%" }}>
-            Sign out
-          </button>
-        </form>
+        <LogoutButton className="sidebar-logout more-logout" />
       </section>
     </div>
   );

@@ -3,7 +3,7 @@
 import { Bot, CalendarCheck, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/auth/logout-button";
 import type { AppRole } from "@/lib/auth/membership";
 import {
   getActiveNavId,
@@ -78,11 +78,7 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
         {appRole === "owner" || appRole === "admin" ? (
           <OwnerWhatsappBrief />
         ) : null}
-        <form action={signOut}>
-          <button type="submit" className="sidebar-signout">
-            Sign out
-          </button>
-        </form>
+        <LogoutButton />
       </div>
     </aside>
   );
