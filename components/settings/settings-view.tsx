@@ -239,11 +239,10 @@ export function SettingsView({
 
             <div>
               <label htmlFor="daily-revenue-target" className="field-label">
-                Aaj ka revenue target (₹)
+                {t("settings.revenueTargetLabel")}
               </label>
               <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
-                Today dashboard par progress bar is target ke against dikhega. Khali
-                chhodne par target off rahega.
+                {t("settings.revenueTargetHelp")}
               </p>
               <input
                 id="daily-revenue-target"
@@ -285,7 +284,7 @@ export function SettingsView({
           <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
             <div>
               <label htmlFor="new-password" className="field-label">
-                Naya password
+                {t("settings.newPassword")}
               </label>
               <input
                 id="new-password"

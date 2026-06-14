@@ -11,7 +11,6 @@ import {
   type CommandNavId,
 } from "@/lib/command-center/navigation";
 import { useT } from "@/lib/i18n/LanguageContext";
-import { OwnerWhatsappBrief } from "@/components/command-center/owner-whatsapp-brief";
 
 const NAV_I18N_KEY: Partial<Record<CommandNavId, string>> = {
   today: "nav.today",
@@ -93,9 +92,6 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
       </nav>
 
       <div className="sidebar-footer">
-        {appRole === "owner" || appRole === "admin" ? (
-          <OwnerWhatsappBrief />
-        ) : null}
         <LogoutButton />
       </div>
     </aside>
