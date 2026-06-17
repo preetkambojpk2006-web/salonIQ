@@ -70,7 +70,7 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
         }}
       >
         <Star size={16} strokeWidth={2} color="#C9A96E" aria-hidden />
-        Star of the Month
+        {t("leaderboard.title")}
       </p>
       <p
         style={{
@@ -151,8 +151,7 @@ export function LeaderboardCard({ entries }: LeaderboardCardProps) {
                       paddingLeft: 24,
                     }}
                   >
-                    {entry.appointmentCount} appointment
-                    {entry.appointmentCount === 1 ? "" : "s"}
+                    {entry.appointmentCount} {t("leaderboard.apptUnit")}
                   </p>
                 </div>
                 <strong

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createAppointment } from "@/lib/appointments/actions";
 import { todayDateIso } from "@/lib/booking/slots";
 import { Toast } from "@/components/ui/toast";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type NewBookingFormProps = {
   onClose: () => void;
@@ -20,6 +21,7 @@ function safeDecode(value: string): string {
 }
 
 export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
+  const { t } = useT();
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [submitError, setSubmitError] = useState<string | null>(
@@ -79,14 +81,14 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
         <form onSubmit={handleSubmit} className="bg-panel p-5 text-ink">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-eyebrow">New booking</p>
-              <h3 className="heading-section mt-1">Add appointment</h3>
+              <p className="text-eyebrow">{t("today.newBooking")}</p>
+              <h3 className="heading-section mt-1">{t("booking.addTitle")}</h3>
             </div>
             <button
               type="button"
               onClick={onClose}
               className="rounded-lg px-2 py-1 text-sm text-muted transition-colors duration-150 hover:bg-mint-soft hover:text-ink"
-              aria-label="Close"
+              aria-label={t("common.close")}
             >
               ✕
             </button>
@@ -101,34 +103,34 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
           <div className="mt-6 stack-4">
             <div>
               <label htmlFor="booking-customer" className="field-label">
-                Customer name <span className="text-coral">*</span>
+                {t("booking.customerName")} <span className="text-coral">*</span>
               </label>
               <input
                 id="booking-customer"
                 name="customer_name"
                 required
                 className="input-field"
-                placeholder="e.g. Sneha Sharma"
+                placeholder={t("booking.customerPlaceholder")}
               />
             </div>
 
             <div>
               <label htmlFor="booking-service" className="field-label">
-                Service <span className="text-coral">*</span>
+                {t("booking.serviceLabel")} <span className="text-coral">*</span>
               </label>
               <input
                 id="booking-service"
                 name="service_name"
                 required
                 className="input-field"
-                placeholder="e.g. Hair cut, Facial"
+                placeholder={t("booking.servicePlaceholder")}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="booking-date" className="field-label">
-                  Date <span className="text-coral">*</span>
+                  {t("booking.dateLabel")} <span className="text-coral">*</span>
                 </label>
                 <input
                   id="booking-date"
@@ -141,7 +143,7 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
               </div>
               <div>
                 <label htmlFor="booking-time" className="field-label">
-                  Time <span className="text-coral">*</span>
+                  {t("booking.timeLabel")} <span className="text-coral">*</span>
                 </label>
                 <input
                   id="booking-time"
@@ -155,19 +157,19 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
 
             <div>
               <label htmlFor="booking-staff" className="field-label">
-                Staff name
+                {t("booking.staffName")}
               </label>
               <input
                 id="booking-staff"
                 name="staff_name"
                 className="input-field"
-                placeholder="e.g. Anita"
+                placeholder={t("booking.staffPlaceholder")}
               />
             </div>
 
             <div>
               <label htmlFor="booking-amount" className="field-label">
-                Amount (Rs)
+                {t("booking.amountLabel")}
               </label>
               <input
                 id="booking-amount"
@@ -176,30 +178,31 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
                 min="0"
                 step="1"
                 className="input-field"
-                placeholder="e.g. 1200"
+                placeholder={t("booking.amountPlaceholder")}
               />
             </div>
 
             <div>
               <label htmlFor="booking-notes" className="field-label">
-                Notes <span className="font-normal text-muted">(optional)</span>
+                {t("booking.notesLabel")}{" "}
+                <span className="font-normal text-muted">{t("booking.optional")}</span>
               </label>
               <textarea
                 id="booking-notes"
                 name="notes"
                 rows={2}
                 className="input-field"
-                placeholder="Any special requests"
+                placeholder={t("booking.notesPlaceholder")}
               />
             </div>
           </div>
 
           <div className="mt-6 flex gap-2">
             <button type="button" onClick={onClose} className="btn-ghost-os flex-1">
-              Cancel
+              {t("common.cancel")}
             </button>
             <button type="submit" className="btn-dark flex-1" disabled={isPending}>
-              {isPending ? "Saving…" : "Save booking"}
+              {isPending ? t("common.saving") : t("booking.saveBooking")}
             </button>
           </div>
         </form>

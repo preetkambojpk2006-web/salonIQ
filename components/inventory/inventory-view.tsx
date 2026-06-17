@@ -93,6 +93,7 @@ function ModalOverlay({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useT();
   return (
     <div
       role="dialog"
@@ -140,7 +141,7 @@ function ModalOverlay({
               cursor: "pointer",
               color: TOKENS.textMuted,
             }}
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ×
           </button>
@@ -156,7 +157,7 @@ function SummaryCards({ summary }: { summary: InventorySummary }) {
   const cards = [
     {
       key: "value",
-      label: "Total Stock Value",
+      label: t("inventory.totalStockValue"),
       value: formatInr(summary.total_stock_value),
       color: TOKENS.textDark,
     },
@@ -174,7 +175,7 @@ function SummaryCards({ summary }: { summary: InventorySummary }) {
     },
     {
       key: "low",
-      label: "Low Stock Items",
+      label: t("inventory.lowStockItems"),
       value: String(summary.low_stock_count),
       color: summary.low_stock_count > 0 ? TOKENS.accentCoral : TOKENS.textDark,
     },
@@ -262,7 +263,11 @@ function StockModal({
         onError(result.error);
         return;
       }
-      onSuccess(kind === "stockIn" ? "Stock add ho gaya ✓" : "Use record ho gaya ✓");
+      onSuccess(
+        kind === "stockIn"
+          ? t("inventory.stockAddedToast")
+          : t("inventory.useRecordedToast")
+      );
       router.refresh();
       onClose();
     });
@@ -281,7 +286,7 @@ function StockModal({
       <div style={{ display: "grid", gap: 12 }}>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
-            Product
+            {t("inventory.productLabel")}
           </label>
           <select
             value={productId}
@@ -299,7 +304,7 @@ function StockModal({
 
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
-            Quantity
+            {t("inventory.quantityLabel")}
           </label>
           <input
             type="number"
@@ -307,7 +312,7 @@ function StockModal({
             step="0.01"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
-            placeholder={selected ? selected.unit_type : "Qty"}
+            placeholder={selected ? selected.unit_type : t("inventory.qtyPlaceholder")}
             style={{ ...fieldStyle, marginTop: 6 }}
           />
         </div>
@@ -315,7 +320,7 @@ function StockModal({
         {kind === "stockIn" ? (
           <div>
             <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
-              Price per unit (₹)
+              {t("inventory.pricePerUnit")}
             </label>
             <input
               type="number"
@@ -323,7 +328,7 @@ function StockModal({
               step="0.01"
               value={unitCost}
               onChange={(event) => setUnitCost(event.target.value)}
-              placeholder="e.g. 450"
+              placeholder={t("inventory.pricePlaceholder")}
               style={{ ...fieldStyle, marginTop: 6 }}
             />
           </div>
@@ -331,7 +336,7 @@ function StockModal({
 
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
-            Date
+            {t("inventory.dateLabel")}
           </label>
           <input
             type="date"
@@ -343,7 +348,7 @@ function StockModal({
 
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: TOKENS.textDark }}>
-            Notes (optional)
+            {t("inventory.notesLabel")}
           </label>
           <textarea
             value={notes}
@@ -370,7 +375,7 @@ function StockModal({
           }}
         >
           {isPending
-            ? "Saving…"
+            ? t("common.saving")
             : kind === "stockIn"
               ? t("inventory.stockAdd")
               : t("inventory.useRecord")}
@@ -419,7 +424,11 @@ function ProductRow({
         onError(result.error);
         return;
       }
-      onSuccess(isActive ? "Product active ✓" : "Product inactive ✓");
+      onSuccess(
+        isActive
+          ? t("inventory.productActiveToast")
+          : t("inventory.productInactiveToast")
+      );
       router.refresh();
     });
   };
@@ -437,7 +446,7 @@ function ProductRow({
         onError(result.error);
         return;
       }
-      onSuccess("Product update ho gaya ✓");
+      onSuccess(t("inventory.productUpdatedToast"));
       setEditing(false);
       router.refresh();
     });
@@ -488,9 +497,11 @@ function ProductRow({
             ) : null}
           </div>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: TOKENS.textMuted }}>
-            {product.unit_type} · Stock: {formatQty(product.current_quantity)} · Min:{" "}
-            {formatQty(product.min_quantity)} · Avg: {formatInr(product.avg_unit_cost)} ·
-            Value: {formatInr(stockValue)}
+            {product.unit_type} · {t("inventory.inlineStock")}{" "}
+            {formatQty(product.current_quantity)} · {t("inventory.inlineMin")}{" "}
+            {formatQty(product.min_quantity)} · {t("inventory.inlineAvg")}{" "}
+            {formatInr(product.avg_unit_cost)} · {t("inventory.inlineValue")}{" "}
+            {formatInr(stockValue)}
           </p>
         </div>
 
@@ -550,7 +561,7 @@ function ProductRow({
                 cursor: "pointer",
               }}
             >
-              Save
+              {t("common.save")}
             </button>
             <button
               type="button"
@@ -564,7 +575,7 @@ function ProductRow({
                 cursor: "pointer",
               }}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         </div>
@@ -606,7 +617,7 @@ function ProductRow({
               opacity: product.is_active ? 1 : 0.5,
             }}
           >
-            Use
+            {t("inventory.useShort")}
           </button>
           <button
             type="button"
@@ -622,7 +633,7 @@ function ProductRow({
               cursor: "pointer",
             }}
           >
-            Edit
+            {t("common.edit")}
           </button>
         </div>
       )}
@@ -734,7 +745,7 @@ export function InventoryView({
         showToast(result.error, "error");
         return;
       }
-      showToast("Brand add ho gayi ✓", "success");
+      showToast(t("inventory.brandAddedToast"), "success");
       setNewBrandName("");
       setShowAddBrand(false);
       router.refresh();
@@ -754,7 +765,7 @@ export function InventoryView({
         showToast(result.error, "error");
         return;
       }
-      showToast("Product add ho gaya ✓", "success");
+      showToast(t("inventory.productAddedToast"), "success");
       setAddProductBrandId(null);
       setNewProductName("");
       setNewProductUnit("bottle");
@@ -774,7 +785,12 @@ export function InventoryView({
         showToast(result.error, "error");
         return;
       }
-      showToast(isActive ? "Brand active ✓" : "Brand inactive ✓", "success");
+      showToast(
+        isActive
+          ? t("inventory.brandActiveToast")
+          : t("inventory.brandInactiveToast"),
+        "success"
+      );
       router.refresh();
     });
   };
@@ -793,9 +809,9 @@ export function InventoryView({
       >
         {(
           [
-            { id: "stock" as const, label: "Stock" },
+            { id: "stock" as const, label: t("inventory.tabStock") },
             { id: "kharcha" as const, label: t("inventory.tabExpenses") },
-            { id: "history" as const, label: "History" },
+            { id: "history" as const, label: t("inventory.tabHistory") },
           ] as const
         ).map(({ id, label }) => (
           <button
@@ -838,7 +854,7 @@ export function InventoryView({
               letterSpacing: "0.06em",
             }}
           >
-            Inventory
+            {t("inventory.eyebrow")}
           </p>
           <h2
             style={{
@@ -848,7 +864,7 @@ export function InventoryView({
               color: TOKENS.textDark,
             }}
           >
-            Stock overview
+            {t("inventory.stockOverview")}
           </h2>
 
           <SummaryCards summary={summary} />
@@ -925,7 +941,7 @@ export function InventoryView({
               <input
                 value={newBrandName}
                 onChange={(event) => setNewBrandName(event.target.value)}
-                placeholder="Brand name (e.g. Loreal)"
+                placeholder={t("inventory.brandNamePlaceholder")}
                 style={{ ...fieldStyle, flex: "1 1 200px" }}
               />
               <button
@@ -943,7 +959,7 @@ export function InventoryView({
                   cursor: "pointer",
                 }}
               >
-                Save brand
+                {t("inventory.saveBrand")}
               </button>
             </div>
           ) : null}
@@ -996,7 +1012,7 @@ export function InventoryView({
                         </h3>
                         {!section.isActive ? (
                           <span style={{ fontSize: 12, color: TOKENS.textMuted }}>
-                            Inactive brand
+                            {t("inventory.inactiveBrand")}
                           </span>
                         ) : null}
                       </div>
@@ -1023,7 +1039,7 @@ export function InventoryView({
                             }
                             style={{ accentColor: TOKENS.accentGreen }}
                           />
-                          Active
+                          {t("common.active")}
                         </label>
                       ) : null}
                     </div>
@@ -1060,13 +1076,13 @@ export function InventoryView({
                         <input
                           value={newProductName}
                           onChange={(event) => setNewProductName(event.target.value)}
-                          placeholder="Product name"
+                          placeholder={t("inventory.productNamePlaceholder")}
                           style={fieldStyle}
                         />
                         <input
                           value={newProductUnit}
                           onChange={(event) => setNewProductUnit(event.target.value)}
-                          placeholder="Unit type (bottle, tube, gram...)"
+                          placeholder={t("inventory.unitTypePlaceholder")}
                           style={fieldStyle}
                         />
                         <input
@@ -1074,7 +1090,7 @@ export function InventoryView({
                           min={0}
                           value={newProductMin}
                           onChange={(event) => setNewProductMin(event.target.value)}
-                          placeholder="Min quantity"
+                          placeholder={t("inventory.minQtyPlaceholder")}
                           style={fieldStyle}
                         />
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1093,7 +1109,7 @@ export function InventoryView({
                               cursor: "pointer",
                             }}
                           >
-                            Save product
+                            {t("inventory.saveProduct")}
                           </button>
                           <button
                             type="button"
@@ -1107,7 +1123,7 @@ export function InventoryView({
                               cursor: "pointer",
                             }}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </button>
                         </div>
                       </div>
@@ -1167,7 +1183,7 @@ export function InventoryView({
                   letterSpacing: "0.06em",
                 }}
               >
-                Brand spend
+                {t("inventory.brandSpendEyebrow")}
               </p>
               <h2
                 style={{
@@ -1197,7 +1213,7 @@ export function InventoryView({
                   fontWeight: 600,
                 }}
               >
-                ← Prev
+                {t("inventory.prev")}
               </Link>
               <Link
                 href={`/dashboard/inventory?year=${shiftMonth(spendYear, spendMonth, 1).year}&month=${shiftMonth(spendYear, spendMonth, 1).month}`}
@@ -1214,7 +1230,7 @@ export function InventoryView({
                   fontWeight: 600,
                 }}
               >
-                Next →
+                {t("inventory.next")}
               </Link>
             </div>
           </div>
@@ -1243,13 +1259,17 @@ export function InventoryView({
               >
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${TOKENS.borderSubtle}` }}>
-                    {["Brand", "Purchases", "Total Spend", "Avg per purchase"].map(
-                      (heading) => (
+                    {[
+                      t("inventory.colBrand"),
+                      t("inventory.colPurchases"),
+                      t("inventory.colTotalSpend"),
+                      t("inventory.colAvgPurchase"),
+                    ].map((heading, index) => (
                         <th
                           key={heading}
                           style={{
                             padding: "12px 14px",
-                            textAlign: heading === "Brand" ? "left" : "center",
+                            textAlign: index === 0 ? "left" : "center",
                             fontSize: 12,
                             fontWeight: 700,
                             color: TOKENS.textMuted,
@@ -1306,7 +1326,7 @@ export function InventoryView({
               alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 700 }}>Kul purchase spend</span>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{t("inventory.totalPurchaseSpend")}</span>
             <strong style={{ fontSize: 18, color: TOKENS.accentGreen }}>
               {formatInr(totalBrandSpend)}
             </strong>
@@ -1333,7 +1353,7 @@ export function InventoryView({
               letterSpacing: "0.06em",
             }}
           >
-            Transactions
+            {t("inventory.transactionsEyebrow")}
           </p>
           <h2
             style={{
@@ -1343,7 +1363,7 @@ export function InventoryView({
               color: TOKENS.textDark,
             }}
           >
-            Recent history
+            {t("inventory.recentHistory")}
           </h2>
 
           {transactions.length === 0 ? (
@@ -1355,7 +1375,11 @@ export function InventoryView({
               {transactions.map((txn) => {
                 const isPurchase = txn.txn_type === "purchase";
                 const accent = isPurchase ? TOKENS.accentGreen : TOKENS.accentOrange;
-                const typeLabel = isPurchase ? "Purchase" : txn.txn_type === "use" ? "Use" : "Adjustment";
+                const typeLabel = isPurchase
+                  ? t("inventory.txnPurchase")
+                  : txn.txn_type === "use"
+                    ? t("inventory.txnUse")
+                    : t("inventory.txnAdjustment");
 
                 return (
                   <article
@@ -1402,8 +1426,10 @@ export function InventoryView({
                       </span>
                     </div>
                     <p style={{ margin: "8px 0 0", fontSize: 13, color: TOKENS.textDark }}>
-                      Qty: {formatQty(Math.abs(txn.quantity))}
-                      {txn.total_cost != null ? ` · Cost: ${formatInr(txn.total_cost)}` : ""}
+                      {t("inventory.inlineQty")} {formatQty(Math.abs(txn.quantity))}
+                      {txn.total_cost != null
+                        ? ` · ${t("inventory.inlineCost")} ${formatInr(txn.total_cost)}`
+                        : ""}
                     </p>
                     {txn.notes ? (
                       <p style={{ margin: "4px 0 0", fontSize: 12, color: TOKENS.textMuted }}>

@@ -75,7 +75,7 @@ export function CommandSidebar({ appRole }: CommandSidebarProps) {
         <div className="brand-mark">S</div>
         <div>
           <p className="brand-name">SALONIQ OS</p>
-          <p className="brand-subtitle">AI operating system</p>
+          <p className="brand-subtitle">{t("sidebar.tagline")}</p>
         </div>
       </div>
 

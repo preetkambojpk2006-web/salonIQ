@@ -101,7 +101,7 @@ export function SettingsView({
       return;
     }
 
-    showToast("Settings save ho gayi ✓", "success");
+    showToast(t("settings.savedToast"), "success");
     router.refresh();
   };
 
@@ -124,7 +124,7 @@ export function SettingsView({
 
     setNewPassword("");
     setConfirmPassword("");
-    showToast("Password update ho gaya ✓", "success");
+    showToast(t("settings.passwordUpdatedToast"), "success");
   };
 
   return (
@@ -138,8 +138,8 @@ export function SettingsView({
           <section className="panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">Walk-in queue</p>
-                <h2>QR code</h2>
+                <p className="eyebrow">{t("settings.walkinQueueEyebrow")}</p>
+                <h2>{t("settings.qrCodeHeading")}</h2>
               </div>
             </div>
             <WalkinQrCard slug={bookingSlug} businessName={salonName} />
@@ -153,15 +153,15 @@ export function SettingsView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Salon settings</p>
-              <h2>Salon details</h2>
+              <p className="eyebrow">{t("settings.salonSettingsEyebrow")}</p>
+              <h2>{t("settings.salonDetailsHeading")}</h2>
             </div>
           </div>
 
           <div style={{ maxWidth: 520, display: "grid", gap: 14 }}>
             <div>
               <label htmlFor="salon-name" className="field-label">
-                Salon name
+                {t("settings.salonNameLabel")}
               </label>
               <input
                 id="salon-name"
@@ -176,7 +176,7 @@ export function SettingsView({
 
             <div>
               <label htmlFor="salon-phone" className="field-label">
-                Phone
+                {t("settings.phoneLabel")}
               </label>
               <input
                 id="salon-phone"
@@ -191,7 +191,7 @@ export function SettingsView({
 
             <div>
               <label htmlFor="salon-email" className="field-label">
-                Email
+                {t("settings.emailLabel")}
               </label>
               <input
                 id="salon-email"
@@ -206,7 +206,7 @@ export function SettingsView({
 
             <div>
               <label htmlFor="opening-hours" className="field-label">
-                Opening hours
+                {t("settings.openingHoursLabel")}
               </label>
               <textarea
                 id="opening-hours"
@@ -221,7 +221,7 @@ export function SettingsView({
 
             <div>
               <label htmlFor="google-review-link" className="field-label">
-                Google Review Link
+                {t("settings.googleReviewLabel")}
               </label>
               <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
                 {t("settings.reviewRequestHelp")}
@@ -268,7 +268,7 @@ export function SettingsView({
               className="primary-button"
               style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
             >
-              {savingProfile ? "Saving…" : "Save salon details"}
+              {savingProfile ? t("common.saving") : t("settings.saveSalonDetails")}
             </button>
           </div>
         </section>
@@ -276,8 +276,8 @@ export function SettingsView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Security</p>
-              <h2>Change password</h2>
+              <p className="eyebrow">{t("settings.securityEyebrow")}</p>
+              <h2>{t("settings.changePasswordHeading")}</h2>
             </div>
           </div>
 
@@ -317,7 +317,7 @@ export function SettingsView({
               className="primary-button"
               style={{ minHeight: 44, borderRadius: 10, justifySelf: "start" }}
             >
-              {savingPassword ? "Updating…" : "Update password"}
+              {savingPassword ? t("settings.updating") : t("settings.updatePassword")}
             </button>
           </div>
         </section>

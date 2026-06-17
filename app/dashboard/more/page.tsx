@@ -1,7 +1,9 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { getUserMembership } from "@/lib/auth/membership";
 import { getNavItemsForRole } from "@/lib/command-center/navigation";
+import { getLocale, t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MorePage() {
@@ -11,6 +13,7 @@ export default async function MorePage() {
   } = await supabase.auth.getUser();
   const membership = await getUserMembership();
   const appRole = membership?.appRole ?? "staff";
+  const locale = getLocale(cookies().get("saloniq_ui_language")?.value);
 
   const extraNav = getNavItemsForRole(appRole).filter(
     (item) => !item.mobile && item.id !== "today"
@@ -21,8 +24,8 @@ export default async function MorePage() {
       <section className="panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Account</p>
-            <h2>More</h2>
+            <p className="eyebrow">{t("more.account", locale)}</p>
+            <h2>{t("nav.more", locale)}</h2>
           </div>
         </div>
         <p className="text-body" style={{ marginBottom: 16 }}>
@@ -38,7 +41,7 @@ export default async function MorePage() {
             >
               <span className="appointment-time">→</span>
               <div>
-                <strong>{item.label}</strong>
+                <strong>{t(`nav.${item.id}`, locale)}</strong>
               </div>
             </Link>
           ))}

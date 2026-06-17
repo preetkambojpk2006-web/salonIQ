@@ -395,7 +395,7 @@ export function CoachPage({ insights }: CoachPageProps) {
       <section className="panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AI business coach</p>
+            <p className="eyebrow">{t("coach.aiBusinessCoach")}</p>
             <h2>{t("coach.smartAdvisor")}</h2>
           </div>
         </div>
@@ -546,7 +546,7 @@ export function CoachPage({ insights }: CoachPageProps) {
                         letterSpacing: "0.02em",
                       }}
                     >
-                      AI Coach
+                      {t("coach.aiCoachLabel")}
                     </span>
                   </div>
                   <p

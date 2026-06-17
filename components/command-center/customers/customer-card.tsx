@@ -66,6 +66,7 @@ function CustomerNotesEditor({
   customerId: string;
   initialNotes: string | null;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes ?? "");
   const [saving, setSaving] = useState(false);
@@ -100,7 +101,7 @@ function CustomerNotesEditor({
         className="field-label"
         style={{ fontSize: 12, color: "#8A8A8A", fontWeight: 600 }}
       >
-        Notes
+        {t("customers.notesLabel")}
       </label>
       <textarea
         id={`customer-notes-${customerId}`}
@@ -108,7 +109,7 @@ function CustomerNotesEditor({
         value={notes}
         onChange={(event) => setNotes(event.target.value)}
         rows={3}
-        placeholder="Prefers short hair, allergic to dye, likes chai…"
+        placeholder={t("customers.notesPlaceholder")}
         style={{
           marginTop: 6,
           borderRadius: 10,
@@ -140,7 +141,7 @@ function CustomerNotesEditor({
           opacity: saving ? 0.7 : 1,
         }}
       >
-        {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
+        {saving ? t("common.saving") : saved ? t("common.saved") : t("common.save")}
       </button>
     </div>
   );

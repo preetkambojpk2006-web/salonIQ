@@ -47,6 +47,7 @@ function ActiveToggle({
   onChange: (next: boolean) => void;
   label: string;
 }) {
+  const { t } = useT();
   return (
     <label
       style={{
@@ -67,7 +68,7 @@ function ActiveToggle({
         style={{ accentColor: "#1FA873" }}
         aria-label={label}
       />
-      {checked ? "Active" : "Inactive"}
+      {checked ? t("common.active") : t("common.inactive")}
     </label>
   );
 }
@@ -81,6 +82,7 @@ function ServiceRow({
   onUpdated: () => void;
   onError: (message: string) => void;
 }) {
+  const { t } = useT();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -131,7 +133,7 @@ function ServiceRow({
     return (
       <article className="customer-card" style={{ display: "grid", gap: 12 }}>
         <div>
-          <label className="field-label">Service name</label>
+          <label className="field-label">{t("services.serviceNameLabel")}</label>
           <input
             className="input-field"
             value={name}
@@ -140,18 +142,18 @@ function ServiceRow({
           />
         </div>
         <div>
-          <label className="field-label">Category</label>
+          <label className="field-label">{t("services.categoryLabel")}</label>
           <input
             className="input-field"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            placeholder="Hair, Nails…"
+            placeholder={t("services.categoryPlaceholder")}
             style={fieldStyle}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Duration (mins)</label>
+            <label className="field-label">{t("services.durationLabel")}</label>
             <input
               className="input-field"
               type="number"
@@ -162,7 +164,7 @@ function ServiceRow({
             />
           </div>
           <div>
-            <label className="field-label">Price (₹)</label>
+            <label className="field-label">{t("services.priceLabel")}</label>
             <input
               className="input-field"
               type="number"
@@ -182,7 +184,7 @@ function ServiceRow({
             disabled={saving}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? t("common.saving") : t("common.save")}
           </button>
           <button
             type="button"
@@ -190,7 +192,7 @@ function ServiceRow({
             onClick={() => setEditing(false)}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </article>
@@ -220,7 +222,7 @@ function ServiceRow({
             onClick={() => setEditing(true)}
             style={{ minHeight: 36, borderRadius: 10, fontSize: 13 }}
           >
-            Edit
+            {t("common.edit")}
           </button>
         </div>
       </div>
@@ -239,6 +241,7 @@ function StaffRow({
   onUpdated: () => void;
   onError: (message: string) => void;
 }) {
+  const { t } = useT();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -291,7 +294,7 @@ function StaffRow({
     return (
       <article className="customer-card" style={{ display: "grid", gap: 12 }}>
         <div>
-          <label className="field-label">Name</label>
+          <label className="field-label">{t("services.nameLabel")}</label>
           <input
             className="input-field"
             value={name}
@@ -300,7 +303,7 @@ function StaffRow({
           />
         </div>
         <div>
-          <label className="field-label">Branch</label>
+          <label className="field-label">{t("services.branchLabel")}</label>
           <select
             className="input-field"
             value={branchId}
@@ -316,7 +319,7 @@ function StaffRow({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label">Role</label>
+            <label className="field-label">{t("services.roleLabel")}</label>
             <input
               className="input-field"
               value={role}
@@ -325,7 +328,7 @@ function StaffRow({
             />
           </div>
           <div>
-            <label className="field-label">Phone</label>
+            <label className="field-label">{t("services.phoneLabel")}</label>
             <input
               className="input-field"
               type="tel"
@@ -336,7 +339,7 @@ function StaffRow({
           </div>
         </div>
         <div>
-          <label className="field-label">Commission (%)</label>
+          <label className="field-label">{t("services.commissionLabel")}</label>
           <input
             className="input-field"
             type="number"
@@ -356,7 +359,7 @@ function StaffRow({
             disabled={saving}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? t("common.saving") : t("common.save")}
           </button>
           <button
             type="button"
@@ -364,7 +367,7 @@ function StaffRow({
             onClick={() => setEditing(false)}
             style={{ minHeight: 40, borderRadius: 10 }}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </article>
@@ -377,12 +380,14 @@ function StaffRow({
         <div>
           <strong style={{ display: "block", fontSize: 15 }}>{staff.name}</strong>
           <p style={{ margin: "6px 0 0", fontSize: 14, color: "#8A8A8A" }}>
-            {staff.role || "Team member"}
+            {staff.role || t("services.teamMember")}
             {staff.branch_name ? ` · ${staff.branch_name}` : ""}
             {staff.phone ? ` · ${staff.phone}` : ""}
           </p>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8A8A8A" }}>
-            Commission: {staff.commission_percent}%
+            {t("services.commissionValue", {
+              percent: String(staff.commission_percent),
+            })}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -398,7 +403,7 @@ function StaffRow({
             onClick={() => setEditing(true)}
             style={{ minHeight: 36, borderRadius: 10, fontSize: 13 }}
           >
-            Edit
+            {t("common.edit")}
           </button>
         </div>
       </div>
@@ -457,7 +462,7 @@ export function SalonSetupView({
 
     event.currentTarget.reset();
     setShowServiceForm(false);
-    showToast("Service add ho gayi ✓", "success");
+    showToast(t("services.serviceAddedToast"), "success");
     refresh();
   };
 
@@ -476,7 +481,7 @@ export function SalonSetupView({
 
     event.currentTarget.reset();
     setShowStaffForm(false);
-    showToast("Staff add ho gaya ✓", "success");
+    showToast(t("services.staffAddedToast"), "success");
     refresh();
   };
 
@@ -492,19 +497,22 @@ export function SalonSetupView({
             }}
           >
             <p className="eyebrow" style={{ color: "#1A1A1A" }}>
-              Online booking
+              {t("services.onlineBookingEyebrow")}
             </p>
             <h2 style={{ marginTop: 4, fontSize: 18 }}>
               {t("services.publicBookingSetup")}
             </h2>
             <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8A8A8A", lineHeight: 1.5 }}>
-              Kam se kam 1 active service aur 1 active staff member chahiye.
+              {t("services.bookingNeed")}
               {bookingSlug
-                ? " Tabhi customers aapki booking link se appointment request kar payenge."
-                : " Settings se booking link copy kar sakte ho."}
+                ? t("services.bookingNeedReady")
+                : t("services.bookingNeedSettings")}
             </p>
             <p style={{ margin: "8px 0 0", fontSize: 13, color: "#1A1A1A" }}>
-              Active services: {activeServices} · Active staff: {activeStaff}
+              {t("services.activeCounts", {
+                services: String(activeServices),
+                staff: String(activeStaff),
+              })}
             </p>
           </section>
         ) : null}
@@ -512,7 +520,7 @@ export function SalonSetupView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Services</p>
+              <p className="eyebrow">{t("services.servicesEyebrow")}</p>
               <h2>{t("services.yours")}</h2>
             </div>
             {services.length > 0 ? (
@@ -549,33 +557,33 @@ export function SalonSetupView({
             >
               <div>
                 <label htmlFor="new-service-name" className="field-label">
-                  Service name
+                  {t("services.serviceNameLabel")}
                 </label>
                 <input
                   id="new-service-name"
                   name="name"
                   required
                   className="input-field"
-                  placeholder="e.g. Haircut"
+                  placeholder={t("services.serviceNamePlaceholder")}
                   style={fieldStyle}
                 />
               </div>
               <div>
                 <label htmlFor="new-service-category" className="field-label">
-                  Category (optional)
+                  {t("services.categoryOptionalLabel")}
                 </label>
                 <input
                   id="new-service-category"
                   name="category"
                   className="input-field"
-                  placeholder="Hair, Nails, Spa"
+                  placeholder={t("services.categoryPlaceholder2")}
                   style={fieldStyle}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="new-service-duration" className="field-label">
-                    Duration (mins)
+                    {t("services.durationLabel")}
                   </label>
                   <input
                     id="new-service-duration"
@@ -584,13 +592,13 @@ export function SalonSetupView({
                     min={1}
                     required
                     className="input-field"
-                    placeholder="45"
+                    placeholder={t("services.durationPlaceholder")}
                     style={fieldStyle}
                   />
                 </div>
                 <div>
                   <label htmlFor="new-service-price" className="field-label">
-                    Price (₹)
+                    {t("services.priceLabel")}
                   </label>
                   <input
                     id="new-service-price"
@@ -600,7 +608,7 @@ export function SalonSetupView({
                     step="0.01"
                     required
                     className="input-field"
-                    placeholder="499"
+                    placeholder={t("services.pricePlaceholder")}
                     style={fieldStyle}
                   />
                 </div>
@@ -623,7 +631,7 @@ export function SalonSetupView({
                   key={service.id}
                   service={service}
                   onUpdated={() => {
-                    showToast("Service update ho gayi ✓", "success");
+                    showToast(t("services.serviceUpdatedToast"), "success");
                     refresh();
                   }}
                   onError={(message) => showToast(message, "error")}
@@ -636,7 +644,7 @@ export function SalonSetupView({
         <section className="panel">
           <div className="panel-header">
             <div>
-              <p className="eyebrow">Staff</p>
+              <p className="eyebrow">{t("services.staffEyebrow")}</p>
               <h2>{t("services.team")}</h2>
             </div>
             {staff.length > 0 && branches.length > 0 ? (
@@ -654,9 +662,9 @@ export function SalonSetupView({
           {branches.length === 0 ? (
             <EmptyState
               icon="calendar"
-              title="Pehle branch chahiye"
-              description="Staff add karne ke liye kam se kam ek branch honi chahiye."
-              actionLabel="Branches dekho"
+              title={t("services.needBranchTitle")}
+              description={t("services.needBranchDesc")}
+              actionLabel={t("services.needBranchAction")}
               actionHref="/dashboard/branches"
             />
           ) : staff.length === 0 && !showStaffForm ? (
@@ -681,7 +689,7 @@ export function SalonSetupView({
             >
               <div>
                 <label htmlFor="new-staff-branch" className="field-label">
-                  Branch
+                  {t("services.branchLabel")}
                 </label>
                 <select
                   id="new-staff-branch"
@@ -700,47 +708,47 @@ export function SalonSetupView({
               </div>
               <div>
                 <label htmlFor="new-staff-name" className="field-label">
-                  Name
+                  {t("services.nameLabel")}
                 </label>
                 <input
                   id="new-staff-name"
                   name="name"
                   required
                   className="input-field"
-                  placeholder="e.g. Priya Sharma"
+                  placeholder={t("services.staffNamePlaceholder")}
                   style={fieldStyle}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="new-staff-role" className="field-label">
-                    Role
+                    {t("services.roleLabel")}
                   </label>
                   <input
                     id="new-staff-role"
                     name="role"
                     className="input-field"
-                    placeholder="Senior stylist"
+                    placeholder={t("services.rolePlaceholder")}
                     style={fieldStyle}
                   />
                 </div>
                 <div>
                   <label htmlFor="new-staff-phone" className="field-label">
-                    Phone
+                    {t("services.phoneLabel")}
                   </label>
                   <input
                     id="new-staff-phone"
                     name="phone"
                     type="tel"
                     className="input-field"
-                    placeholder="+91 98765 43210"
+                    placeholder={t("services.phonePlaceholder")}
                     style={fieldStyle}
                   />
                 </div>
               </div>
               <div>
                 <label htmlFor="new-staff-commission" className="field-label">
-                  Commission (%)
+                  {t("services.commissionLabel")}
                 </label>
                 <input
                   id="new-staff-commission"
@@ -773,7 +781,7 @@ export function SalonSetupView({
                   staff={member}
                   branches={branches}
                   onUpdated={() => {
-                    showToast("Staff update ho gaya ✓", "success");
+                    showToast(t("services.staffUpdatedToast"), "success");
                     refresh();
                   }}
                   onError={(message) => showToast(message, "error")}

@@ -37,7 +37,7 @@ export function CoachTeaser({ topInsightTitle }: CoachTeaserProps) {
             color: "#1A1A1A",
           }}
         >
-          AI Business Coach
+          {t("coach.aiBusinessCoach")}
         </p>
       </div>
 

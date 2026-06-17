@@ -5,6 +5,7 @@ import { MessageActions } from "@/components/whatsapp/MessageActions";
 import type { Appointment } from "@/lib/appointments/types";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { googleReviewRequest, invoice } from "@/lib/whatsapp/templates";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type PaymentWhatsAppModalProps = {
   appointment: Appointment;
@@ -34,6 +35,7 @@ export function PaymentWhatsAppModal({
   onClose,
 }: PaymentWhatsAppModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const { t } = useT();
   const reviewLink = googleReviewLink?.trim() ?? "";
 
   useEffect(() => {
@@ -77,11 +79,11 @@ export function PaymentWhatsAppModal({
       <div className="payment-modal-form">
         <div className="payment-modal-header">
           <div>
-            <p className="eyebrow">WhatsApp</p>
-            <h3>Payment saved — send invoice on WhatsApp?</h3>
+            <p className="eyebrow">{t("whatsapp.eyebrow")}</p>
+            <h3>{t("whatsapp.paymentInvoiceTitle")}</h3>
             {!phone ? (
               <p className="payment-modal-meta">
-                Customer phone nahi mila — copy karke manually bhej sakte ho.
+                {t("whatsapp.noPhoneCopy")}
               </p>
             ) : null}
           </div>
@@ -89,7 +91,7 @@ export function PaymentWhatsAppModal({
             type="button"
             onClick={handleClose}
             className="payment-modal-close"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
@@ -100,7 +102,7 @@ export function PaymentWhatsAppModal({
           value={message}
           rows={10}
           className="mt-5 w-full resize-none rounded-xl border border-[#E0DAD0] bg-[#EDE8DF]/40 p-3 text-sm leading-relaxed text-[#1A1A1A]"
-          aria-label="WhatsApp invoice message"
+          aria-label={t("whatsapp.invoiceMsgAria")}
         />
 
         <div className="mt-4">
@@ -125,7 +127,7 @@ export function PaymentWhatsAppModal({
                 color: "#1A1A1A",
               }}
             >
-              Google Review maango?
+              {t("whatsapp.googleReviewTitle")}
             </p>
             <p
               style={{
@@ -135,21 +137,21 @@ export function PaymentWhatsAppModal({
                 lineHeight: 1.4,
               }}
             >
-              Optional — khush customer ko review request bhej sakte hain.
+              {t("whatsapp.googleReviewHint")}
             </p>
             <textarea
               readOnly
               value={reviewMessage}
               rows={7}
               className="w-full resize-none rounded-xl border border-[#E0DAD0] bg-white/80 p-3 text-sm leading-relaxed text-[#1A1A1A]"
-              aria-label="Google review request message"
+              aria-label={t("whatsapp.reviewMsgAria")}
             />
             <div className="mt-3">
               <MessageActions
                 phone={phone}
                 message={reviewMessage}
-                copyLabel="Copy review message"
-                sendLabel="Send Review Request"
+                copyLabel={t("whatsapp.copyReview")}
+                sendLabel={t("whatsapp.sendReview")}
               />
             </div>
           </div>
@@ -157,7 +159,7 @@ export function PaymentWhatsAppModal({
 
         <div className="payment-modal-actions">
           <button type="button" className="payment-btn-ghost" onClick={handleClose}>
-            Close
+            {t("common.close")}
           </button>
         </div>
       </div>

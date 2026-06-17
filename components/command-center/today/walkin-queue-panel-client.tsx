@@ -309,13 +309,13 @@ function QueueRow({
               letterSpacing: "0.04em",
             }}
           >
-            Queue — Aapki baari!
+            {t("walkin.notifyLabel")}
           </p>
           <MessageActions
             phone={entry.customer_phone}
             message={whatsAppMessage}
-            copyLabel="Copy"
-            sendLabel="WhatsApp"
+            copyLabel={t("common.copy")}
+            sendLabel={t("whatsapp.eyebrow")}
           />
         </div>
       ) : null}

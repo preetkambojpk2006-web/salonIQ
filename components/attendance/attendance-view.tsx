@@ -124,13 +124,15 @@ function AttendanceButtons({
         if (result.fineCreated && result.fineAmount > 0) {
           setToast({
             show: true,
-            message: `${formatInr(result.fineAmount)} fine lag gaya`,
+            message: t("attendance.fineApplied", {
+              amount: formatInr(result.fineAmount),
+            }),
             variant: "success",
           });
         } else if (result.fineRemoved) {
           setToast({
             show: true,
-            message: "Fine hata di gayi",
+            message: t("attendance.fineRemoved"),
             variant: "success",
           });
         }
@@ -140,7 +142,7 @@ function AttendanceButtons({
           setLocalStatus(previousStatus);
           setToast({
             show: true,
-            message: "Network error. Dobara try karein.",
+            message: t("attendance.networkError"),
             variant: "error",
           });
         }
@@ -206,7 +208,7 @@ function AttendanceButtons({
       </div>
       {localStatus === "late" && lateFineAmount > 0 ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, color: TOKENS.accentOrange }}>
-          Late fine: {formatInr(lateFineAmount)}
+          {t("attendance.lateFineNote", { amount: formatInr(lateFineAmount) })}
         </p>
       ) : null}
       <Toast
@@ -298,7 +300,7 @@ export function AttendanceView({
               letterSpacing: "0.06em",
             }}
           >
-            Attendance
+            {t("attendance.sectionEyebrow")}
           </p>
           <h2
             style={{
@@ -391,7 +393,7 @@ export function AttendanceView({
               letterSpacing: "0.06em",
             }}
           >
-            Monthly summary
+            {t("attendance.monthlySummary")}
           </p>
           <h2
             style={{
@@ -435,17 +437,17 @@ export function AttendanceView({
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${TOKENS.borderSubtle}` }}>
                     {[
-                      "Staff",
+                      t("attendance.staffHeader"),
                       t("status.present"),
                       t("status.late"),
                       t("status.absent"),
-                      "Total fines",
-                    ].map((heading) => (
+                      t("attendance.totalFinesHeader"),
+                    ].map((heading, index) => (
                       <th
                         key={heading}
                         style={{
                           padding: "12px 14px",
-                          textAlign: heading === "Staff" ? "left" : "center",
+                          textAlign: index === 0 ? "left" : "center",
                           fontSize: 12,
                           fontWeight: 700,
                           color: TOKENS.textMuted,
@@ -504,7 +506,7 @@ export function AttendanceView({
             }}
           >
             <span style={{ fontSize: 14, fontWeight: 700, color: TOKENS.textDark }}>
-              Kul outstanding fines
+              {t("attendance.outstandingTotal")}
             </span>
             <strong style={{ fontSize: 18, color: TOKENS.accentCoral }}>
               {formatInr(totalOutstandingFines)}

@@ -2,8 +2,17 @@
 
 import { Fragment, memo, useMemo } from "react";
 import type { HeatmapRow } from "@/lib/insights/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const dayKeys = [
+  "heatmap.mon",
+  "heatmap.tue",
+  "heatmap.wed",
+  "heatmap.thu",
+  "heatmap.fri",
+  "heatmap.sat",
+  "heatmap.sun",
+] as const;
 
 type InsightsHeatmapProps = {
   rows: HeatmapRow[];
@@ -25,6 +34,7 @@ function heatText(value: number, maxValue: number): string {
 }
 
 function InsightsHeatmapInner({ rows }: InsightsHeatmapProps) {
+  const { t } = useT();
   const maxValue = useMemo(
     () => Math.max(...rows.flatMap((row) => row.values), 1),
     [rows]
@@ -33,9 +43,9 @@ function InsightsHeatmapInner({ rows }: InsightsHeatmapProps) {
   return (
     <div className="heatmap">
       <div className="heat-cell heat-label" />
-      {days.map((day) => (
-        <div key={day} className="heat-cell heat-label">
-          {day}
+      {dayKeys.map((dayKey) => (
+        <div key={dayKey} className="heat-cell heat-label">
+          {t(dayKey)}
         </div>
       ))}
       {rows.map((row) => (
@@ -57,7 +67,7 @@ const HeatmapRow = memo(function HeatmapRow({
       <div className="heat-cell heat-label">{row.time}</div>
       {row.values.map((value, index) => (
         <div
-          key={`${row.time}-${days[index]}`}
+          key={`${row.time}-${dayKeys[index]}`}
           className="heat-cell"
           style={{
             background: heatLevel(value, maxValue),

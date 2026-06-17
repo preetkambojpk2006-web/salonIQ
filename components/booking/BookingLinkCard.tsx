@@ -104,7 +104,7 @@ export function BookingLinkCard({
           letterSpacing: "0.06em",
         }}
       >
-        Online booking link
+        {t("settings.bookingLinkEyebrow")}
       </p>
       <h2
         style={{
@@ -147,7 +147,7 @@ export function BookingLinkCard({
           onClick={handleCopy}
           style={buttonStyle(TOKENS.accentGreen)}
         >
-          {copied ? "Copied ✓" : "Copy link"}
+          {copied ? t("common.copied") : t("common.copyLink")}
         </button>
         <a
           href={whatsappUrl}
@@ -162,7 +162,7 @@ export function BookingLinkCard({
             justifyContent: "center",
           }}
         >
-          Share on WhatsApp
+          {t("settings.shareWhatsApp")}
         </a>
       </div>
 

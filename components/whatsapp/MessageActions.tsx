@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Toast } from "@/components/ui/toast";
 import { buildWhatsAppLink } from "@/lib/whatsapp/sendLink";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type MessageActionsProps = {
   phone: string;
@@ -19,12 +20,15 @@ const BTN_BASE =
 export function MessageActions({
   phone,
   message,
-  copyLabel = "Copy message",
-  sendLabel = "Send on WhatsApp",
+  copyLabel,
+  sendLabel,
   onSend,
   onCopy,
 }: MessageActionsProps) {
+  const { t } = useT();
   const [copyToast, setCopyToast] = useState(false);
+  const resolvedCopyLabel = copyLabel ?? t("whatsapp.copyMessage");
+  const resolvedSendLabel = sendLabel ?? t("whatsapp.sendWhatsApp");
 
   const handleCopy = useCallback(async () => {
     try {
@@ -49,19 +53,19 @@ export function MessageActions({
           onClick={handleCopy}
           className={`${BTN_BASE} border border-[#E0DAD0] bg-white text-[#1A1A1A] hover:bg-[#EDE8DF]`}
         >
-          {copyLabel}
+          {resolvedCopyLabel}
         </button>
         <button
           type="button"
           onClick={handleSend}
           className={`${BTN_BASE} border-0 bg-[#1FA873] text-white hover:brightness-105`}
         >
-          {sendLabel}
+          {resolvedSendLabel}
         </button>
       </div>
 
       <Toast
-        message="Message copied"
+        message={t("whatsapp.messageCopied")}
         show={copyToast}
         onDismiss={() => setCopyToast(false)}
       />

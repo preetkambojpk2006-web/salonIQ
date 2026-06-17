@@ -5,6 +5,7 @@ import { MessageActions } from "@/components/whatsapp/MessageActions";
 import type { Appointment } from "@/lib/appointments/types";
 import { formatTime12h } from "@/lib/format/time";
 import { bookingConfirmation } from "@/lib/whatsapp/templates";
+import { useT } from "@/lib/i18n/LanguageContext";
 
 type BookingWhatsAppModalProps = {
   appointment: Appointment;
@@ -30,6 +31,7 @@ export function BookingWhatsAppModal({
   onClose,
 }: BookingWhatsAppModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const { t } = useT();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -63,11 +65,11 @@ export function BookingWhatsAppModal({
       <div className="payment-modal-form">
         <div className="payment-modal-header">
           <div>
-            <p className="eyebrow">WhatsApp</p>
-            <h3>Booking confirmed — send WhatsApp confirmation?</h3>
+            <p className="eyebrow">{t("whatsapp.eyebrow")}</p>
+            <h3>{t("whatsapp.bookingConfirmTitle")}</h3>
             {!phone ? (
               <p className="payment-modal-meta">
-                Customer phone nahi mila — copy karke manually bhej sakte ho.
+                {t("whatsapp.noPhoneCopy")}
               </p>
             ) : null}
           </div>
@@ -75,7 +77,7 @@ export function BookingWhatsAppModal({
             type="button"
             onClick={handleClose}
             className="payment-modal-close"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
@@ -86,7 +88,7 @@ export function BookingWhatsAppModal({
           value={message}
           rows={10}
           className="mt-5 w-full resize-none rounded-xl border border-[#E0DAD0] bg-[#EDE8DF]/40 p-3 text-sm leading-relaxed text-[#1A1A1A]"
-          aria-label="WhatsApp booking confirmation message"
+          aria-label={t("whatsapp.bookingMsgAria")}
         />
 
         <div className="mt-4">
@@ -95,7 +97,7 @@ export function BookingWhatsAppModal({
 
         <div className="payment-modal-actions">
           <button type="button" className="payment-btn-ghost" onClick={handleClose}>
-            Close
+            {t("common.close")}
           </button>
         </div>
       </div>
