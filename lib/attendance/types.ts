@@ -39,6 +39,24 @@ export type MonthStaffAttendanceSummary = {
   totalFines: number;
 };
 
+export type MonthDayRecord = {
+  date: string;
+  dateLabel: string;
+  dayLabel: string;
+  status: AttendanceStatus | null;
+};
+
+export type StaffMonthDetail = MonthStaffAttendanceSummary & {
+  days: MonthDayRecord[];
+};
+
+export type MonthAttendanceData = {
+  summaries: MonthStaffAttendanceSummary[];
+  staffDetails: StaffMonthDetail[];
+  totalOutstandingFines: number;
+  monthDays: string[];
+};
+
 export type MarkAttendanceResult =
   | {
       ok: true;

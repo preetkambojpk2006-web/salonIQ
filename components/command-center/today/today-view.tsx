@@ -5,7 +5,6 @@ import { NextAppointments } from "@/components/command-center/today/next-appoint
 import { OsHero } from "@/components/command-center/today/os-hero";
 import { WalkinQueuePanelClient } from "@/components/command-center/today/walkin-queue-panel-client";
 import { WelcomeBanner } from "@/components/command-center/welcome-banner";
-import { BookingLinkCard } from "@/components/booking/BookingLinkCard";
 import { CoachTeaser } from "@/components/coach/CoachTeaser";
 import { LeaderboardCard } from "@/components/staff/LeaderboardCard";
 import { SummaryGrid } from "@/components/command-center/today/summary-grid";
@@ -57,9 +56,6 @@ export function TodayView({
   return (
     <div className="view-stack">
       <WelcomeBanner />
-      {showOwnerInsights && bookingSlug ? (
-        <BookingLinkCard slug={bookingSlug} salonName={salonName} compact />
-      ) : null}
       <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
       <OsHero
         nextAppointment={upcoming[0] ?? null}

@@ -11,9 +11,12 @@ import type {
   ActiveStaffMember,
   AttendanceStatus,
   MarkAttendanceResult,
+  MonthAttendanceData,
+  MonthDayRecord,
   MonthStaffAttendanceSummary,
   StaffAttendanceRow,
   StaffFineRow,
+  StaffMonthDetail,
 } from "@/lib/attendance/types";
 
 type AttendanceDbRow = {
@@ -54,6 +57,47 @@ function monthCalendarBounds(
   const endDay = new Date(year, month, 0).getDate();
   const end = `${year}-${String(month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
   return { start, end };
+}
+
+export function listIstMonthDaysUpToToday(year: number, month: number): string[] {
+  const today = todayCalendarDay();
+  const [todayYear, todayMonth, todayDay] = today.split("-").map(Number);
+  const lastDayOfMonth = new Date(year, month, 0).getDate();
+
+  let endDay = lastDayOfMonth;
+  if (year === todayYear && month === todayMonth) {
+    endDay = todayDay;
+  } else if (
+    year > todayYear ||
+    (year === todayYear && month > todayMonth)
+  ) {
+    return [];
+  }
+
+  const days: string[] = [];
+  for (let day = 1; day <= endDay; day += 1) {
+    days.push(
+      `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    );
+  }
+  return days;
+}
+
+export function formatMonthDayLabels(date: string): {
+  dateLabel: string;
+  dayLabel: string;
+} {
+  const parsed = new Date(`${date}T12:00:00+05:30`);
+  const dateLabel = parsed.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Asia/Kolkata",
+  });
+  const dayLabel = parsed.toLocaleDateString("en-IN", {
+    weekday: "short",
+    timeZone: "Asia/Kolkata",
+  });
+  return { dateLabel, dayLabel };
 }
 
 export async function getBusinessLateFineAmount(
@@ -119,19 +163,18 @@ async function getAttendanceForDate(
 export async function getMonthAttendance(
   businessId: string,
   year: number,
-  month: number
-): Promise<{
-  summaries: MonthStaffAttendanceSummary[];
-  totalOutstandingFines: number;
-}> {
+  month: number,
+  activeStaff: ActiveStaffMember[] = []
+): Promise<MonthAttendanceData> {
   const supabase = createClient();
   const { start, end } = monthCalendarBounds(year, month);
+  const monthDays = listIstMonthDaysUpToToday(year, month);
 
   const [{ data: attendanceRows, error: attendanceError }, { data: fineRows, error: finesError }, outstandingFines] =
     await Promise.all([
       supabase
         .from("staff_attendance")
-        .select("staff_id, staff_name, status")
+        .select("staff_id, staff_name, status, attendance_date")
         .eq("business_id", businessId)
         .gte("attendance_date", start)
         .lte("attendance_date", end),
@@ -152,13 +195,27 @@ export async function getMonthAttendance(
   }
 
   const summaryMap = new Map<string, MonthStaffAttendanceSummary>();
+  const statusByStaffDate = new Map<string, Map<string, AttendanceStatus>>();
+
+  for (const member of activeStaff) {
+    summaryMap.set(member.id, {
+      staffId: member.id,
+      staffName: member.name,
+      presentDays: 0,
+      lateDays: 0,
+      absentDays: 0,
+      totalFines: 0,
+    });
+    statusByStaffDate.set(member.id, new Map());
+  }
 
   for (const row of attendanceRows ?? []) {
     const staffId = row.staff_id as string;
     const staffName = normalizeStaffName(row.staff_name as string);
-    const key = staffId;
+    const attendanceDate = row.attendance_date as string;
+    const status = row.status as AttendanceStatus;
 
-    const existing = summaryMap.get(key) ?? {
+    const existing = summaryMap.get(staffId) ?? {
       staffId,
       staffName,
       presentDays: 0,
@@ -167,11 +224,27 @@ export async function getMonthAttendance(
       totalFines: 0,
     };
 
-    if (row.status === "present") existing.presentDays += 1;
-    else if (row.status === "late") existing.lateDays += 1;
-    else if (row.status === "absent") existing.absentDays += 1;
+    if (!summaryMap.has(staffId)) {
+      summaryMap.set(staffId, existing);
+      statusByStaffDate.set(staffId, new Map());
+    }
 
-    summaryMap.set(key, existing);
+    if (status === "present") existing.presentDays += 1;
+    else if (status === "late") existing.lateDays += 1;
+    else if (status === "absent") existing.absentDays += 1;
+
+    summaryMap.set(staffId, existing);
+
+    const staffDates =
+      statusByStaffDate.get(staffId) ?? new Map<string, AttendanceStatus>();
+    if (
+      status === "present" ||
+      status === "late" ||
+      status === "absent"
+    ) {
+      staffDates.set(attendanceDate, status);
+    }
+    statusByStaffDate.set(staffId, staffDates);
   }
 
   for (const row of fineRows ?? []) {
@@ -196,11 +269,26 @@ export async function getMonthAttendance(
     a.staffName.localeCompare(b.staffName)
   );
 
+  const staffDetails: StaffMonthDetail[] = summaries.map((summary) => {
+    const byDate = statusByStaffDate.get(summary.staffId) ?? new Map();
+    const days: MonthDayRecord[] = monthDays.map((date) => {
+      const { dateLabel, dayLabel } = formatMonthDayLabels(date);
+      return {
+        date,
+        dateLabel,
+        dayLabel,
+        status: byDate.get(date) ?? null,
+      };
+    });
+
+    return { ...summary, days };
+  });
+
   const totalOutstandingFines = roundMoney(
     outstandingFines.reduce((sum, fine) => sum + fine.amount, 0)
   );
 
-  return { summaries, totalOutstandingFines };
+  return { summaries, staffDetails, totalOutstandingFines, monthDays };
 }
 
 export async function getOutstandingFines(
@@ -216,6 +304,7 @@ export async function markAttendance(params: {
   date?: string;
   status: AttendanceStatus;
   notes?: string | null;
+  lateFineAmount?: number;
 }): Promise<MarkAttendanceResult> {
   const { businessId, staffId, staffName, status, notes } = params;
   const date = params.date ?? todayCalendarDay();
@@ -226,7 +315,10 @@ export async function markAttendance(params: {
 
   const supabase = createClient();
   const normalizedName = normalizeStaffName(staffName);
-  const fineAmount = await getBusinessLateFineAmount(businessId);
+  const fineAmount =
+    params.lateFineAmount !== undefined
+      ? roundMoney(params.lateFineAmount)
+      : await getBusinessLateFineAmount(businessId);
 
   const { data: existing, error: existingError } = await supabase
     .from("staff_attendance")

@@ -46,6 +46,11 @@ export async function markStaffAttendance(
   const staffName = (formData.get("staff_name") as string)?.trim();
   const statusRaw = (formData.get("status") as string)?.trim();
   const date = (formData.get("date") as string)?.trim() || undefined;
+  const lateFineRaw = (formData.get("late_fine_amount") as string)?.trim();
+  const lateFineAmount =
+    lateFineRaw && Number.isFinite(Number(lateFineRaw))
+      ? Number(lateFineRaw)
+      : undefined;
 
   if (!staffId || !staffName) {
     return { ok: false, error: "Staff info missing." };
@@ -67,11 +72,11 @@ export async function markStaffAttendance(
     staffName,
     date,
     status,
+    lateFineAmount,
   });
 
   if (result.ok) {
     revalidatePath("/dashboard/attendance");
-    revalidatePath("/dashboard/money");
   }
 
   return result;
