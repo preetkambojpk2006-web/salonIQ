@@ -338,6 +338,8 @@
   "inventory.noPurchaseRecords": "No purchase records this month yet.",
   "inventory.noTransactions": "No stock transactions yet.",
   "today.noUpcomingBooking": "No upcoming bookings today",
+  "today.bookingsTodaySummary": "{count} bookings on today's schedule",
+  "today.addFirstBooking": "Add first booking",
   "today.todayRevenueLabel": "Today's revenue",
   "attendance.todayHeader": "Today — {date}, {day}",
   "attendance.noStaff": "No active staff. Add staff from Services & Staff first.",

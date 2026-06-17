@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import type { UpcomingAppointment } from "@/lib/dashboard/today-queries";
 import { RevenueTargetProgress } from "@/components/command-center/today/revenue-target-progress";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type OsHeroProps = {
   nextAppointment: UpcomingAppointment | null;
+  bookingsToday: number;
   revenueToday: number;
   dailyRevenueTarget?: number | null;
   showRevenue?: boolean;
@@ -17,11 +19,13 @@ function formatRs(amount: number): string {
 
 export function OsHero({
   nextAppointment,
+  bookingsToday,
   revenueToday,
   dailyRevenueTarget = null,
   showRevenue = true,
 }: OsHeroProps) {
   const { t } = useT();
+  const hasBookingsToday = bookingsToday > 0;
 
   return (
     <section
@@ -69,13 +73,36 @@ export function OsHero({
           >
             {nextAppointment
               ? `${nextAppointment.time} · ${nextAppointment.customer}`
-              : t("today.noUpcomingBooking")}
+              : hasBookingsToday
+                ? t("today.bookingsTodaySummary", {
+                    count: String(bookingsToday),
+                  })
+                : t("today.noUpcomingBooking")}
           </p>
           {nextAppointment ? (
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8A8A8A" }}>
               {nextAppointment.service}
               {nextAppointment.staff ? ` · ${nextAppointment.staff}` : ""}
             </p>
+          ) : !hasBookingsToday ? (
+            <Link
+              href="/dashboard/calendar?booking=new"
+              style={{
+                display: "inline-block",
+                marginTop: 10,
+                minHeight: 36,
+                padding: "0 14px",
+                borderRadius: 10,
+                background: "#1FA873",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+                lineHeight: "36px",
+              }}
+            >
+              {t("today.addFirstBooking")}
+            </Link>
           ) : null}
         </div>
 

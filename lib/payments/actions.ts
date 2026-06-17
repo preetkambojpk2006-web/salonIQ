@@ -137,31 +137,6 @@ export async function recordAppointmentPayment(
     return { ok: false, error: paymentError.message };
   }
 
-  if (isPaid) {
-    const commissionResult = await recordStaffCommissionForPayment({
-      businessId: rowBusinessId,
-      appointmentId,
-      staffName: appointment.staff_name as string | null,
-      serviceAmount: amount,
-      earnedAt: now,
-    });
-
-    if (!commissionResult.ok) {
-      return { ok: false, error: commissionResult.error };
-    }
-
-    const customerId = appointment.customer_id as string | null;
-    if (customerId) {
-      await recordCustomerLoyaltyForPayment({
-        businessId: rowBusinessId,
-        appointmentId,
-        customerId,
-        amount,
-        paidAt: now,
-      });
-    }
-  }
-
   const { error: updateError } = await supabase
     .from("appointments")
     .update({
@@ -180,6 +155,31 @@ export async function recordAppointmentPayment(
   revalidatePath("/dashboard/money");
   revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard");
+
+  if (isPaid) {
+    void recordStaffCommissionForPayment({
+      businessId: rowBusinessId,
+      appointmentId,
+      staffName: appointment.staff_name as string | null,
+      serviceAmount: amount,
+      earnedAt: now,
+    }).catch((err) => {
+      console.error("recordStaffCommissionForPayment:", err);
+    });
+
+    const customerId = appointment.customer_id as string | null;
+    if (customerId) {
+      void recordCustomerLoyaltyForPayment({
+        businessId: rowBusinessId,
+        appointmentId,
+        customerId,
+        amount,
+        paidAt: now,
+      }).catch((err) => {
+        console.error("recordCustomerLoyaltyForPayment:", err);
+      });
+    }
+  }
 
   return { ok: true };
 }

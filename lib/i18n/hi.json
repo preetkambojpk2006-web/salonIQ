@@ -338,6 +338,8 @@
   "inventory.noPurchaseRecords": "Is mahine abhi koi purchase record nahi hai.",
   "inventory.noTransactions": "Abhi koi stock transaction nahi hai.",
   "today.noUpcomingBooking": "Aaj koi upcoming booking nahi",
+  "today.bookingsTodaySummary": "Aaj {count} bookings hain",
+  "today.addFirstBooking": "Pehli booking add karein",
   "today.todayRevenueLabel": "Aaj ki revenue",
   "attendance.todayHeader": "Aaj — {date}, {day}",
   "attendance.noStaff": "Koi active staff nahi hai. Pehle Services & Staff se staff add karein.",

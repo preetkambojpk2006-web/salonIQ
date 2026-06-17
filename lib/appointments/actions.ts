@@ -174,18 +174,23 @@ export async function applyAppointmentTimeCascade(
     return { ok: false, error: anchorError.message };
   }
 
-  for (const row of preview.shifted) {
-    const { error } = await supabase
-      .from("appointments")
-      .update({
-        start_time: row.new_start,
-        end_time: row.new_end,
-      })
-      .eq("id", row.id);
+  if (preview.shifted.length > 0) {
+    const shiftResults = await Promise.all(
+      preview.shifted.map((row) =>
+        supabase
+          .from("appointments")
+          .update({
+            start_time: row.new_start,
+            end_time: row.new_end,
+          })
+          .eq("id", row.id)
+      )
+    );
 
-    if (error) {
-      console.error("applyAppointmentTimeCascade shifted:", error.message);
-      return { ok: false, error: error.message };
+    const shiftError = shiftResults.find((result) => result.error)?.error;
+    if (shiftError) {
+      console.error("applyAppointmentTimeCascade shifted:", shiftError.message);
+      return { ok: false, error: shiftError.message };
     }
   }
 
@@ -481,7 +486,7 @@ export async function markNoShow(formData: FormData) {
     }
 
     if (appointment.customer_id) {
-      await incrementCustomerNoShowCount(
+      void incrementCustomerNoShowCount(
         appointment.customer_id,
         appointment.business_id
       );
@@ -540,7 +545,7 @@ export async function updateAppointmentStatus(formData: FormData) {
     appointment.status !== "no_show" &&
     appointment.customer_id
   ) {
-    await incrementCustomerNoShowCount(
+    void incrementCustomerNoShowCount(
       appointment.customer_id,
       appointment.business_id
     );

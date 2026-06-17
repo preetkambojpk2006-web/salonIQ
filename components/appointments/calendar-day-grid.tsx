@@ -17,11 +17,13 @@ const TIME_SLOTS = [
   { hour: 17, label: "5 PM" },
   { hour: 18, label: "6 PM" },
   { hour: 19, label: "7 PM" },
+  { hour: 20, label: "8 PM" },
 ];
 
 /** Matches `.calendar-cell { min-height: 74px }` in globals.css — one hour row */
 const SLOT_HEIGHT_PX = 74;
 const GRID_START_HOUR = TIME_SLOTS[0]?.hour ?? 10;
+const GRID_BOTTOM_PADDING_PX = 20;
 const MIN_BLOCK_HEIGHT_PX = SLOT_HEIGHT_PX / 2;
 const SHORT_BLOCK_HEIGHT_PX = MIN_BLOCK_HEIGHT_PX;
 
@@ -144,7 +146,7 @@ function CalendarDayGridInner({
     return map;
   }, [dayAppointments]);
 
-  const gridHeightPx = TIME_SLOTS.length * SLOT_HEIGHT_PX;
+  const gridHeightPx = TIME_SLOTS.length * SLOT_HEIGHT_PX + GRID_BOTTOM_PADDING_PX;
   const bodyRowStart = 2;
   const bodyRowEnd = bodyRowStart + TIME_SLOTS.length;
 
@@ -154,6 +156,7 @@ function CalendarDayGridInner({
       style={{
         gridTemplateColumns: `86px repeat(${staffColumns.length}, minmax(160px, 1fr))`,
         gridTemplateRows: `46px repeat(${TIME_SLOTS.length}, ${SLOT_HEIGHT_PX}px)`,
+        paddingBottom: GRID_BOTTOM_PADDING_PX,
       }}
     >
       <div className="calendar-cell header" style={{ gridColumn: 1, gridRow: 1 }}>
@@ -222,8 +225,9 @@ function CalendarDayGridInner({
                   right: 8,
                   top: layout.topPx + 4,
                   height: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
+                  maxHeight: gridHeightPx - layout.topPx - 4,
                   zIndex: 1,
-                  overflow: "hidden",
+                  overflow: "visible",
                 }}
               >
                 {renderBlock(

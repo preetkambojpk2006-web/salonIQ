@@ -506,6 +506,8 @@ export function CalendarView({
 }: CalendarViewProps) {
   const { t } = useT();
   const router = useRouter();
+  const [localAppointments, setLocalAppointments] = useState(appointments);
+  const [localOnlinePending, setLocalOnlinePending] = useState(onlinePending);
   const [showForm, setShowForm] = useState(openBooking);
   const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(
     null
@@ -536,17 +538,30 @@ export function CalendarView({
   );
   const [timeChangeToast, setTimeChangeToast] = useState(false);
 
+  useEffect(() => {
+    setLocalAppointments(appointments);
+  }, [appointments]);
+
+  useEffect(() => {
+    setLocalOnlinePending(onlinePending);
+  }, [onlinePending]);
+
   const mergedAppointments = useMemo(
-    () => mergeAppointments(appointments, onlinePending),
-    [appointments, onlinePending]
+    () => mergeAppointments(localAppointments, localOnlinePending),
+    [localAppointments, localOnlinePending]
   );
 
-  const onlinePendingCount = onlinePending.length;
+  const onlinePendingIds = useMemo(
+    () => new Set(localOnlinePending.map((appointment) => appointment.id)),
+    [localOnlinePending]
+  );
+
+  const onlinePendingCount = localOnlinePending.length;
 
   const visibleAppointments = useMemo(() => {
     if (!onlinePendingOnly) return mergedAppointments;
-    return onlinePending;
-  }, [mergedAppointments, onlinePending, onlinePendingOnly]);
+    return localOnlinePending;
+  }, [mergedAppointments, localOnlinePending, onlinePendingOnly]);
 
   useEffect(() => {
     setShowForm(openBooking);
@@ -672,8 +687,58 @@ export function CalendarView({
     (preview: CascadePreview) => {
       const appointment = cascadeFlow?.appointment;
       setCascadeFlow(null);
-      setDetailAppointment(null);
       setTimeChangeToast(true);
+
+      setLocalAppointments((current) =>
+        current.map((row) => {
+          if (row.id === preview.anchor.id) {
+            return {
+              ...row,
+              start_time: preview.anchor.new_start,
+              end_time: preview.anchor.new_end,
+            };
+          }
+          const shifted = preview.shifted.find((item) => item.id === row.id);
+          if (shifted) {
+            return {
+              ...row,
+              start_time: shifted.new_start,
+              end_time: shifted.new_end,
+            };
+          }
+          return row;
+        })
+      );
+
+      setLocalOnlinePending((current) =>
+        current.map((row) => {
+          if (row.id === preview.anchor.id) {
+            return {
+              ...row,
+              start_time: preview.anchor.new_start,
+              end_time: preview.anchor.new_end,
+            };
+          }
+          const shifted = preview.shifted.find((item) => item.id === row.id);
+          if (shifted) {
+            return {
+              ...row,
+              start_time: shifted.new_start,
+              end_time: shifted.new_end,
+            };
+          }
+          return row;
+        })
+      );
+
+      if (appointment) {
+        setDetailAppointment({
+          ...appointment,
+          start_time: preview.anchor.new_start,
+          end_time: preview.anchor.new_end,
+        });
+      }
+
       router.refresh();
 
       if (!appointment) return;
@@ -782,7 +847,7 @@ export function CalendarView({
           ) : filteredAppointments.length === 0 ? (
             <div className="view-stack">
               {onlinePendingCount > 0 ? (
-                <OnlinePendingRequests appointments={onlinePending} />
+                <OnlinePendingRequests appointments={localOnlinePending} />
               ) : null}
               <p className="text-body" style={{ color: "var(--muted)" }}>
                 {viewMode === "day"
@@ -795,7 +860,7 @@ export function CalendarView({
           ) : (
             <div className="view-stack">
               {onlinePendingCount > 0 ? (
-                <OnlinePendingRequests appointments={onlinePending} />
+                <OnlinePendingRequests appointments={localOnlinePending} />
               ) : null}
 
               {grouped.map(([key, dayAppointments]) => (
@@ -809,7 +874,9 @@ export function CalendarView({
                       : null}
                   </p>
                   <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
-                    {dayAppointments.map((appointment) => (
+                    {dayAppointments
+                      .filter((appointment) => !onlinePendingIds.has(appointment.id))
+                      .map((appointment) => (
                       <AppointmentBlock
                         key={appointment.id}
                         appointment={appointment}

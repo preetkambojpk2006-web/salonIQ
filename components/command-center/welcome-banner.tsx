@@ -6,11 +6,17 @@ import { useT } from "@/lib/i18n/LanguageContext";
 
 const STORAGE_KEY = "saloniq_welcome_dismissed";
 
-export function WelcomeBanner() {
+type WelcomeBannerProps = {
+  /** Hide when the salon already has bookings or upcoming appointments */
+  hasActivity?: boolean;
+};
+
+export function WelcomeBanner({ hasActivity = false }: WelcomeBannerProps) {
   const { t } = useT();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (hasActivity) return;
     try {
       const dismissed = window.localStorage.getItem(STORAGE_KEY);
       if (!dismissed) {
@@ -19,9 +25,9 @@ export function WelcomeBanner() {
     } catch {
       setVisible(true);
     }
-  }, []);
+  }, [hasActivity]);
 
-  if (!visible) return null;
+  if (hasActivity || !visible) return null;
 
   const dismiss = () => {
     try {

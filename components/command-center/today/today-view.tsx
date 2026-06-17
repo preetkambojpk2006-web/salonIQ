@@ -18,6 +18,7 @@ import { OnlinePendingRequests } from "@/components/appointments/online-pending-
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import type { WalkinQueueRow } from "@/lib/walkin/types";
+import { formatTime12h } from "@/lib/format/time";
 
 type TodayViewProps = {
   metrics: TodayMetrics;
@@ -46,17 +47,34 @@ export function TodayView({
   lowStockProducts = [],
   initialWalkinQueue = [],
 }: TodayViewProps) {
-  const isNewSalon =
-    metrics.revenueToday === 0 &&
-    metrics.bookingsToday === 0 &&
-    upcoming.length === 0;
+  const hasBookingsToday = metrics.bookingsToday > 0;
+  const hasUpcoming = upcoming.length > 0;
+  const hasOnlinePending = onlinePending.length > 0;
+  const hasActivity = hasBookingsToday || hasUpcoming || hasOnlinePending;
+
+  const heroNext =
+    upcoming[0] ??
+    (onlinePending[0]
+      ? {
+          id: onlinePending[0].id,
+          time: formatTime12h(onlinePending[0].start_time),
+          customer: onlinePending[0].customer_name ?? "Customer",
+          service: onlinePending[0].service_name ?? "Service",
+          staff: onlinePending[0].staff_name ?? "Team",
+          status: onlinePending[0].status,
+          payment_status: onlinePending[0].payment_status ?? "unpaid",
+        }
+      : null);
+
+  const isNewSalon = !hasActivity && metrics.revenueToday === 0;
 
   return (
     <div className="view-stack">
-      <WelcomeBanner />
+      <WelcomeBanner hasActivity={hasActivity} />
       <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
       <OsHero
-        nextAppointment={upcoming[0] ?? null}
+        nextAppointment={heroNext}
+        bookingsToday={metrics.bookingsToday}
         revenueToday={metrics.revenueToday}
         dailyRevenueTarget={dailyRevenueTarget}
         showRevenue={showOwnerInsights}
