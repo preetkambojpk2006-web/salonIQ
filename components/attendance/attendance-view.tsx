@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Clock, X } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import { markStaffAttendance } from "@/lib/attendance/actions";
@@ -78,11 +77,12 @@ function AttendanceButtons({
   lateFineAmount: number;
 }) {
   const { t } = useT();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [localStatus, setLocalStatus] = useState<AttendanceStatus | null>(
     currentStatus
   );
+  // Tracks the latest user intent so a stale/late server response can't
+  // overwrite a newer click.
+  const requestSeq = useRef(0);
 
   useEffect(() => {
     setLocalStatus(currentStatus);
@@ -94,44 +94,57 @@ function AttendanceButtons({
   }>({ show: false, message: "", variant: "success" });
 
   const handleMark = (status: AttendanceStatus) => {
-    if (isPending) return;
-
     const previousStatus = localStatus;
+    if (status === previousStatus) return;
+
+    // Instant optimistic update — UI never waits on the server.
     setLocalStatus(status);
+    const seq = (requestSeq.current += 1);
 
     const formData = new FormData();
     formData.set("staff_id", staffMember.id);
     formData.set("staff_name", staffMember.name);
     formData.set("status", status);
+    formData.set("late_fine_amount", String(lateFineAmount));
 
-    startTransition(async () => {
-      const result = await markStaffAttendance(formData);
-      if (!result.ok) {
-        setLocalStatus(previousStatus);
-        setToast({
-          show: true,
-          message: result.error,
-          variant: "error",
-        });
-        return;
-      }
+    // Fire and forget — sync in the background, revert only on failure.
+    void markStaffAttendance(formData)
+      .then((result) => {
+        const isLatest = requestSeq.current === seq;
+        if (!result.ok) {
+          if (isLatest) {
+            setLocalStatus(previousStatus);
+            setToast({ show: true, message: result.error, variant: "error" });
+          }
+          return;
+        }
 
-      if (result.fineCreated && result.fineAmount > 0) {
-        setToast({
-          show: true,
-          message: `${formatInr(result.fineAmount)} fine lagega`,
-          variant: "success",
-        });
-      } else if (result.fineRemoved) {
-        setToast({
-          show: true,
-          message: "Fine hata di gayi",
-          variant: "success",
-        });
-      }
+        if (!isLatest) return;
 
-      router.refresh();
-    });
+        if (result.fineCreated && result.fineAmount > 0) {
+          setToast({
+            show: true,
+            message: `${formatInr(result.fineAmount)} fine lag gaya`,
+            variant: "success",
+          });
+        } else if (result.fineRemoved) {
+          setToast({
+            show: true,
+            message: "Fine hata di gayi",
+            variant: "success",
+          });
+        }
+      })
+      .catch(() => {
+        if (requestSeq.current === seq) {
+          setLocalStatus(previousStatus);
+          setToast({
+            show: true,
+            message: "Network error. Dobara try karein.",
+            variant: "error",
+          });
+        }
+      });
   };
 
   const buttons: {
@@ -162,7 +175,6 @@ function AttendanceButtons({
             <button
               key={status}
               type="button"
-              disabled={isPending}
               onClick={() => handleMark(status)}
               style={{
                 flex: "1 1 90px",
@@ -174,8 +186,7 @@ function AttendanceButtons({
                 color: isActive ? styles.color : TOKENS.textDark,
                 fontSize: 13,
                 fontWeight: isActive ? 700 : 600,
-                cursor: isPending ? "wait" : "pointer",
-                opacity: isPending ? 0.7 : 1,
+                cursor: "pointer",
               }}
             >
               <span
