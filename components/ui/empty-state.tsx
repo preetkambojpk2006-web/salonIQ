@@ -55,7 +55,7 @@ export function EmptyState({
   icon = "customers",
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center px-6 py-12 text-center">
+    <div className="flex min-h-[400px] flex-col items-center justify-center px-6 py-12 text-center">
       <EmptyIcon type={icon} />
       <h3 className="mt-6 text-lg font-semibold text-ink">{title}</h3>
       <p className="mt-2 max-w-sm text-body">{description}</p>
