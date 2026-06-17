@@ -27,7 +27,6 @@ type TodayViewProps = {
   staffLeaderboard?: StaffLeaderboardEntry[];
   showOwnerInsights?: boolean;
   businessId?: string | null;
-  bookingSlug?: string | null;
   salonName?: string;
   dailyRevenueTarget?: number | null;
   lowStockProducts?: InventoryProductWithBrand[];

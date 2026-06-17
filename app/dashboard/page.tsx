@@ -1,5 +1,4 @@
 import { TodayView } from "@/components/command-center/today/today-view";
-import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { listOnlinePendingAppointments } from "@/lib/appointments/queries";
@@ -53,12 +52,6 @@ export default async function DashboardPage() {
   ]);
   const topInsight = pickTopInsight(insights);
 
-  const bookingSlug =
-    business?.id && business.name
-      ? (business.booking_slug ??
-        (await ensureBusinessBookingSlug(business.id, business.name)))
-      : null;
-
   return (
     <TodayView
       metrics={data.metrics}
@@ -68,7 +61,6 @@ export default async function DashboardPage() {
       staffLeaderboard={leaderboard}
       showOwnerInsights={canManageFinance(appRole)}
       businessId={businessId}
-      bookingSlug={bookingSlug}
       salonName={business?.name ?? "Your salon"}
       dailyRevenueTarget={(() => {
         const raw = business?.daily_revenue_target;
