@@ -301,12 +301,18 @@ export async function createAppointment(
 
   const endTime = defaultEndTime(startTime);
 
-  const overlap = await hasAppointmentOverlap({
-    businessId,
-    staffName,
-    startTime,
-    endTime,
-  });
+  // These three lookups are independent — run them in parallel to cut latency.
+  const [overlap, customerId, branches] = await Promise.all([
+    hasAppointmentOverlap({
+      businessId,
+      staffName,
+      startTime,
+      endTime,
+    }),
+    resolveCustomerId(businessId, customerName),
+    getOwnerBranches(businessId),
+  ]);
+
   if (overlap) {
     return {
       ok: false,
@@ -314,8 +320,6 @@ export async function createAppointment(
     };
   }
 
-  const customerId = await resolveCustomerId(businessId, customerName);
-  const branches = await getOwnerBranches(businessId);
   const branchId = branches[0]?.id ?? null;
 
   const { data: created, error } = await supabase

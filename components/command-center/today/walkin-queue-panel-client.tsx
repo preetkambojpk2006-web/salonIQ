@@ -13,7 +13,7 @@ import { queueYourTurn } from "@/lib/whatsapp/templates";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 const WHATSAPP_NOTIFY_MS = 120_000;
-const QUEUE_POLL_MS = 30_000;
+const QUEUE_POLL_MS = 10_000;
 
 const pillBase: CSSProperties = {
   padding: "5px 12px",
