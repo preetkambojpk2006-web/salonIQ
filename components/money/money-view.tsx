@@ -92,7 +92,7 @@ export function MoneyView({
   if (isEmptySalon) {
     return (
       <div className="view-stack">
-        <section className="panel">
+        <section className="panel empty-state-panel">
           <EmptyState
             icon="money"
             title={t("money.emptyTitle")}

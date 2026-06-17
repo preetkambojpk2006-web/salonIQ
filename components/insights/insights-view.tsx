@@ -28,15 +28,19 @@ export function InsightsView({
 }: InsightsViewProps) {
   const { t } = useT();
 
+  const isEmpty = cards.length === 0;
+
   return (
     <div className="view-stack">
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">{t("insights.eyebrow")}</p>
-            <h2>{t("insights.title")}</h2>
+      <section className={isEmpty ? "panel empty-state-panel" : "panel"}>
+        {!isEmpty ? (
+          <div className="panel-header">
+            <div>
+              <p className="eyebrow">{t("insights.eyebrow")}</p>
+              <h2>{t("insights.title")}</h2>
+            </div>
           </div>
-        </div>
+        ) : null}
         <InsightsCards cards={cards} />
       </section>
 
