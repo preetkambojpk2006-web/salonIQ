@@ -147,6 +147,9 @@
 
   .workspace {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     padding: 28px;
     padding-bottom: 88px;
     overflow-y: auto;
@@ -170,6 +173,17 @@
   .view-stack {
     display: grid;
     gap: 18px;
+  }
+
+  .view-stack-fill {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 70vh;
+  }
+
+  .view-stack-fill > .empty-state-panel {
+    flex: 1;
   }
 
   /* Sidebar */
@@ -698,9 +712,18 @@
   .empty-state-panel {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    height: 100%;
+  }
+
+  .empty-state-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: max(400px, 60vh);
+    padding: 48px 24px;
+    text-align: center;
   }
 
   .two-column,
@@ -1784,6 +1807,17 @@
 
   .page-enter {
     animation: fade-up-in 0.3s ease-out forwards;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .page-enter-stagger {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
   }
 
   .page-enter-stagger > * {

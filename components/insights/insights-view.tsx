@@ -31,7 +31,7 @@ export function InsightsView({
   const isEmpty = cards.length === 0;
 
   return (
-    <div className="view-stack">
+    <div className={isEmpty ? "view-stack view-stack-fill" : "view-stack"}>
       <section className={isEmpty ? "panel empty-state-panel" : "panel"}>
         {!isEmpty ? (
           <div className="panel-header">
