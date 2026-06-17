@@ -107,6 +107,12 @@ export async function updateSession(request: NextRequest) {
         }
       }
 
+      if (pathname.startsWith("/onboarding") && onboardingComplete && appRole) {
+        const url = request.nextUrl.clone();
+        url.pathname = isApproved ? "/dashboard" : "/pending";
+        return NextResponse.redirect(url);
+      }
+
       if (
         pathname.startsWith("/onboarding") &&
         appRole &&

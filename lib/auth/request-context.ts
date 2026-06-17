@@ -29,7 +29,7 @@ export async function getRequestAuthContext(
   const [{ data: ownedBusiness }, { data: membership }] = await Promise.all([
     supabase
       .from("businesses")
-      .select("id, opening_hours, is_approved")
+      .select("id, opening_hours, is_approved, onboarding_completed")
       .eq("owner_id", user.id)
       .maybeSingle(),
     supabase
@@ -68,6 +68,16 @@ export async function getRequestAuthContext(
       isApproved: false,
       onboardingComplete: false,
       onboardingStep: "business",
+    };
+  }
+
+  if (ownedBusiness.onboarding_completed) {
+    return {
+      appRole: "owner",
+      businessId: ownedBusiness.id,
+      isApproved: ownedBusiness.is_approved === true,
+      onboardingComplete: true,
+      onboardingStep: "complete",
     };
   }
 

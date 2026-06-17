@@ -1,6 +1,9 @@
 "use server";
 
 import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
+import {
+  markOnboardingComplete,
+} from "@/lib/onboarding/status";
 import { withOnboardingSkip } from "@/lib/onboarding/skips";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -248,7 +251,19 @@ export async function createService(formData: FormData) {
     );
   }
 
+  const { error: completeError } = await markOnboardingComplete(
+    supabase,
+    business.id
+  );
+  if (completeError) {
+    redirect(
+      `/onboarding/services?error=${encodeURIComponent(completeError)}`
+    );
+  }
+
   revalidatePath("/dashboard");
+  revalidatePath("/onboarding");
+  revalidatePath("/pending");
   redirect(await getAuthenticatedLandingPath(supabase));
 }
 
@@ -266,13 +281,31 @@ export async function skipServices() {
     .eq("id", business.id)
     .maybeSingle();
 
-  await supabase
+  const { error: skipError } = await supabase
     .from("businesses")
     .update({
       opening_hours: withOnboardingSkip(row?.opening_hours, "services"),
     })
     .eq("id", business.id);
 
+  if (skipError) {
+    redirect(
+      `/onboarding/services?error=${encodeURIComponent(skipError.message)}`
+    );
+  }
+
+  const { error: completeError } = await markOnboardingComplete(
+    supabase,
+    business.id
+  );
+  if (completeError) {
+    redirect(
+      `/onboarding/services?error=${encodeURIComponent(completeError)}`
+    );
+  }
+
   revalidatePath("/dashboard");
+  revalidatePath("/onboarding");
+  revalidatePath("/pending");
   redirect(await getAuthenticatedLandingPath(supabase));
 }

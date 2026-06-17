@@ -8,6 +8,18 @@ export type OnboardingStep =
   | "services"
   | "complete";
 
+export async function markOnboardingComplete(
+  supabase: SupabaseClient,
+  businessId: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from("businesses")
+    .update({ onboarding_completed: true })
+    .eq("id", businessId);
+
+  return { error: error?.message ?? null };
+}
+
 export async function getOnboardingStep(
   supabase: SupabaseClient
 ): Promise<OnboardingStep> {
@@ -31,12 +43,16 @@ export async function getOnboardingStep(
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, opening_hours")
+    .select("id, opening_hours, onboarding_completed")
     .eq("owner_id", user.id)
     .maybeSingle();
 
   if (!business) {
     return "business";
+  }
+
+  if (business.onboarding_completed) {
+    return "complete";
   }
 
   const skips = parseOpeningHours(business.opening_hours).onboarding_skips ?? {};
