@@ -1,10 +1,9 @@
 import { canAccessDashboardPath } from "@/lib/auth/route-access";
-import { resolveAppRole } from "@/lib/auth/resolve-role";
 import {
-  getAuthenticatedLandingPath,
-  getBusinessApprovalStatus,
-} from "@/lib/auth/business-approval";
-import { getOnboardingRedirect, getOnboardingStep } from "@/lib/onboarding/status";
+  getRequestAuthContext,
+  landingPathFromContext,
+} from "@/lib/auth/request-context";
+import { onboardingPathForStep } from "@/lib/onboarding/status";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -57,69 +56,82 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const appRole = await resolveAppRole(supabase, user.id);
-    const step = await getOnboardingStep(supabase);
-    const approval = await getBusinessApprovalStatus(supabase, user.id);
+    // Single consolidated lookup (was ~18 sequential queries) — only when the
+    // route actually needs gating, so most requests stay cheap.
+    const needsContext =
+      isAuthRoute ||
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/pending");
 
-    if (pathname.startsWith("/dashboard") && !appRole) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/onboarding";
-      return NextResponse.redirect(url);
-    }
+    if (needsContext) {
+      const ctx = await getRequestAuthContext(supabase, user);
+      const { appRole, onboardingComplete, isApproved, onboardingStep } = ctx;
 
-    if (
-      pathname.startsWith("/dashboard") &&
-      (step === "business" || step === "branch")
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = await getOnboardingRedirect(supabase);
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      pathname.startsWith("/dashboard") &&
-      approval.onboardingComplete &&
-      !approval.isApproved
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/pending";
-      return NextResponse.redirect(url);
-    }
-
-    if (pathname.startsWith("/pending")) {
-      if (!approval.onboardingComplete) {
+      if (pathname.startsWith("/dashboard") && !appRole) {
         const url = request.nextUrl.clone();
-        url.pathname = await getOnboardingRedirect(supabase);
+        url.pathname = "/onboarding";
         return NextResponse.redirect(url);
       }
 
-      if (approval.isApproved) {
+      if (
+        pathname.startsWith("/dashboard") &&
+        (onboardingStep === "business" || onboardingStep === "branch")
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = onboardingPathForStep(onboardingStep);
+        return NextResponse.redirect(url);
+      }
+
+      if (
+        pathname.startsWith("/dashboard") &&
+        onboardingComplete &&
+        !isApproved
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/pending";
+        return NextResponse.redirect(url);
+      }
+
+      if (pathname.startsWith("/pending")) {
+        if (!onboardingComplete) {
+          const url = request.nextUrl.clone();
+          url.pathname = onboardingPathForStep(onboardingStep);
+          return NextResponse.redirect(url);
+        }
+
+        if (isApproved) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/dashboard";
+          return NextResponse.redirect(url);
+        }
+      }
+
+      if (
+        pathname.startsWith("/onboarding") &&
+        appRole &&
+        appRole !== "owner"
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = isApproved ? "/dashboard" : "/pending";
+        return NextResponse.redirect(url);
+      }
+
+      if (
+        appRole &&
+        pathname.startsWith("/dashboard") &&
+        !canAccessDashboardPath(appRole, pathname)
+      ) {
         const url = request.nextUrl.clone();
         url.pathname = "/dashboard";
         return NextResponse.redirect(url);
       }
-    }
 
-    if (pathname.startsWith("/onboarding") && appRole && appRole !== "owner") {
-      const url = request.nextUrl.clone();
-      url.pathname = approval.isApproved ? "/dashboard" : "/pending";
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      appRole &&
-      pathname.startsWith("/dashboard") &&
-      !canAccessDashboardPath(appRole, pathname)
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
-
-    if (isAuthRoute) {
-      const url = request.nextUrl.clone();
-      url.pathname = await getAuthenticatedLandingPath(supabase);
-      return NextResponse.redirect(url);
+      if (isAuthRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = landingPathFromContext(ctx);
+        return NextResponse.redirect(url);
+      }
     }
   }
 

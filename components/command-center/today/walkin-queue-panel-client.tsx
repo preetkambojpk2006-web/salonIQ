@@ -5,6 +5,7 @@ import { Toast } from "@/components/ui/toast";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import {
   performWalkinQueueAction,
+  refreshWalkinQueue,
   type WalkinQueueAction,
 } from "@/lib/walkin/actions";
 import type { WalkinQueueRow, WalkinQueueStatus } from "@/lib/walkin/types";
@@ -12,6 +13,7 @@ import { queueYourTurn } from "@/lib/whatsapp/templates";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 const WHATSAPP_NOTIFY_MS = 120_000;
+const QUEUE_POLL_MS = 30_000;
 
 const pillBase: CSSProperties = {
   padding: "5px 12px",
@@ -345,6 +347,34 @@ export function WalkinQueuePanelClient({
       }
     };
   }, []);
+
+  // Poll every 30s so new customer walk-ins appear without a manual reload.
+  const updatingIdRef = useRef(updatingId);
+  updatingIdRef.current = updatingId;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = async () => {
+      // Skip while an owner action is mid-flight to avoid clobbering state.
+      if (updatingIdRef.current) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+
+      const result = await refreshWalkinQueue(businessId);
+      if (!cancelled && result.ok) {
+        setQueue(result.queue);
+      }
+    };
+
+    const intervalId = setInterval(() => {
+      void poll();
+    }, QUEUE_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [businessId]);
 
   const waitingCount = queue.filter((entry) => entry.status === "waiting").length;
 

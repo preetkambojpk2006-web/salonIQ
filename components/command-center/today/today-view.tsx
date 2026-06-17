@@ -42,7 +42,6 @@ export function TodayView({
   staffLeaderboard = [],
   showOwnerInsights = true,
   businessId = null,
-  bookingSlug = null,
   salonName = "Your salon",
   dailyRevenueTarget = null,
   lowStockProducts = [],

@@ -15,6 +15,25 @@ import { redirect } from "next/navigation";
 
 export type WalkinQueueAction = "call" | "start" | "done" | "no_show" | "remove";
 
+export type WalkinQueueRefreshResult =
+  | { ok: true; queue: WalkinQueueRow[] }
+  | { ok: false; error: string };
+
+/** Lightweight poll endpoint: returns today's live queue for the owner panel. */
+export async function refreshWalkinQueue(
+  businessId: string
+): Promise<WalkinQueueRefreshResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  if (access.businessId !== businessId) {
+    return { ok: false, error: "Yeh queue aapke salon ki nahi hai." };
+  }
+
+  const queue = await listTodayWalkinQueue(access.businessId);
+  return { ok: true, queue };
+}
+
 export type WalkinQueueActionResult =
   | { ok: true; queue: WalkinQueueRow[]; message: string }
   | { ok: false; error: string };

@@ -90,6 +90,8 @@ export async function signUp(formData: FormData) {
 
 export async function signOut() {
   const supabase = createClient();
-  await supabase.auth.signOut();
+  // Local scope clears this browser's session immediately without waiting on a
+  // global revocation round-trip — makes logout feel instant.
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }

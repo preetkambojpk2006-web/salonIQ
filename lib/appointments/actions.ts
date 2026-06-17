@@ -342,6 +342,7 @@ export async function createAppointment(
   }
 
   revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard");
   return { ok: true, appointmentId: created.id };
 }
 
