@@ -323,6 +323,8 @@
   "services.branchHintAfter": "kholo.",
   "settings.bookingTitle": "Customers yahan book karein",
   "settings.bookingHint": "Link WhatsApp par bhejein — booking seedha calendar mein pending aayegi.",
+  "settings.bookingQrHint": "Is QR ko apni shop par lagayein",
+  "settings.bookingQrDownload": "QR Download karein",
   "settings.walkinScan": "Scan karke queue mein join karo",
   "settings.reviewRequestHelp": "Payment ke baad customers ko review request bhej sakte hain.",
   "settings.confirmPassword": "Password confirm karein",

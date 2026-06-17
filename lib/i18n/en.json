@@ -323,6 +323,8 @@
   "services.branchHintAfter": "kholo.",
   "settings.bookingTitle": "Customers can book here",
   "settings.bookingHint": "Share on WhatsApp — bookings go directly to your calendar as pending.",
+  "settings.bookingQrHint": "Is QR ko apni shop par lagayein",
+  "settings.bookingQrDownload": "Download QR",
   "settings.walkinScan": "Scan to join the walk-in queue",
   "settings.reviewRequestHelp": "Send customers a review request after payment.",
   "settings.confirmPassword": "Confirm password",

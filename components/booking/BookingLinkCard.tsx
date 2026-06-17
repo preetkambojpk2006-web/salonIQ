@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "react-qr-code";
 import { buildPublicBookingUrl, buildWhatsAppShareUrl } from "@/lib/booking/url";
 import { useT } from "@/lib/i18n/LanguageContext";
 
@@ -27,10 +28,47 @@ export function BookingLinkCard({
   const { t } = useT();
   const [bookingUrl, setBookingUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setBookingUrl(buildPublicBookingUrl(slug, window.location.origin));
   }, [slug]);
+
+  const handleDownloadQr = () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) return;
+
+    const serialized = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([serialized], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(svgBlob);
+    const image = new Image();
+
+    image.onload = () => {
+      const scale = 4;
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size * scale;
+      canvas.height = size * scale;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+
+      const link = document.createElement("a");
+      link.download = `${slug}-booking-qr.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
+
+    image.src = url;
+  };
 
   const handleCopy = async () => {
     if (!bookingUrl) return;
@@ -126,6 +164,53 @@ export function BookingLinkCard({
         >
           Share on WhatsApp
         </a>
+      </div>
+
+      <div
+        style={{
+          marginTop: 16,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <div
+          ref={qrRef}
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            background: "#fff",
+            border: `1px solid ${TOKENS.borderSubtle}`,
+            lineHeight: 0,
+          }}
+        >
+          {bookingUrl ? (
+            <QRCode
+              value={bookingUrl}
+              size={160}
+              fgColor="#1A1A1A"
+              bgColor="#FFFFFF"
+            />
+          ) : (
+            <div style={{ width: 160, height: 160, background: "#f5f5f5", borderRadius: 8 }} />
+          )}
+        </div>
+        <p style={{ margin: 0, fontSize: 13, color: TOKENS.textMuted, textAlign: "center" }}>
+          {t("settings.bookingQrHint")}
+        </p>
+        <button
+          type="button"
+          onClick={handleDownloadQr}
+          disabled={!bookingUrl}
+          style={{
+            ...buttonStyle(TOKENS.accentGreenSoft),
+            color: TOKENS.textDark,
+            cursor: bookingUrl ? "pointer" : "not-allowed",
+          }}
+        >
+          {t("settings.bookingQrDownload")}
+        </button>
       </div>
     </section>
   );
