@@ -22,6 +22,7 @@ type SettingsViewProps = {
   attendancePanel?: ReactNode;
   loyaltyPanel?: ReactNode;
   gstPanel?: ReactNode;
+  commissionPanel?: ReactNode;
   languagePanel?: ReactNode;
   bookingSlug?: string | null;
   salonName: string;
@@ -37,6 +38,7 @@ export function SettingsView({
   attendancePanel,
   loyaltyPanel,
   gstPanel,
+  commissionPanel,
   languagePanel,
   bookingSlug = null,
   salonName,
@@ -151,6 +153,7 @@ export function SettingsView({
         {attendancePanel}
         {loyaltyPanel}
         {gstPanel}
+        {commissionPanel}
         {languagePanel}
 
         <section className="panel">

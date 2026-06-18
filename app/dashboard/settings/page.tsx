@@ -1,4 +1,5 @@
 import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
+import { CommissionSettingsPanel } from "@/components/settings/commission-settings-panel";
 import { GstSettingsPanel } from "@/components/settings/gst-settings-panel";
 import { LanguageSettingsPanel } from "@/components/settings/language-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
@@ -6,6 +7,7 @@ import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-pan
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
+import { getCommissionConfig } from "@/lib/commission/actions";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { redirect } from "next/navigation";
@@ -32,9 +34,10 @@ export default async function SettingsPage() {
   }
 
   const businessId = await getOwnerBusinessId();
-  const [business, rewardConfig] = await Promise.all([
+  const [business, rewardConfig, commissionConfig] = await Promise.all([
     getOwnerBusiness(),
     businessId ? getBusinessRewardConfig(businessId) : Promise.resolve(null),
+    getCommissionConfig(),
   ]);
 
   const bookingSlug =
@@ -96,6 +99,12 @@ export default async function SettingsPage() {
               : "18"
           }
           initialGstInclusive={businessWithGst?.gst_inclusive ?? false}
+        />
+      }
+      commissionPanel={
+        <CommissionSettingsPanel
+          initialMode={commissionConfig.mode}
+          initialSlabs={commissionConfig.slabs}
         />
       }
       bookingSlug={bookingSlug}
