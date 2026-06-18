@@ -12,7 +12,9 @@ export async function getOwnerBusiness() {
 
   const { data: business, error } = await supabase
     .from("businesses")
-    .select(`${businessFields}, ui_language`)
+    .select(
+      `${businessFields}, ui_language, gst_enabled, gst_number, gst_rate, gst_inclusive`
+    )
     .eq("id", membership.businessId)
     .maybeSingle();
 
@@ -20,15 +22,25 @@ export async function getOwnerBusiness() {
     return business;
   }
 
-  console.error("[getOwnerBusiness] ui_language fetch failed:", error.message);
+  console.error("[getOwnerBusiness] extended fields fetch failed:", error.message);
 
   const { data: fallbackBusiness } = await supabase
+    .from("businesses")
+    .select(`${businessFields}, ui_language`)
+    .eq("id", membership.businessId)
+    .maybeSingle();
+
+  if (fallbackBusiness) {
+    return fallbackBusiness;
+  }
+
+  const { data: baseBusiness } = await supabase
     .from("businesses")
     .select(businessFields)
     .eq("id", membership.businessId)
     .maybeSingle();
 
-  return fallbackBusiness ?? null;
+  return baseBusiness ?? null;
 }
 
 export async function getOwnerBranches(businessId: string) {

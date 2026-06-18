@@ -1,4 +1,5 @@
 import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
+import { GstSettingsPanel } from "@/components/settings/gst-settings-panel";
 import { LanguageSettingsPanel } from "@/components/settings/language-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
@@ -42,6 +43,13 @@ export default async function SettingsPage() {
         (await ensureBusinessBookingSlug(business.id, business.name)))
       : null;
 
+  const businessWithGst = business as typeof business & {
+    gst_enabled?: boolean;
+    gst_number?: string | null;
+    gst_rate?: number | null;
+    gst_inclusive?: boolean;
+  };
+
   return (
     <SettingsView
       initialName={business?.name ?? ""}
@@ -76,6 +84,18 @@ export default async function SettingsPage() {
               : "10"
           }
           initialRewardDescription={rewardConfig?.reward_description ?? ""}
+        />
+      }
+      gstPanel={
+        <GstSettingsPanel
+          initialGstEnabled={businessWithGst?.gst_enabled ?? false}
+          initialGstNumber={businessWithGst?.gst_number ?? ""}
+          initialGstRate={
+            businessWithGst?.gst_rate != null
+              ? String(Number(businessWithGst.gst_rate))
+              : "18"
+          }
+          initialGstInclusive={businessWithGst?.gst_inclusive ?? false}
         />
       }
       bookingSlug={bookingSlug}

@@ -204,6 +204,66 @@ export async function updateAttendanceSettings(
   return { ok: true };
 }
 
+export async function updateGstSettings(
+  formData: FormData
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin GST settings update kar sakte hain.",
+    };
+  }
+
+  const gstEnabled = formData.get("gst_enabled") === "true";
+  const gstNumber = (formData.get("gst_number") as string)?.trim() || null;
+  const gstRateRaw = (formData.get("gst_rate") as string)?.trim();
+  const gstInclusive = formData.get("gst_inclusive") === "true";
+
+  let gst_rate = 18;
+  if (gstRateRaw) {
+    const parsed = parseFloat(gstRateRaw);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+      return {
+        ok: false,
+        error: "GST rate 0 se 100 ke beech valid number hona chahiye.",
+      };
+    }
+    gst_rate = parsed;
+  } else if (gstEnabled) {
+    return {
+      ok: false,
+      error: "GST on karne ke liye rate daalein.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({
+      gst_enabled: gstEnabled,
+      gst_number: gstNumber,
+      gst_rate,
+      gst_inclusive: gstInclusive,
+    })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { ok: true };
+}
+
 export async function updateUiLanguage(
   uiLanguage: string
 ): Promise<SettingsActionResult> {
