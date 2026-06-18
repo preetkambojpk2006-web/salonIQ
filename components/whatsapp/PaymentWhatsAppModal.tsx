@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Receipt } from "lucide-react";
+import { InvoiceModal } from "@/components/invoice/invoice-modal";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import type { Appointment } from "@/lib/appointments/types";
 import type { PaymentMethod } from "@/lib/payments/types";
@@ -36,6 +38,7 @@ export function PaymentWhatsAppModal({
 }: PaymentWhatsAppModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { t } = useT();
+  const [showInvoice, setShowInvoice] = useState(false);
   const reviewLink = googleReviewLink?.trim() ?? "";
 
   useEffect(() => {
@@ -75,6 +78,7 @@ export function PaymentWhatsAppModal({
   }, [onClose]);
 
   return (
+    <>
     <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
       <div className="payment-modal-form">
         <div className="payment-modal-header">
@@ -96,6 +100,16 @@ export function PaymentWhatsAppModal({
             ✕
           </button>
         </div>
+
+        <button
+          type="button"
+          className="invoice-btn-outline"
+          style={{ width: "100%", marginTop: 16 }}
+          onClick={() => setShowInvoice(true)}
+        >
+          <Receipt size={16} strokeWidth={1.5} aria-hidden />
+          {t("invoice.viewInvoice")}
+        </button>
 
         <textarea
           readOnly
@@ -164,5 +178,15 @@ export function PaymentWhatsAppModal({
         </div>
       </div>
     </dialog>
+
+      {showInvoice ? (
+        <InvoiceModal
+          appointment={appointment}
+          businessName={businessName}
+          paymentMethod={paymentMethod}
+          onClose={() => setShowInvoice(false)}
+        />
+      ) : null}
+    </>
   );
 }

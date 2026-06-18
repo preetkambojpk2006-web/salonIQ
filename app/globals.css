@@ -1750,6 +1750,198 @@
     cursor: wait;
   }
 
+  /* Invoice modal */
+  .invoice-modal {
+    width: min(100%, 28rem);
+    max-height: min(92vh, 820px);
+    padding: 0;
+    border: 1px solid #E0DAD0;
+    border-radius: 16px;
+    background: #F9F8F3;
+    color: #1A1A1A;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .invoice-modal::backdrop {
+    background: rgba(23, 33, 31, 0.45);
+  }
+
+  .invoice-modal-form {
+    padding: 20px;
+    max-height: min(92vh, 820px);
+    overflow-y: auto;
+    background: #F9F8F3;
+  }
+
+  .invoice-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .invoice-sheet {
+    padding: 18px;
+    border: 1px solid #E0DAD0;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .invoice-title {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1FA873;
+  }
+
+  .invoice-business-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1A1A1A;
+  }
+
+  .invoice-meta-line {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #8A8A8A;
+    line-height: 1.45;
+  }
+
+  .invoice-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 18px 0;
+    padding: 12px 0;
+    border-top: 1px solid #E0DAD0;
+    border-bottom: 1px solid #E0DAD0;
+  }
+
+  .invoice-label {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 12px;
+    color: #8A8A8A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .invoice-meta-grid strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A1A1A;
+  }
+
+  .invoice-muted {
+    margin: 0;
+    font-size: 14px;
+    color: #8A8A8A;
+  }
+
+  .invoice-table-wrap {
+    overflow-x: auto;
+  }
+
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .invoice-table th {
+    padding: 8px 0;
+    border-bottom: 1px solid #E0DAD0;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8A8A8A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .invoice-table th:last-child,
+  .invoice-table td:last-child {
+    text-align: right;
+  }
+
+  .invoice-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #EDE8DF;
+    color: #1A1A1A;
+  }
+
+  .invoice-totals {
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .invoice-total-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    color: #1A1A1A;
+  }
+
+  .invoice-total-row-strong {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid #E0DAD0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1FA873;
+  }
+
+  .invoice-payment-method {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: #1A1A1A;
+  }
+
+  .invoice-footer {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: #8A8A8A;
+    text-align: center;
+  }
+
+  .invoice-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .invoice-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid #1FA873;
+    border-radius: 10px;
+    background: transparent;
+    color: #1FA873;
+    font-size: 14px;
+    font-weight: 700;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .invoice-btn-outline:hover:not(:disabled) {
+    background: rgba(31, 168, 115, 0.08);
+  }
+
+  .invoice-btn-outline:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+
   /* WhatsApp copy buttons (calendar) */
   .wa-copy-actions {
     display: flex;
@@ -2092,6 +2284,18 @@
   .appointment-row {
     grid-template-columns: 1fr;
   }
+
+  .invoice-modal {
+    width: min(100vw - 24px, 28rem);
+  }
+
+  .invoice-modal-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-meta-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2123,5 +2327,31 @@
   .automation-row:hover,
   .booking-block:hover {
     transform: none !important;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-print-area,
+  #invoice-print-area * {
+    visibility: visible;
+  }
+
+  #invoice-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 24px;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  .invoice-no-print {
+    display: none !important;
   }
 }
