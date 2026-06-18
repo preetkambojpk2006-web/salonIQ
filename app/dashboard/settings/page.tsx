@@ -2,6 +2,7 @@ import { AttendanceSettingsPanel } from "@/components/settings/attendance-settin
 import { CommissionSettingsPanel } from "@/components/settings/commission-settings-panel";
 import { GstSettingsPanel } from "@/components/settings/gst-settings-panel";
 import { LanguageSettingsPanel } from "@/components/settings/language-settings-panel";
+import { OnlineBookingSettingsPanel } from "@/components/settings/online-booking-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
@@ -51,6 +52,7 @@ export default async function SettingsPage() {
     gst_number?: string | null;
     gst_rate?: number | null;
     gst_inclusive?: boolean;
+    online_booking_enabled?: boolean;
   };
 
   return (
@@ -108,6 +110,11 @@ export default async function SettingsPage() {
         />
       }
       bookingSlug={bookingSlug}
+      onlineBookingPanel={
+        <OnlineBookingSettingsPanel
+          initialEnabled={businessWithGst?.online_booking_enabled ?? true}
+        />
+      }
       salonName={business?.name ?? "Your salon"}
     />
   );

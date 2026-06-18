@@ -25,6 +25,7 @@ type SettingsViewProps = {
   commissionPanel?: ReactNode;
   languagePanel?: ReactNode;
   bookingSlug?: string | null;
+  onlineBookingPanel?: ReactNode;
   salonName: string;
 };
 
@@ -41,6 +42,7 @@ export function SettingsView({
   commissionPanel,
   languagePanel,
   bookingSlug = null,
+  onlineBookingPanel,
   salonName,
 }: SettingsViewProps) {
   const { t } = useT();
@@ -149,6 +151,8 @@ export function SettingsView({
             <WalkinQrCard slug={bookingSlug} businessName={salonName} />
           </section>
         ) : null}
+
+        {onlineBookingPanel}
 
         {attendancePanel}
         {loyaltyPanel}

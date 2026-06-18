@@ -264,6 +264,42 @@ export async function updateGstSettings(
   return { ok: true };
 }
 
+export async function updateOnlineBookingSettings(
+  formData: FormData
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin online booking settings update kar sakte hain.",
+    };
+  }
+
+  const onlineBookingEnabled =
+    formData.get("online_booking_enabled") === "true";
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({ online_booking_enabled: onlineBookingEnabled })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { ok: true };
+}
+
 export async function updateUiLanguage(
   uiLanguage: string
 ): Promise<SettingsActionResult> {

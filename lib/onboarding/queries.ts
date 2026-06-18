@@ -13,7 +13,7 @@ export async function getOwnerBusiness() {
   const { data: business, error } = await supabase
     .from("businesses")
     .select(
-      `${businessFields}, ui_language, gst_enabled, gst_number, gst_rate, gst_inclusive`
+      `${businessFields}, ui_language, gst_enabled, gst_number, gst_rate, gst_inclusive, online_booking_enabled`
     )
     .eq("id", membership.businessId)
     .maybeSingle();

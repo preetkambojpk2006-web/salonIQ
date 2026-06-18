@@ -10,6 +10,7 @@ import {
 } from "@/lib/booking/slots";
 import type {
   PublicBookingContext,
+  PublicBookingGate,
   PublicBookingService,
   PublicBookingStaff,
 } from "@/lib/booking/types";
@@ -34,6 +35,7 @@ function formatInr(amount: number): string {
 }
 
 export function PublicBookingPage({ slug }: PublicBookingPageProps) {
+  const [gate, setGate] = useState<PublicBookingGate | null>(null);
   const [context, setContext] = useState<PublicBookingContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -54,11 +56,11 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadContext() {
+    async function loadGate() {
       setLoading(true);
       const supabase = createClient();
       const { data, error: rpcError } = await supabase.rpc(
-        "get_public_booking_context",
+        "get_public_booking_gate",
         { p_slug: slug }
       );
 
@@ -66,24 +68,54 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
 
       if (rpcError || !data) {
         setNotFound(true);
+        setGate(null);
         setContext(null);
         setLoading(false);
         return;
       }
 
-      const raw = data as PublicBookingContext;
-      const parsed: PublicBookingContext = {
+      const parsed = data as PublicBookingGate;
+      setGate({
+        salon_name: parsed.salon_name,
+        branch_name: parsed.branch_name ?? "",
+        phone: parsed.phone ?? "",
+        online_booking_enabled: parsed.online_booking_enabled !== false,
+      });
+      setNotFound(false);
+
+      if (parsed.online_booking_enabled === false) {
+        setContext(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: contextData, error: contextError } = await supabase.rpc(
+        "get_public_booking_context",
+        { p_slug: slug }
+      );
+
+      if (cancelled) return;
+
+      if (contextError || !contextData) {
+        setNotFound(true);
+        setContext(null);
+        setLoading(false);
+        return;
+      }
+
+      const raw = contextData as PublicBookingContext;
+      const bookingContext: PublicBookingContext = {
         ...raw,
         services: Array.isArray(raw.services) ? raw.services : [],
         staff: Array.isArray(raw.staff) ? raw.staff : [],
       };
-      setContext(parsed);
-      setSelectedService(parsed.services[0] ?? null);
-      setSelectedStaff(parsed.staff[0] ?? null);
+      setContext(bookingContext);
+      setSelectedService(bookingContext.services[0] ?? null);
+      setSelectedStaff(bookingContext.staff[0] ?? null);
       setLoading(false);
     }
 
-    void loadContext();
+    void loadGate();
     return () => {
       cancelled = true;
     };
@@ -188,7 +220,7 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
     );
   }
 
-  if (notFound || !context) {
+  if (notFound || !gate) {
     return (
       <div style={{ padding: 24, maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: TOKENS.textDark }}>
@@ -197,6 +229,20 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
         <p style={{ color: TOKENS.textMuted, marginTop: 8 }}>
           Booking link check karein ya salon se sahi link maangein.
         </p>
+      </div>
+    );
+  }
+
+  if (!gate.online_booking_enabled) {
+    return (
+      <BookingClosedView gate={gate} />
+    );
+  }
+
+  if (!context) {
+    return (
+      <div style={{ padding: 24, maxWidth: 480, margin: "0 auto" }}>
+        <p style={{ color: TOKENS.textMuted, fontSize: 14 }}>Loading…</p>
       </div>
     );
   }
@@ -471,6 +517,82 @@ const inputStyle: React.CSSProperties = {
   color: TOKENS.textDark,
   background: "#fff",
 };
+
+function BookingClosedView({ gate }: { gate: PublicBookingGate }) {
+  const phone = gate.phone?.trim();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: TOKENS.bgMain,
+        padding: "20px 16px 40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <section
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          borderRadius: 16,
+          border: `1px solid ${TOKENS.borderSubtle}`,
+          background: "#F9F8F3",
+          padding: 28,
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 24,
+            fontWeight: 800,
+            color: TOKENS.textDark,
+          }}
+        >
+          {gate.salon_name}
+        </h1>
+        {gate.branch_name ? (
+          <p style={{ margin: "8px 0 0", fontSize: 15, color: TOKENS.textMuted }}>
+            {gate.branch_name}
+          </p>
+        ) : null}
+
+        <p
+          style={{
+            margin: "20px 0 0",
+            fontSize: 17,
+            fontWeight: 700,
+            color: TOKENS.textDark,
+            lineHeight: 1.45,
+          }}
+        >
+          Online booking is currently closed.
+        </p>
+        <p style={{ margin: "10px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
+          Please call us to book your appointment.
+        </p>
+
+        {phone ? (
+          <a
+            href={`tel:${phone.replace(/\s+/g, "")}`}
+            style={{
+              display: "inline-block",
+              marginTop: 20,
+              fontSize: 22,
+              fontWeight: 800,
+              color: TOKENS.accentGreen,
+              textDecoration: "none",
+            }}
+          >
+            {phone}
+          </a>
+        ) : null}
+      </section>
+    </div>
+  );
+}
 
 function Section({
   title,
