@@ -7,7 +7,8 @@ type ToastProps = {
   show: boolean;
   onDismiss: () => void;
   durationMs?: number;
-  variant?: "success" | "error";
+  variant?: "success" | "error" | "warning";
+  style?: React.CSSProperties;
 };
 
 export function Toast({
@@ -16,6 +17,7 @@ export function Toast({
   onDismiss,
   durationMs = 3000,
   variant = "success",
+  style,
 }: ToastProps) {
   const [exiting, setExiting] = useState(false);
 
@@ -37,13 +39,16 @@ export function Toast({
   const className =
     variant === "error"
       ? `toast-error ${exiting ? "toast-exit" : ""}`
-      : `toast-success ${exiting ? "toast-exit" : ""}`;
+      : variant === "warning"
+        ? `toast-warning ${exiting ? "toast-exit" : ""}`
+        : `toast-success ${exiting ? "toast-exit" : ""}`;
 
   return (
     <div
       role={variant === "error" ? "alert" : "status"}
       className={className}
       aria-live={variant === "error" ? "assertive" : "polite"}
+      style={style}
     >
       {message}
     </div>

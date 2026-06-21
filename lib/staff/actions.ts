@@ -12,9 +12,11 @@ import {
   settleOutstandingAdvancesForStaff,
 } from "@/lib/staff/advances";
 import { settleOutstandingFinesForStaff } from "@/lib/staff/fines";
+import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
 import { getGrossUnpaidCommissionForStaff } from "@/lib/staff/payouts";
 import type {
   RecordStaffAdvanceResult,
+  RetryCommissionResult,
   SettleStaffPayoutResult,
 } from "@/lib/staff/types";
 import { createClient } from "@/lib/supabase/server";
@@ -172,4 +174,75 @@ export async function settleStaffPayout(
     advanceApplied,
     netPaid,
   };
+}
+
+/** Idempotent retry — delegates to recordStaffCommissionForPayment (duplicate-safe). */
+export async function retryCommissionForAppointment(
+  appointmentId: string
+): Promise<RetryCommissionResult> {
+  const auth = await requireOwnerOrAdmin();
+  if (!auth.ok) {
+    return auth;
+  }
+
+  const trimmedId = appointmentId?.trim();
+  if (!trimmedId) {
+    return { ok: false, error: "missing-appointment" };
+  }
+
+  const supabase = createClient();
+
+  const { data: appointment, error: appointmentError } = await supabase
+    .from("appointments")
+    .select(
+      "id, business_id, staff_name, total_amount, payment_status, status"
+    )
+    .eq("id", trimmedId)
+    .eq("business_id", auth.businessId)
+    .maybeSingle();
+
+  if (appointmentError || !appointment) {
+    return { ok: false, error: "Booking not found." };
+  }
+
+  if (
+    appointment.payment_status !== "paid" ||
+    appointment.status !== "completed"
+  ) {
+    return { ok: false, error: "commission-retry-not-paid" };
+  }
+
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .select("paid_at, amount")
+    .eq("appointment_id", trimmedId)
+    .eq("business_id", auth.businessId)
+    .eq("status", "paid")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (paymentError) {
+    console.error("retryCommissionForAppointment payment:", paymentError.message);
+    return { ok: false, error: paymentError.message };
+  }
+
+  const earnedAt = payment?.paid_at ?? new Date().toISOString();
+  const serviceAmount = Number(payment?.amount ?? appointment.total_amount ?? 0);
+
+  const result = await recordStaffCommissionForPayment({
+    businessId: auth.businessId,
+    appointmentId: trimmedId,
+    staffName: appointment.staff_name as string | null,
+    serviceAmount,
+    earnedAt,
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: result.error };
+  }
+
+  revalidatePath("/dashboard/money");
+  revalidatePath("/dashboard/calendar");
+  return { ok: true };
 }

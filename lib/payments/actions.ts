@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending"];
 
 export type RecordPaymentResult =
-  | { ok: true }
+  | { ok: true; commissionWarning?: boolean }
   | { ok: false; error: string };
 
 export async function recordAppointmentPayment(
@@ -156,16 +156,24 @@ export async function recordAppointmentPayment(
   revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard");
 
+  let commissionWarning = false;
+
   if (isPaid) {
-    void recordStaffCommissionForPayment({
+    const commissionResult = await recordStaffCommissionForPayment({
       businessId: rowBusinessId,
       appointmentId,
       staffName: appointment.staff_name as string | null,
       serviceAmount: amount,
       earnedAt: now,
-    }).catch((err) => {
-      console.error("recordStaffCommissionForPayment:", err);
     });
+
+    if (!commissionResult.ok) {
+      console.error(
+        "recordStaffCommissionForPayment:",
+        commissionResult.error
+      );
+      commissionWarning = true;
+    }
 
     const customerId = appointment.customer_id as string | null;
     if (customerId) {
@@ -181,5 +189,5 @@ export async function recordAppointmentPayment(
     }
   }
 
-  return { ok: true };
+  return commissionWarning ? { ok: true, commissionWarning: true } : { ok: true };
 }

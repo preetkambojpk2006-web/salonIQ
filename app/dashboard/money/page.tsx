@@ -1,3 +1,4 @@
+import { MissingCommissionRetries } from "@/components/money/MissingCommissionRetries";
 import { MoneyView } from "@/components/money/money-view";
 import { StaffAdvances } from "@/components/money/StaffAdvances";
 import { StaffPayouts } from "@/components/money/StaffPayouts";
@@ -18,6 +19,7 @@ import type { CashUpiSplit } from "@/lib/payments/types";
 import { listStaffMembers } from "@/lib/salon/queries";
 import { listStaffAdvances } from "@/lib/staff/advances";
 import { getStaffPayouts } from "@/lib/staff/payouts";
+import { getPaidAppointmentsMissingCommission } from "@/lib/staff/missing-commission";
 import type { StaffAdvance, StaffPayoutsSummary } from "@/lib/staff/types";
 import { redirect } from "next/navigation";
 
@@ -67,7 +69,7 @@ export default async function MoneyPage() {
   const { year, month } = currentIstYearMonth();
 
   const { startIso, endIsoExclusive } = getDayBoundsIso();
-  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend] =
+  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend, missingCommissions] =
     businessId
       ? await Promise.all([
           getCashUpiSplit(
@@ -84,6 +86,7 @@ export default async function MoneyPage() {
           showInventorySpend
             ? getBrandSpendSummary(businessId, year, month)
             : Promise.resolve([] as BrandSpendSummary[]),
+          getPaidAppointmentsMissingCommission(businessId),
         ])
       : [
           EMPTY_SPLIT,
@@ -92,6 +95,7 @@ export default async function MoneyPage() {
           [],
           EMPTY_INVENTORY_SUMMARY,
           [] as BrandSpendSummary[],
+          [],
         ];
 
   const activeStaff = staffMembers
@@ -107,6 +111,7 @@ export default async function MoneyPage() {
       brandSpend={brandSpend}
       staffPanels={
         <>
+          <MissingCommissionRetries items={missingCommissions} />
           <StaffAdvances advances={staffAdvances} staffMembers={activeStaff} />
           <StaffPayouts payouts={staffPayouts} />
         </>

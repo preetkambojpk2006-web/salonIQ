@@ -60,3 +60,13 @@ export type SettleStaffPayoutResult =
       netPaid: number;
     }
   | { ok: false; error: string };
+
+export type MissingCommissionAppointment = {
+  appointmentId: string;
+  staffName: string;
+  serviceName: string | null;
+  totalAmount: number;
+  startTime: string;
+};
+
+export type RetryCommissionResult = { ok: true } | { ok: false; error: string };

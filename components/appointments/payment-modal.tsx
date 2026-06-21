@@ -12,7 +12,10 @@ import { useT } from "@/lib/i18n/LanguageContext";
 type PaymentModalProps = {
   appointment: Appointment;
   onClose: () => void;
-  onSuccess: (method: PaymentMethod) => void;
+  onSuccess: (
+    method: PaymentMethod,
+    meta?: { commissionWarning?: boolean }
+  ) => void;
   onError: (message: string) => void;
 };
 
@@ -106,7 +109,9 @@ export function PaymentModal({
         return;
       }
 
-      onSuccess(method);
+      onSuccess(method, {
+        commissionWarning: result.commissionWarning === true,
+      });
       dialogRef.current?.close();
       onClose();
     } catch (err) {

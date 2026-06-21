@@ -1278,7 +1278,8 @@
 
   /* Toast */
   .toast-success,
-  .toast-error {
+  .toast-error,
+  .toast-warning {
     position: fixed;
     right: 22px;
     bottom: 88px;
@@ -1299,6 +1300,12 @@
   .toast-error {
     background: var(--coral);
     color: #fff;
+  }
+
+  .toast-warning {
+    background: #E8D9C0;
+    color: #1A1A1A;
+    border: 1px solid #C9A96E;
   }
 
   .toast-exit {

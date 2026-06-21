@@ -522,6 +522,7 @@ export function CalendarView({
   } | null>(null);
   const [bookingToast, setBookingToast] = useState(showAddedToast);
   const [paymentToast, setPaymentToast] = useState(showPaymentToast);
+  const [commissionWarningToast, setCommissionWarningToast] = useState(false);
   const [paymentErrorToast, setPaymentErrorToast] = useState<string | null>(
     null
   );
@@ -627,8 +628,12 @@ export function CalendarView({
   const handleCopied = useCallback(() => setCopyToast(true), []);
 
   const handlePaymentSuccess = useCallback(
-    (method: PaymentMethod) => {
+    (method: PaymentMethod, meta?: { commissionWarning?: boolean }) => {
       setPaymentToast(true);
+
+      if (meta?.commissionWarning) {
+        setCommissionWarningToast(true);
+      }
 
       if (payAppointment && (method === "cash" || method === "upi")) {
         setWhatsappPayment({ appointment: payAppointment, paymentMethod: method });
@@ -996,6 +1001,14 @@ export function CalendarView({
         message={t("calendar.paymentSaved")}
         show={paymentToast}
         onDismiss={() => setPaymentToast(false)}
+      />
+      <Toast
+        message={t("payment.commissionWarning")}
+        show={commissionWarningToast}
+        variant="warning"
+        durationMs={7000}
+        style={{ bottom: 148 }}
+        onDismiss={() => setCommissionWarningToast(false)}
       />
       <Toast
         message={paymentErrorToast ?? ""}
