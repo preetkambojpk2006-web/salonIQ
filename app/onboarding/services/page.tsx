@@ -2,6 +2,7 @@ import { OnboardingError } from "@/components/onboarding/onboarding-error";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { FormField } from "@/components/onboarding/form-field";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { SkipButton } from "@/components/onboarding/skip-button";
 import { createService, skipServices } from "@/lib/onboarding/actions";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { redirect } from "next/navigation";
@@ -65,9 +66,7 @@ export default async function ServicesOnboardingPage({
       </form>
 
       <form action={skipServices} className="onboarding-skip-form">
-        <button type="submit" className="btn-ghost-link">
-          Skip for now
-        </button>
+        <SkipButton label="Skip for now" />
       </form>
     </OnboardingShell>
   );

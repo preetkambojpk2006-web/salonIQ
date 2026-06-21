@@ -296,18 +296,21 @@ export async function createAppointment(
     return { ok: false, error: "Sahi date aur time choose karein." };
   }
 
-  const totalAmount = amountRaw ? Number.parseFloat(amountRaw) : 0;
-  if (amountRaw && Number.isNaN(totalAmount)) {
+  const parsedAmount = amountRaw ? Number.parseFloat(amountRaw) : null;
+  if (amountRaw && (parsedAmount === null || Number.isNaN(parsedAmount))) {
     return { ok: false, error: "Sahi amount daalein." };
   }
-  if (totalAmount < 0) {
+  if (parsedAmount !== null && parsedAmount < 0) {
     return { ok: false, error: "Amount 0 se kam nahi ho sakta." };
   }
 
+  const needsServicePrice =
+    parsedAmount === null || parsedAmount === 0;
+
   const endTime = defaultEndTime(startTime);
 
-  // These three lookups are independent — run them in parallel to cut latency.
-  const [overlap, customerId, branches] = await Promise.all([
+  // These lookups are independent — run them in parallel to cut latency.
+  const [overlap, customerId, branches, serviceRow] = await Promise.all([
     hasAppointmentOverlap({
       businessId,
       staffName,
@@ -316,6 +319,15 @@ export async function createAppointment(
     }),
     resolveCustomerId(businessId, customerName),
     getOwnerBranches(businessId),
+    needsServicePrice
+      ? supabase
+          .from("services")
+          .select("price")
+          .eq("business_id", businessId)
+          .eq("is_active", true)
+          .ilike("name", serviceName)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   if (overlap) {
@@ -323,6 +335,14 @@ export async function createAppointment(
       ok: false,
       error: "Is staff ke liye yeh time slot pehle se booked hai.",
     };
+  }
+
+  let totalAmount = parsedAmount ?? 0;
+  if (needsServicePrice && serviceRow.data?.price != null) {
+    const servicePrice = Number(serviceRow.data.price);
+    if (Number.isFinite(servicePrice) && servicePrice > 0) {
+      totalAmount = servicePrice;
+    }
   }
 
   const branchId = branches[0]?.id ?? null;

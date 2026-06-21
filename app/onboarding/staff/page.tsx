@@ -3,6 +3,7 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { FormField } from "@/components/onboarding/form-field";
 import { SelectField } from "@/components/onboarding/select-field";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { SkipButton } from "@/components/onboarding/skip-button";
 import { createStaff, skipStaff } from "@/lib/onboarding/actions";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -77,9 +78,7 @@ export default async function StaffOnboardingPage({
       </form>
 
       <form action={skipStaff} className="onboarding-skip-form">
-        <button type="submit" className="btn-ghost-link">
-          Skip for now
-        </button>
+        <SkipButton label="Skip for now" />
       </form>
     </OnboardingShell>
   );

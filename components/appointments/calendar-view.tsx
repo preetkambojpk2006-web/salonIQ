@@ -343,15 +343,17 @@ function AppointmentActions({
         </>
       ) : null}
 
-      {appointment.status === "confirmed" && canManageFinance ? (
-        <button
-          type="button"
-          className={`primary-button ${btnClass}`}
-          onClick={onCompletePay}
-        >
-          {t("calendar.completePay")}
-        </button>
-      ) : null}
+      {appointment.status === "pending" || appointment.status === "confirmed"
+        ? canManageFinance && (
+            <button
+              type="button"
+              className={`primary-button ${btnClass}`}
+              onClick={onCompletePay}
+            >
+              {t("calendar.completePay")}
+            </button>
+          )
+        : null}
 
       {appointment.status === "pending" || appointment.status === "confirmed" ? (
         <form action={markNoShow}>

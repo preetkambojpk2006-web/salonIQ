@@ -1,6 +1,7 @@
 "use server";
 
 import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
+import { maybeAutoApproveForDemo } from "@/lib/auth/demo-autoapprove";
 import {
   markOnboardingComplete,
 } from "@/lib/onboarding/status";
@@ -198,12 +199,18 @@ export async function skipStaff() {
     .eq("id", business.id)
     .maybeSingle();
 
-  await supabase
+  const { error: skipError } = await supabase
     .from("businesses")
     .update({
       opening_hours: withOnboardingSkip(row?.opening_hours, "staff"),
     })
     .eq("id", business.id);
+
+  if (skipError) {
+    redirect(
+      `/onboarding/staff?error=${encodeURIComponent(skipError.message)}`
+    );
+  }
 
   redirect("/onboarding/services");
 }
@@ -261,6 +268,8 @@ export async function createService(formData: FormData) {
     );
   }
 
+  await maybeAutoApproveForDemo(business.id);
+
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
   revalidatePath("/pending");
@@ -303,6 +312,8 @@ export async function skipServices() {
       `/onboarding/services?error=${encodeURIComponent(completeError)}`
     );
   }
+
+  await maybeAutoApproveForDemo(business.id);
 
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");

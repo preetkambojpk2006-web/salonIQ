@@ -3,7 +3,10 @@ import { CommandCenterShell } from "@/components/command-center/command-center-s
 import { getWorkspaceContext } from "@/lib/command-center/get-workspace";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { getLocale } from "@/lib/i18n";
-import { getOnboardingStep } from "@/lib/onboarding/status";
+import {
+  getOnboardingStep,
+  onboardingPathForStep,
+} from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -23,8 +26,8 @@ export default async function DashboardLayout({
   }
 
   const step = await getOnboardingStep(supabase);
-  if (step === "business" || step === "branch") {
-    redirect("/onboarding");
+  if (step !== "complete") {
+    redirect(onboardingPathForStep(step));
   }
 
   const approval = await getBusinessApprovalStatus(supabase, user.id);

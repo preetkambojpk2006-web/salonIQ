@@ -72,6 +72,7 @@ export function PaymentModal({
   const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [amountError, setAmountError] = useState<string | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -86,6 +87,12 @@ export function PaymentModal({
   }, [isSaving, onClose]);
 
   const handlePay = async (method: PaymentMethod) => {
+    if ((method === "cash" || method === "upi") && amount <= 0) {
+      setAmountError(t("payment.amountRequired"));
+      return;
+    }
+
+    setAmountError(null);
     setIsSaving(true);
     try {
       const formData = new FormData();
@@ -147,11 +154,23 @@ export function PaymentModal({
           </button>
         </div>
 
+        {amount <= 0 ? (
+          <p className="alert-danger" role="alert" style={{ marginBottom: 12 }}>
+            {t("payment.amountRequired")}
+          </p>
+        ) : null}
+
+        {amountError ? (
+          <p className="alert-danger" role="alert" style={{ marginBottom: 12 }}>
+            {amountError}
+          </p>
+        ) : null}
+
         <div className="payment-modal-actions">
           <button
             type="button"
             className="payment-btn-mint"
-            disabled={isSaving}
+            disabled={isSaving || amount <= 0}
             onClick={() => handlePay("cash")}
           >
             {isSaving ? (
@@ -173,7 +192,7 @@ export function PaymentModal({
           <button
             type="button"
             className="payment-btn-mint"
-            disabled={isSaving}
+            disabled={isSaving || amount <= 0}
             onClick={() => handlePay("upi")}
           >
             {isSaving ? (

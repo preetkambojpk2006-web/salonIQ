@@ -85,7 +85,39 @@ export async function signUp(formData: FormData) {
     redirect("/onboarding");
   }
 
-  redirect("/login?message=check-email");
+  // No session means Supabase email confirmation is enabled. For smooth local
+  // demos, "Confirm email" can be turned off in Supabase Dashboard →
+  // Authentication → Providers → Email (project setting, not a code change).
+  redirect(`/signup/check-email?email=${encodeURIComponent(email)}`);
+}
+
+export type ResendConfirmationResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function resendConfirmationEmail(
+  formData: FormData
+): Promise<ResendConfirmationResult> {
+  const email = (formData.get("email") as string)?.trim();
+
+  if (!email) {
+    return { ok: false, error: "missing-email" };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: getAuthRedirectUrl("/auth/callback?next=/onboarding"),
+    },
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
 }
 
 export async function signOut() {

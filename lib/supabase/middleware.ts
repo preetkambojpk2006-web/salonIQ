@@ -74,10 +74,7 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
       }
 
-      if (
-        pathname.startsWith("/dashboard") &&
-        (onboardingStep === "business" || onboardingStep === "branch")
-      ) {
+      if (pathname.startsWith("/dashboard") && !onboardingComplete) {
         const url = request.nextUrl.clone();
         url.pathname = onboardingPathForStep(onboardingStep);
         return NextResponse.redirect(url);
