@@ -279,6 +279,18 @@ function AppointmentSourceTag({ appointment }: { appointment: Appointment }) {
   );
 }
 
+function PaidStatusBadge({ isPaid }: { isPaid: boolean }) {
+  const { t } = useT();
+
+  if (isPaid) {
+    return <span className="calendar-paid-badge">{t("common.paid")}</span>;
+  }
+
+  return (
+    <span className="calendar-payment-pending-badge">{t("status.pending")}</span>
+  );
+}
+
 function AppointmentActions({
   appointment,
   businessName,
@@ -299,19 +311,12 @@ function AppointmentActions({
 
   if (appointment.status === "completed") {
     return (
-      <div style={{ display: "grid", gap: 6 }}>
-        <p className="text-xs font-medium text-muted">
-          {appointment.payment_status === "paid"
-            ? t("common.paid")
-            : t("status.pending")}
-        </p>
-        <WhatsAppCopyButtons
-          appointment={appointment}
-          businessName={businessName}
-          onCopied={onCopied}
-          compact={compact}
-        />
-      </div>
+      <WhatsAppCopyButtons
+        appointment={appointment}
+        businessName={businessName}
+        onCopied={onCopied}
+        compact={compact}
+      />
     );
   }
 
@@ -428,30 +433,83 @@ const AppointmentBlock = memo(function AppointmentBlock({
           {gridOptions ? (
             gridOptions.showTimes ? (
               <>
-                <strong style={{ display: "block", lineHeight: 1.3 }}>
-                  {blockTitle(appointment)}
-                </strong>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#666" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 6,
+                  }}
+                >
+                  <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
+                    {blockTitle(appointment)}
+                  </strong>
+                  {appointment.status === "completed" ? (
+                    <PaidStatusBadge
+                      isPaid={appointment.payment_status === "paid"}
+                    />
+                  ) : null}
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#8A8A8A" }}>
                   {gridOptions.timeLabel}
                 </span>
               </>
             ) : (
-              <strong style={{ display: "block", lineHeight: 1.3 }}>
-                {gridOptions.serviceLabel}
-              </strong>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 6,
+                }}
+              >
+                <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
+                  {gridOptions.serviceLabel}
+                </strong>
+                {appointment.status === "completed" ? (
+                  <PaidStatusBadge
+                    isPaid={appointment.payment_status === "paid"}
+                  />
+                ) : null}
+              </div>
             )
           ) : (
-            blockTitle(appointment)
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 6,
+              }}
+            >
+              <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
+                {blockTitle(appointment)}
+              </strong>
+              {appointment.status === "completed" ? (
+                <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
+              ) : null}
+            </div>
           )}
         </button>
-        <AppointmentActions
-          appointment={appointment}
-          businessName={businessName}
-          onCompletePay={onCompletePay}
-          onCopied={onCopied}
-          canManageFinance={canManageFinance}
-          compact
-        />
+        {appointment.status === "completed" ? (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <WhatsAppCopyButtons
+              appointment={appointment}
+              businessName={businessName}
+              onCopied={onCopied}
+              compact
+            />
+          </div>
+        ) : (
+          <AppointmentActions
+            appointment={appointment}
+            businessName={businessName}
+            onCompletePay={onCompletePay}
+            onCopied={onCopied}
+            canManageFinance={canManageFinance}
+            compact
+          />
+        )}
       </div>
     );
   }
@@ -475,10 +533,30 @@ const AppointmentBlock = memo(function AppointmentBlock({
         appointment.customer_reliability ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
-        <strong style={{ display: "block" }}>{blockTitle(appointment)}</strong>
-        <p style={{ margin: "4px 0 0" }}>{staffLabel(appointment, t)}</p>
-        {appointment.total_amount > 0 ? (
-          <p style={{ margin: "4px 0 0" }}>{formatRs(appointment.total_amount)}</p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          <strong style={{ display: "block", minWidth: 0 }}>
+            {blockTitle(appointment)}
+          </strong>
+          {appointment.status === "completed" ? (
+            <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
+          ) : null}
+        </div>
+        {appointment.status !== "completed" ? (
+          <>
+            <p style={{ margin: "4px 0 0", color: "#8A8A8A" }}>
+              {staffLabel(appointment, t)}
+            </p>
+            {appointment.total_amount > 0 ? (
+              <p style={{ margin: "4px 0 0" }}>{formatRs(appointment.total_amount)}</p>
+            ) : null}
+          </>
         ) : null}
       </button>
       <AppointmentActions

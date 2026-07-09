@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 import type { Appointment } from "@/lib/appointments/types";
+import { useT } from "@/lib/i18n/LanguageContext";
 import {
   buildConfirmationMessage,
   buildPaymentReceiptMessage,
@@ -26,37 +29,82 @@ export function WhatsAppCopyButtons({
   appointment,
   businessName,
   onCopied,
-  compact = false,
 }: WhatsAppCopyButtonsProps) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [open]);
+
   const handleCopy = async (text: string) => {
     const ok = await copyText(text);
-    if (ok) onCopied();
+    if (ok) {
+      onCopied();
+      setOpen(false);
+    }
   };
 
   return (
-    <div className={`wa-copy-actions ${compact ? "is-compact" : ""}`}>
+    <div ref={rootRef} className="wa-copy-menu">
       <button
         type="button"
-        className="wa-copy-btn"
-        onClick={() => handleCopy(buildConfirmationMessage(appointment))}
+        className="wa-copy-menu-trigger"
+        aria-label={t("calendar.copyActions")}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((value) => !value);
+        }}
       >
-        Copy confirmation
+        <MoreHorizontal size={16} strokeWidth={1.5} aria-hidden />
       </button>
-      <button
-        type="button"
-        className="wa-copy-btn"
-        onClick={() =>
-          handleCopy(
-            buildPaymentReceiptMessage(
-              appointment,
-              businessName,
-              appointment.payment_method
-            )
-          )
-        }
-      >
-        Copy payment receipt
-      </button>
+      {open ? (
+        <div className="wa-copy-menu-panel" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="wa-copy-menu-item"
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleCopy(buildConfirmationMessage(appointment));
+            }}
+          >
+            {t("calendar.copyConfirmation")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="wa-copy-menu-item"
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleCopy(
+                buildPaymentReceiptMessage(
+                  appointment,
+                  businessName,
+                  appointment.payment_method
+                )
+              );
+            }}
+          >
+            {t("calendar.copyPaymentReceipt")}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

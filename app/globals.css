@@ -1949,7 +1949,100 @@
     cursor: wait;
   }
 
-  /* WhatsApp copy buttons (calendar) */
+  /* WhatsApp copy overflow menu (calendar) */
+  .calendar-paid-badge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(31, 168, 115, 0.12);
+    color: #1fa873;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+
+  .calendar-payment-pending-badge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f9f8f3;
+    color: #8a8a8a;
+    border: 1px solid #e0dad0;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .wa-copy-menu {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .wa-copy-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #e0dad0;
+    border-radius: 10px;
+    background: #f9f8f3;
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .wa-copy-menu-trigger:hover {
+    border-color: rgba(31, 168, 115, 0.35);
+    background: rgba(31, 168, 115, 0.08);
+    color: #1fa873;
+  }
+
+  .wa-copy-menu-trigger:active {
+    transform: scale(0.98);
+  }
+
+  .wa-copy-menu-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    min-width: 188px;
+    padding: 6px;
+    border: 1px solid #e0dad0;
+    border-radius: 16px;
+    background: #f9f8f3;
+    box-shadow: var(--shadow);
+  }
+
+  .wa-copy-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .wa-copy-menu-item:hover {
+    background: rgba(31, 168, 115, 0.1);
+    color: #1fa873;
+  }
+
   .wa-copy-actions {
     display: flex;
     flex-wrap: wrap;
