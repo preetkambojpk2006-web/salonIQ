@@ -461,9 +461,31 @@ const AppointmentBlock = memo(function AppointmentBlock({
   gridOptions?: GridBlockOptions;
 }) {
   const { t } = useT();
-  if (compact) {
-    const isCompleted = appointment.status === "completed";
+  const isCompleted = appointment.status === "completed";
 
+  if (!compact && isCompleted) {
+    return (
+      <article className="appointment-row appointment-row--summary">
+        <span className="appointment-time">
+          {formatTime12h(appointment.start_time)}
+        </span>
+        <button
+          type="button"
+          className="appointment-row-summary"
+          onClick={onOpenDetail}
+          aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
+          style={openDetailButtonStyle}
+        >
+          <span className="appointment-row-summary-main">
+            <strong>{blockTitle(appointment)}</strong>
+            <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
+          </span>
+        </button>
+      </article>
+    );
+  }
+
+  if (compact) {
     return (
       <div
         className={`calendar-booking-card${isCompleted ? " is-completed" : " is-open"}`}
@@ -530,8 +552,6 @@ const AppointmentBlock = memo(function AppointmentBlock({
       </div>
     );
   }
-
-  const isCompleted = appointment.status === "completed";
 
   return (
     <article className="appointment-row">
@@ -899,12 +919,8 @@ export function CalendarView({
     <>
       <div className="view-stack">
         <section className="panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">{t("calendar.eyebrow")}</p>
-              <h2>{t("calendar.title")}</h2>
-            </div>
-            <div className="topbar-actions">
+          <div className="panel-header calendar-toolbar">
+            <div className="topbar-actions calendar-toolbar-actions">
               {onlinePendingCount > 0 ? (
                 <button
                   type="button"

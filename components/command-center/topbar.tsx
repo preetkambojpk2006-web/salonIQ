@@ -31,6 +31,10 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
   const activeId = getActiveNavId(pathname);
   const { t } = useT();
 
+  if (pathname.startsWith("/dashboard/calendar")) {
+    return null;
+  }
+
   return (
     <header className="topbar">
       <div>
