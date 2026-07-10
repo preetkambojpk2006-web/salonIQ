@@ -3,6 +3,7 @@ import { CommissionSettingsPanel } from "@/components/settings/commission-settin
 import { GstSettingsPanel } from "@/components/settings/gst-settings-panel";
 import { LanguageSettingsPanel } from "@/components/settings/language-settings-panel";
 import { OnlineBookingSettingsPanel } from "@/components/settings/online-booking-settings-panel";
+import { ReviewsSocialSettingsPanel } from "@/components/settings/reviews-social-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
@@ -46,12 +47,16 @@ export default async function SettingsPage() {
         (await ensureBusinessBookingSlug(business.id, business.name)))
       : null;
 
-  const businessWithGst = business as typeof business & {
+  const businessWithExtras = business as typeof business & {
     gst_enabled?: boolean;
     gst_number?: string | null;
     gst_rate?: number | null;
     gst_inclusive?: boolean;
     online_booking_enabled?: boolean;
+    review_prompt_enabled?: boolean;
+    google_review_url?: string | null;
+    instagram_prompt_enabled?: boolean;
+    instagram_url?: string | null;
   };
 
   return (
@@ -62,7 +67,6 @@ export default async function SettingsPage() {
       initialOpeningHours={openingHoursDisplay(
         business?.opening_hours as { display?: string } | null
       )}
-      initialGoogleReviewLink={business?.google_review_link ?? ""}
       initialDailyRevenueTarget={
         business?.daily_revenue_target != null
           ? String(Number(business.daily_revenue_target))
@@ -92,14 +96,14 @@ export default async function SettingsPage() {
       }
       gstPanel={
         <GstSettingsPanel
-          initialGstEnabled={businessWithGst?.gst_enabled ?? false}
-          initialGstNumber={businessWithGst?.gst_number ?? ""}
+          initialGstEnabled={businessWithExtras?.gst_enabled ?? false}
+          initialGstNumber={businessWithExtras?.gst_number ?? ""}
           initialGstRate={
-            businessWithGst?.gst_rate != null
-              ? String(Number(businessWithGst.gst_rate))
+            businessWithExtras?.gst_rate != null
+              ? String(Number(businessWithExtras.gst_rate))
               : "18"
           }
-          initialGstInclusive={businessWithGst?.gst_inclusive ?? false}
+          initialGstInclusive={businessWithExtras?.gst_inclusive ?? false}
         />
       }
       commissionPanel={
@@ -111,7 +115,23 @@ export default async function SettingsPage() {
       bookingSlug={bookingSlug}
       onlineBookingPanel={
         <OnlineBookingSettingsPanel
-          initialEnabled={businessWithGst?.online_booking_enabled ?? true}
+          initialEnabled={businessWithExtras?.online_booking_enabled ?? true}
+        />
+      }
+      reviewsSocialPanel={
+        <ReviewsSocialSettingsPanel
+          initialReviewPromptEnabled={
+            businessWithExtras?.review_prompt_enabled ?? false
+          }
+          initialGoogleReviewUrl={
+            businessWithExtras?.google_review_url ??
+            business?.google_review_link ??
+            ""
+          }
+          initialInstagramPromptEnabled={
+            businessWithExtras?.instagram_prompt_enabled ?? false
+          }
+          initialInstagramUrl={businessWithExtras?.instagram_url ?? ""}
         />
       }
       salonName={business?.name ?? "Your salon"}

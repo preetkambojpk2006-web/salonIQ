@@ -6,6 +6,7 @@ import {
 } from "@/lib/appointments/queries";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
+import { reviewsSocialFromBusiness } from "@/lib/settings/reviews-social";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     getOwnerBusinessId(),
   ]);
   const appRole = membership?.appRole ?? "staff";
+  const reviewsSocial = reviewsSocialFromBusiness(business);
 
   return (
     <CalendarView
@@ -37,6 +39,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       businessId={businessId}
       businessName={business?.name ?? "Your salon"}
       googleReviewLink={business?.google_review_link ?? null}
+      reviewsSocial={reviewsSocial}
       canManageFinance={canManageFinance(appRole)}
       canEditAppointmentTime={isOwnerOrAdmin(appRole)}
       openBooking={searchParams?.booking === "new"}

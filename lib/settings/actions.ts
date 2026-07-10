@@ -36,8 +36,6 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
   const email = (formData.get("email") as string)?.trim() || null;
   const openingHoursNote =
     (formData.get("opening_hours") as string)?.trim() || null;
-  const googleReviewLink =
-    (formData.get("google_review_link") as string)?.trim() || null;
   const dailyRevenueTargetRaw = (
     formData.get("daily_revenue_target") as string
   )?.trim();
@@ -76,7 +74,6 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
       phone,
       email,
       opening_hours,
-      google_review_link: googleReviewLink,
       daily_revenue_target,
     })
     .eq("id", membership.businessId);
@@ -87,6 +84,67 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/calendar");
+  return { ok: true };
+}
+
+export async function updateReviewsSocialSettings(
+  formData: FormData
+): Promise<SettingsActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return {
+      ok: false,
+      error: "Sirf owner ya admin reviews settings update kar sakte hain.",
+    };
+  }
+
+  const reviewPromptEnabled = formData.get("review_prompt_enabled") === "true";
+  const instagramPromptEnabled =
+    formData.get("instagram_prompt_enabled") === "true";
+  const googleReviewUrl =
+    (formData.get("google_review_url") as string)?.trim() || null;
+  const instagramUrl = (formData.get("instagram_url") as string)?.trim() || null;
+
+  if (reviewPromptEnabled && !googleReviewUrl) {
+    return {
+      ok: false,
+      error: "Google review on karne ke liye link daalein.",
+    };
+  }
+
+  if (instagramPromptEnabled && !instagramUrl) {
+    return {
+      ok: false,
+      error: "Instagram on karne ke liye profile link daalein.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({
+      review_prompt_enabled: reviewPromptEnabled,
+      google_review_url: googleReviewUrl,
+      google_review_link: googleReviewUrl,
+      instagram_prompt_enabled: instagramPromptEnabled,
+      instagram_url: instagramUrl,
+    })
+    .eq("id", membership.businessId);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/calendar");
   return { ok: true };
 }

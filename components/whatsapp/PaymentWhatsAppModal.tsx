@@ -1,11 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Receipt } from "lucide-react";
+import { ExternalLink, Instagram, Receipt, Star, X } from "lucide-react";
 import { InvoiceModal } from "@/components/invoice/invoice-modal";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import type { Appointment } from "@/lib/appointments/types";
 import type { PaymentMethod } from "@/lib/payments/types";
+import {
+  hasReviewsSocialPrompts,
+  showGoogleReviewPrompt,
+  showInstagramPrompt,
+  type ReviewsSocialPrompts,
+} from "@/lib/settings/reviews-social";
 import { googleReviewRequest, invoice } from "@/lib/whatsapp/templates";
 import { useT } from "@/lib/i18n/LanguageContext";
 
@@ -14,6 +20,7 @@ type PaymentWhatsAppModalProps = {
   businessName: string;
   paymentMethod: PaymentMethod;
   googleReviewLink?: string | null;
+  reviewsSocial?: ReviewsSocialPrompts;
   onClose: () => void;
 };
 
@@ -34,12 +41,24 @@ export function PaymentWhatsAppModal({
   businessName,
   paymentMethod,
   googleReviewLink,
+  reviewsSocial,
   onClose,
 }: PaymentWhatsAppModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { t } = useT();
   const [showInvoice, setShowInvoice] = useState(false);
   const reviewLink = googleReviewLink?.trim() ?? "";
+
+  const social = reviewsSocial ?? {
+    reviewPromptEnabled: false,
+    googleReviewUrl: null,
+    instagramPromptEnabled: false,
+    instagramUrl: null,
+  };
+
+  const showGoogleButton = showGoogleReviewPrompt(social);
+  const showInstagramButton = showInstagramPrompt(social);
+  const showSocialSection = hasReviewsSocialPrompts(social);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -79,105 +98,174 @@ export function PaymentWhatsAppModal({
 
   return (
     <>
-    <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
-      <div className="payment-modal-form">
-        <div className="payment-modal-header">
-          <div>
-            <p className="eyebrow">{t("whatsapp.eyebrow")}</p>
-            <h3>{t("whatsapp.paymentInvoiceTitle")}</h3>
-            {!phone ? (
-              <p className="payment-modal-meta">
-                {t("whatsapp.noPhoneCopy")}
-              </p>
-            ) : null}
+      <dialog ref={dialogRef} className="payment-modal" onClose={onClose}>
+        <div className="payment-modal-form">
+          <div className="payment-modal-header">
+            <div>
+              <p className="eyebrow">{t("whatsapp.eyebrow")}</p>
+              <h3>{t("whatsapp.paymentInvoiceTitle")}</h3>
+              {!phone ? (
+                <p className="payment-modal-meta">{t("whatsapp.noPhoneCopy")}</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="payment-modal-close"
+              aria-label={t("common.close")}
+            >
+              <X size={18} strokeWidth={1.5} aria-hidden />
+            </button>
           </div>
+
           <button
             type="button"
-            onClick={handleClose}
-            className="payment-modal-close"
-            aria-label={t("common.close")}
+            className="invoice-btn-outline"
+            style={{ width: "100%", marginTop: 16 }}
+            onClick={() => setShowInvoice(true)}
           >
-            ✕
+            <Receipt size={16} strokeWidth={1.5} aria-hidden />
+            {t("invoice.viewInvoice")}
           </button>
-        </div>
 
-        <button
-          type="button"
-          className="invoice-btn-outline"
-          style={{ width: "100%", marginTop: 16 }}
-          onClick={() => setShowInvoice(true)}
-        >
-          <Receipt size={16} strokeWidth={1.5} aria-hidden />
-          {t("invoice.viewInvoice")}
-        </button>
+          <textarea
+            readOnly
+            value={message}
+            rows={10}
+            className="mt-5 w-full resize-none rounded-xl border border-[#E0DAD0] bg-[#EDE8DF]/40 p-3 text-sm leading-relaxed text-[#1A1A1A]"
+            aria-label={t("whatsapp.invoiceMsgAria")}
+          />
 
-        <textarea
-          readOnly
-          value={message}
-          rows={10}
-          className="mt-5 w-full resize-none rounded-xl border border-[#E0DAD0] bg-[#EDE8DF]/40 p-3 text-sm leading-relaxed text-[#1A1A1A]"
-          aria-label={t("whatsapp.invoiceMsgAria")}
-        />
-
-        <div className="mt-4">
-          <MessageActions phone={phone} message={message} />
-        </div>
-
-        {reviewLink ? (
-          <div
-            style={{
-              marginTop: 18,
-              padding: "14px 16px",
-              borderRadius: 12,
-              border: "1px solid #E0DAD0",
-              background: "#E8D9C0",
-            }}
-          >
-            <p
-              style={{
-                margin: 0,
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#1A1A1A",
-              }}
-            >
-              {t("whatsapp.googleReviewTitle")}
-            </p>
-            <p
-              style={{
-                margin: "6px 0 12px",
-                fontSize: 13,
-                color: "#8A8A8A",
-                lineHeight: 1.4,
-              }}
-            >
-              {t("whatsapp.googleReviewHint")}
-            </p>
-            <textarea
-              readOnly
-              value={reviewMessage}
-              rows={7}
-              className="w-full resize-none rounded-xl border border-[#E0DAD0] bg-white/80 p-3 text-sm leading-relaxed text-[#1A1A1A]"
-              aria-label={t("whatsapp.reviewMsgAria")}
-            />
-            <div className="mt-3">
-              <MessageActions
-                phone={phone}
-                message={reviewMessage}
-                copyLabel={t("whatsapp.copyReview")}
-                sendLabel={t("whatsapp.sendReview")}
-              />
-            </div>
+          <div className="mt-4">
+            <MessageActions phone={phone} message={message} />
           </div>
-        ) : null}
 
-        <div className="payment-modal-actions">
-          <button type="button" className="payment-btn-ghost" onClick={handleClose}>
-            {t("common.close")}
-          </button>
+          {reviewLink ? (
+            <div
+              style={{
+                marginTop: 18,
+                padding: "14px 16px",
+                borderRadius: 16,
+                border: "1px solid #E0DAD0",
+                background: "#F9F8F3",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#1A1A1A",
+                }}
+              >
+                {t("whatsapp.googleReviewTitle")}
+              </p>
+              <p
+                style={{
+                  margin: "6px 0 12px",
+                  fontSize: 13,
+                  color: "#8A8A8A",
+                  lineHeight: 1.4,
+                }}
+              >
+                {t("whatsapp.googleReviewHint")}
+              </p>
+              <textarea
+                readOnly
+                value={reviewMessage}
+                rows={7}
+                className="w-full resize-none rounded-xl border border-[#E0DAD0] bg-white/80 p-3 text-sm leading-relaxed text-[#1A1A1A]"
+                aria-label={t("whatsapp.reviewMsgAria")}
+              />
+              <div className="mt-3">
+                <MessageActions
+                  phone={phone}
+                  message={reviewMessage}
+                  copyLabel={t("whatsapp.copyReview")}
+                  sendLabel={t("whatsapp.sendReview")}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {showSocialSection ? (
+            <div
+              style={{
+                marginTop: 18,
+                padding: "14px 16px",
+                borderRadius: 16,
+                border: "1px solid #E0DAD0",
+                background: "#F9F8F3",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#1A1A1A",
+                }}
+              >
+                {t("payment.reviewsSocialHeading")}
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gap: 8,
+                  marginTop: 12,
+                }}
+              >
+                {showGoogleButton && social.googleReviewUrl ? (
+                  <a
+                    href={social.googleReviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="payment-btn-mint"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      textDecoration: "none",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <Star size={16} strokeWidth={1.5} aria-hidden />
+                    {t("payment.openGoogleReview")}
+                    <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
+                  </a>
+                ) : null}
+                {showInstagramButton && social.instagramUrl ? (
+                  <a
+                    href={social.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="payment-btn-mint"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      textDecoration: "none",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <Instagram size={16} strokeWidth={1.5} aria-hidden />
+                    {t("payment.openInstagram")}
+                    <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="payment-modal-actions">
+            <button type="button" className="payment-btn-ghost" onClick={handleClose}>
+              {t("common.close")}
+            </button>
+          </div>
         </div>
-      </div>
-    </dialog>
+      </dialog>
 
       {showInvoice ? (
         <InvoiceModal

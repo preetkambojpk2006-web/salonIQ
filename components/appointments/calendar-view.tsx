@@ -14,6 +14,7 @@ import { PaymentModal } from "@/components/appointments/payment-modal";
 import { BookingWhatsAppModal } from "@/components/whatsapp/BookingWhatsAppModal";
 import { DelayWhatsAppModal, type DelayAffectedEntry } from "@/components/whatsapp/DelayWhatsAppModal";
 import { PaymentWhatsAppModal } from "@/components/whatsapp/PaymentWhatsAppModal";
+import type { ReviewsSocialPrompts } from "@/lib/settings/reviews-social";
 import type { CascadePreview } from "@/lib/appointments/cascade";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
@@ -41,6 +42,7 @@ type CalendarViewProps = {
   businessId?: string | null;
   businessName: string;
   googleReviewLink?: string | null;
+  reviewsSocial?: ReviewsSocialPrompts;
   canManageFinance?: boolean;
   canEditAppointmentTime?: boolean;
   openBooking?: boolean;
@@ -583,6 +585,7 @@ export function CalendarView({
   businessId = null,
   businessName,
   googleReviewLink = null,
+  reviewsSocial,
   canManageFinance = true,
   canEditAppointmentTime = false,
   openBooking = false,
@@ -1075,6 +1078,7 @@ export function CalendarView({
           businessName={businessName}
           paymentMethod={whatsappPayment.paymentMethod}
           googleReviewLink={googleReviewLink}
+          reviewsSocial={reviewsSocial}
           onClose={handleCloseWhatsappPayment}
         />
       ) : null}

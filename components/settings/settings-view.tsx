@@ -17,7 +17,6 @@ type SettingsViewProps = {
   initialPhone: string;
   initialEmail: string;
   initialOpeningHours: string;
-  initialGoogleReviewLink: string;
   initialDailyRevenueTarget?: string;
   attendancePanel?: ReactNode;
   loyaltyPanel?: ReactNode;
@@ -26,6 +25,7 @@ type SettingsViewProps = {
   languagePanel?: ReactNode;
   bookingSlug?: string | null;
   onlineBookingPanel?: ReactNode;
+  reviewsSocialPanel?: ReactNode;
   salonName: string;
 };
 
@@ -34,7 +34,6 @@ export function SettingsView({
   initialPhone,
   initialEmail,
   initialOpeningHours,
-  initialGoogleReviewLink,
   initialDailyRevenueTarget = "",
   attendancePanel,
   loyaltyPanel,
@@ -43,6 +42,7 @@ export function SettingsView({
   languagePanel,
   bookingSlug = null,
   onlineBookingPanel,
+  reviewsSocialPanel,
   salonName,
 }: SettingsViewProps) {
   const { t } = useT();
@@ -51,7 +51,6 @@ export function SettingsView({
   const [phone, setPhone] = useState(initialPhone);
   const [email, setEmail] = useState(initialEmail);
   const [openingHours, setOpeningHours] = useState(initialOpeningHours);
-  const [googleReviewLink, setGoogleReviewLink] = useState(initialGoogleReviewLink);
   const [dailyRevenueTarget, setDailyRevenueTarget] = useState(
     initialDailyRevenueTarget
   );
@@ -71,14 +70,12 @@ export function SettingsView({
     setPhone(initialPhone);
     setEmail(initialEmail);
     setOpeningHours(initialOpeningHours);
-    setGoogleReviewLink(initialGoogleReviewLink);
     setDailyRevenueTarget(initialDailyRevenueTarget);
   }, [
     initialName,
     initialPhone,
     initialEmail,
     initialOpeningHours,
-    initialGoogleReviewLink,
     initialDailyRevenueTarget,
   ]);
 
@@ -95,7 +92,6 @@ export function SettingsView({
     formData.set("phone", phone);
     formData.set("email", email);
     formData.set("opening_hours", openingHours);
-    formData.set("google_review_link", googleReviewLink);
     formData.set("daily_revenue_target", dailyRevenueTarget);
 
     const result = await updateBusinessSettings(formData);
@@ -153,6 +149,8 @@ export function SettingsView({
         ) : null}
 
         {onlineBookingPanel}
+
+        {reviewsSocialPanel}
 
         {attendancePanel}
         {loyaltyPanel}
@@ -226,24 +224,6 @@ export function SettingsView({
                 placeholder="Mon–Sat, 10am – 8pm"
                 rows={2}
                 style={{ borderRadius: 10, borderColor: "#E0DAD0", resize: "vertical" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="google-review-link" className="field-label">
-                {t("settings.googleReviewLabel")}
-              </label>
-              <p className="text-body" style={{ margin: "6px 0 8px", fontSize: 14 }}>
-                {t("settings.reviewRequestHelp")}
-              </p>
-              <input
-                id="google-review-link"
-                type="url"
-                className="input-field"
-                value={googleReviewLink}
-                onChange={(e) => setGoogleReviewLink(e.target.value)}
-                placeholder="https://g.page/r/..."
-                style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
               />
             </div>
 

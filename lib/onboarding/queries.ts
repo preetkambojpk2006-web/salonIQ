@@ -9,7 +9,7 @@ export const getOwnerBusiness = cache(async () => {
   if (!membership) return null;
 
   const businessFields =
-    "id, name, logo_url, phone, email, opening_hours, google_review_link, booking_slug, daily_revenue_target, late_fine_amount";
+    "id, name, logo_url, phone, email, opening_hours, google_review_link, google_review_url, instagram_url, review_prompt_enabled, instagram_prompt_enabled, booking_slug, daily_revenue_target, late_fine_amount";
 
   const { data: business, error } = await supabase
     .from("businesses")
