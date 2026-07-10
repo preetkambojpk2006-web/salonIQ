@@ -66,6 +66,7 @@ export function TodayView({
           id: onlinePending[0].id,
           time: formatTime12h(onlinePending[0].start_time),
           customer: onlinePending[0].customer_name ?? "Customer",
+          customerPhone: onlinePending[0].customer_phone ?? null,
           service: onlinePending[0].service_name ?? "Service",
           staff: onlinePending[0].staff_name ?? "Team",
           status: onlinePending[0].status,
@@ -90,7 +91,7 @@ export function TodayView({
         <OnlinePendingRequests appointments={onlinePending} />
       ) : null}
       <div className="two-column">
-        <NextAppointments appointments={upcoming} />
+        <NextAppointments appointments={upcoming} salonName={salonName} />
         {isNewSalon ? <GettingStartedPanel /> : null}
       </div>
       {showOwnerInsights && businessId ? (

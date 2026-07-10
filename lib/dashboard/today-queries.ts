@@ -1,5 +1,5 @@
 import { getOwnerBusinessId } from "@/lib/customers/queries";
-import { formatTime12h } from "@/lib/format/time";
+import { formatTime12hInSalon } from "@/lib/format/time";
 import { getDayBoundsIso } from "@/lib/payments/date-utils";
 import { getTodayPaymentTotals } from "@/lib/payments/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +21,7 @@ export type UpcomingAppointment = {
   id: string;
   time: string;
   customer: string;
+  customerPhone: string | null;
   service: string;
   staff: string;
   status: string;
@@ -58,6 +59,18 @@ function customerName(row: {
   const c = row.customers;
   if (Array.isArray(c)) return c[0]?.name ?? "Customer";
   return c?.name ?? "Customer";
+}
+
+function customerPhone(row: {
+  customers:
+    | { name: string; phone?: string | null }
+    | { name: string; phone?: string | null }[]
+    | null;
+}): string | null {
+  const c = row.customers;
+  const phone = Array.isArray(c) ? c[0]?.phone : c?.phone;
+  const trimmed = phone?.trim();
+  return trimmed || null;
 }
 
 export async function getTodayDashboardData(): Promise<{
@@ -104,14 +117,14 @@ export async function getTodayDashboardData(): Promise<{
     supabase
       .from("appointments")
       .select(
-        `id, start_time, status, payment_status, service_name, staff_name, customers ( name )`
+        `id, start_time, status, payment_status, service_name, staff_name, customers ( name, phone )`
       )
       .eq("business_id", businessId)
       .gte("start_time", nowIso)
-      .neq("status", "cancelled")
-      .neq("status", "completed")
+      .lt("start_time", todayEnd)
+      .in("status", ["pending", "confirmed"])
       .order("start_time", { ascending: true })
-      .limit(3),
+      .limit(10),
     supabase
       .from("appointments")
       .select(
@@ -174,8 +187,9 @@ export async function getTodayDashboardData(): Promise<{
 
   const upcoming: UpcomingAppointment[] = (upcomingRows ?? []).map((row) => ({
     id: row.id,
-    time: formatTime12h(row.start_time),
+    time: formatTime12hInSalon(row.start_time),
     customer: customerName(row),
+    customerPhone: customerPhone(row),
     service: row.service_name ?? "Service",
     staff: row.staff_name ?? "Team",
     status: row.status,

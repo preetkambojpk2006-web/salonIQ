@@ -13,3 +13,26 @@ export function buildWhatsAppLink(phone: string, message: string): string {
 
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
+
+/** Opens WhatsApp with a pre-filled message; uses wa.me/?text= when no phone on file. */
+export function buildWhatsAppReminderLink(
+  phone: string | null | undefined,
+  message: string
+): string {
+  const trimmed = phone?.trim();
+  if (trimmed) {
+    return buildWhatsAppLink(trimmed, message);
+  }
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
+export function openWhatsAppReminder(
+  phone: string | null | undefined,
+  message: string
+): void {
+  window.open(
+    buildWhatsAppReminderLink(phone, message),
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
