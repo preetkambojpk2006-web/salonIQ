@@ -1,13 +1,9 @@
-import { getBusinessApprovalStatus } from "@/lib/auth/business-approval";
 import { CommandCenterShell } from "@/components/command-center/command-center-shell";
+import { getCachedAuthUser, getCachedRequestAuthContext } from "@/lib/auth/cached-server";
 import { getWorkspaceContext } from "@/lib/command-center/get-workspace";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { getLocale } from "@/lib/i18n";
-import {
-  getOnboardingStep,
-  onboardingPathForStep,
-} from "@/lib/onboarding/status";
-import { createClient } from "@/lib/supabase/server";
+import { onboardingPathForStep } from "@/lib/onboarding/paths";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,22 +12,17 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const step = await getOnboardingStep(supabase);
-  if (step !== "complete") {
-    redirect(onboardingPathForStep(step));
+  const ctx = await getCachedRequestAuthContext();
+  if (!ctx?.onboardingComplete) {
+    redirect(onboardingPathForStep(ctx?.onboardingStep ?? "business"));
   }
-
-  const approval = await getBusinessApprovalStatus(supabase, user.id);
-  if (approval.onboardingComplete && !approval.isApproved) {
+  if (!ctx.isApproved) {
     redirect("/pending");
   }
 

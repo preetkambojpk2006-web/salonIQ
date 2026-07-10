@@ -4,7 +4,7 @@ import { parseOpeningHours } from "@/lib/onboarding/skips";
 import {
   onboardingPathForStep,
   type OnboardingStep,
-} from "@/lib/onboarding/status";
+} from "@/lib/onboarding/paths";
 
 export type RequestAuthContext = {
   appRole: AppRole | null;

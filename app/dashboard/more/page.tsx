@@ -1,16 +1,13 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { getCachedAuthUser } from "@/lib/auth/cached-server";
 import { getUserMembership } from "@/lib/auth/membership";
 import { getNavItemsForRole } from "@/lib/command-center/navigation";
 import { getLocale, t } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function MorePage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
   const membership = await getUserMembership();
   const appRole = membership?.appRole ?? "staff";
   const locale = getLocale(cookies().get("saloniq_ui_language")?.value);
@@ -36,6 +33,7 @@ export default async function MorePage() {
             <Link
               key={item.id}
               href={item.href}
+              prefetch
               className="appointment-row"
               style={{ textDecoration: "none", color: "inherit" }}
             >

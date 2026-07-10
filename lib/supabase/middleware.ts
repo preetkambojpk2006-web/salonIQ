@@ -3,7 +3,7 @@ import {
   getRequestAuthContext,
   landingPathFromContext,
 } from "@/lib/auth/request-context";
-import { onboardingPathForStep } from "@/lib/onboarding/status";
+import { onboardingPathForStep } from "@/lib/onboarding/paths";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 

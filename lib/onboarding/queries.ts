@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { getUserMembership } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getOwnerBusiness() {
+export const getOwnerBusiness = cache(async () => {
   const supabase = createClient();
   const membership = await getUserMembership();
 
@@ -41,7 +42,7 @@ export async function getOwnerBusiness() {
     .maybeSingle();
 
   return baseBusiness ?? null;
-}
+});
 
 export async function getOwnerBranches(businessId: string) {
   const supabase = createClient();

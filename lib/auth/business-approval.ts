@@ -1,8 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  getOnboardingStep,
-  onboardingPathForStep,
-} from "@/lib/onboarding/status";
+import { onboardingPathForStep } from "@/lib/onboarding/paths";
+import { getOnboardingStep } from "@/lib/onboarding/status";
 
 export type BusinessApprovalStatus = {
   businessId: string | null;
@@ -37,7 +35,7 @@ export async function getBusinessApprovalStatus(
   supabase: SupabaseClient,
   userId: string
 ): Promise<BusinessApprovalStatus> {
-  const step = await getOnboardingStep(supabase);
+  const step = await getOnboardingStep();
   const onboardingComplete = step === "complete";
 
   if (!onboardingComplete) {
@@ -90,7 +88,7 @@ export async function getAuthenticatedLandingPath(
     return "/login";
   }
 
-  const step = await getOnboardingStep(supabase);
+  const step = await getOnboardingStep();
   if (step !== "complete") {
     return onboardingPathForStep(step);
   }

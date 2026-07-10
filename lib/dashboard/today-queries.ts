@@ -93,6 +93,7 @@ export async function getTodayDashboardData(): Promise<{
     { data: upcomingRows },
     { data: recentRows },
     { data: customers },
+    paymentTotals,
   ] = await Promise.all([
     supabase
       .from("appointments")
@@ -123,9 +124,8 @@ export async function getTodayDashboardData(): Promise<{
       .from("customers")
       .select("visit_count")
       .eq("business_id", businessId),
+    getTodayPaymentTotals(businessId),
   ]);
-
-  const paymentTotals = await getTodayPaymentTotals(businessId);
 
   const today = todayAppointments ?? [];
   const activeToday = today.filter(

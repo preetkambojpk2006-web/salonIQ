@@ -1,12 +1,15 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCachedAuthUser } from "@/lib/auth/cached-server";
+import {
+  onboardingPathForStep,
+  type OnboardingStep,
+} from "@/lib/onboarding/paths";
+import { createClient } from "@/lib/supabase/server";
 import { parseOpeningHours } from "@/lib/onboarding/skips";
 
-export type OnboardingStep =
-  | "business"
-  | "branch"
-  | "staff"
-  | "services"
-  | "complete";
+export type { OnboardingStep } from "@/lib/onboarding/paths";
+export { onboardingPathForStep } from "@/lib/onboarding/paths";
 
 export async function markOnboardingComplete(
   supabase: SupabaseClient,
@@ -20,12 +23,9 @@ export async function markOnboardingComplete(
   return { error: error?.message ?? null };
 }
 
-export async function getOnboardingStep(
-  supabase: SupabaseClient
-): Promise<OnboardingStep> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const getOnboardingStep = cache(async (): Promise<OnboardingStep> => {
+  const supabase = createClient();
+  const user = await getCachedAuthUser();
 
   if (!user) {
     return "business";
@@ -57,56 +57,40 @@ export async function getOnboardingStep(
 
   const skips = parseOpeningHours(business.opening_hours).onboarding_skips ?? {};
 
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("id")
-    .eq("business_id", business.id)
-    .limit(1)
-    .maybeSingle();
+  const [{ data: branch }, { count: staffCount }, { count: serviceCount }] =
+    await Promise.all([
+      supabase
+        .from("branches")
+        .select("id")
+        .eq("business_id", business.id)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("staff")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", business.id),
+      supabase
+        .from("services")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", business.id),
+    ]);
 
   if (!branch) {
     return "branch";
   }
 
-  const { count: staffCount } = await supabase
-    .from("staff")
-    .select("id", { count: "exact", head: true })
-    .eq("business_id", business.id);
-
   if (!staffCount && !skips.staff) {
     return "staff";
   }
-
-  const { count: serviceCount } = await supabase
-    .from("services")
-    .select("id", { count: "exact", head: true })
-    .eq("business_id", business.id);
 
   if (!serviceCount && !skips.services) {
     return "services";
   }
 
   return "complete";
-}
+});
 
-export function onboardingPathForStep(step: OnboardingStep): string {
-  switch (step) {
-    case "business":
-      return "/onboarding/business";
-    case "branch":
-      return "/onboarding/branch";
-    case "staff":
-      return "/onboarding/staff";
-    case "services":
-      return "/onboarding/services";
-    case "complete":
-      return "/dashboard";
-  }
-}
-
-export async function getOnboardingRedirect(
-  supabase: SupabaseClient
-): Promise<string> {
-  const step = await getOnboardingStep(supabase);
+export async function getOnboardingRedirect(): Promise<string> {
+  const step = await getOnboardingStep();
   return onboardingPathForStep(step);
 }

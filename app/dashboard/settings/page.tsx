@@ -9,7 +9,6 @@ import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
 import { getCommissionConfig } from "@/lib/commission/actions";
-import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { redirect } from "next/navigation";
 
@@ -34,10 +33,10 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const businessId = await getOwnerBusinessId();
+  const businessId = membership.businessId;
   const [business, rewardConfig, commissionConfig] = await Promise.all([
     getOwnerBusiness(),
-    businessId ? getBusinessRewardConfig(businessId) : Promise.resolve(null),
+    getBusinessRewardConfig(businessId),
     getCommissionConfig(),
   ]);
 

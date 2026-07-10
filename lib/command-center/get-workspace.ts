@@ -1,7 +1,8 @@
+import { cache } from "react";
 import type { AppRole } from "@/lib/auth/membership";
 import { getUserMembership } from "@/lib/auth/membership";
+import { getCachedAuthUser } from "@/lib/auth/cached-server";
 import { getOwnerBranches, getOwnerBusiness } from "@/lib/onboarding/queries";
-import { createClient } from "@/lib/supabase/server";
 import { getNamasteGreeting, getFirstName } from "@/lib/dashboard/greeting";
 
 export type WorkspaceContext = {
@@ -13,17 +14,16 @@ export type WorkspaceContext = {
   appRole: AppRole;
 };
 
-export async function getWorkspaceContext(): Promise<WorkspaceContext> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export const getWorkspaceContext = cache(async (): Promise<WorkspaceContext> => {
+  const user = await getCachedAuthUser();
   const membership = await getUserMembership();
-  const business = await getOwnerBusiness();
-  const branches = business
-    ? await getOwnerBranches(business.id)
-    : [];
+
+  const [business, branches] = await Promise.all([
+    getOwnerBusiness(),
+    membership?.businessId
+      ? getOwnerBranches(membership.businessId)
+      : Promise.resolve([]),
+  ]);
 
   const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
   const displayName = meta?.full_name ?? meta?.name ?? null;
@@ -37,4 +37,4 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext> {
     greeting: getNamasteGreeting(user?.email, displayName),
     appRole: membership?.appRole ?? "staff",
   };
-}
+});

@@ -17,7 +17,7 @@ export default async function OnboardingLayout({
     redirect("/login");
   }
 
-  const step = await getOnboardingStep(supabase);
+  const step = await getOnboardingStep();
 
   if (step === "complete") {
     redirect(await getAuthenticatedLandingPath(supabase));

@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { getCachedAuthUser } from "@/lib/auth/cached-server";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole, UserMembership } from "@/lib/auth/types";
 
@@ -10,11 +12,9 @@ function normalizeRole(value: string | null | undefined): AppRole | null {
   return null;
 }
 
-export async function getUserMembership(): Promise<UserMembership | null> {
+export const getUserMembership = cache(async (): Promise<UserMembership | null> => {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
 
   if (!user) {
     return null;
@@ -42,7 +42,7 @@ export async function getUserMembership(): Promise<UserMembership | null> {
 
   const appRole = normalizeRole(membership.app_role) ?? "staff";
   return { businessId: membership.business_id, appRole };
-}
+});
 
 export async function getUserBusinessId(): Promise<string | null> {
   const membership = await getUserMembership();

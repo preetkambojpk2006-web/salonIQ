@@ -34,9 +34,9 @@ export async function signIn(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  const step = await getOnboardingStep(supabase);
+  const step = await getOnboardingStep();
   if (step !== "complete") {
-    redirect(await getOnboardingRedirect(supabase));
+    redirect(await getOnboardingRedirect());
   }
 
   const landingPath = await getAuthenticatedLandingPath(supabase);
