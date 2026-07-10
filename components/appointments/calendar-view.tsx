@@ -342,7 +342,12 @@ function AppointmentActions({
   cornerActionsHandled?: boolean;
 }) {
   const { t } = useT();
-  const btnClass = compact ? "" : "";
+  const compactPrimaryClass = compact
+    ? "calendar-card-btn calendar-card-btn--primary"
+    : "primary-button";
+  const compactSecondaryClass = compact
+    ? "calendar-card-btn calendar-card-btn--secondary"
+    : "demo-button";
 
   if (appointment.status === "completed") {
     if (cornerActionsHandled) {
@@ -366,25 +371,30 @@ function AppointmentActions({
   return (
     <div
       className={compact ? "calendar-booking-card-actions" : undefined}
-      style={{ display: "grid", gap: 6 }}
+      style={compact ? undefined : { display: "grid", gap: 6 }}
     >
       <AppointmentSourceTag appointment={appointment} />
-      <div className="flex flex-wrap gap-1.5 items-start">
+      <div
+        className={
+          compact
+            ? "calendar-booking-card-actions-row"
+            : "flex flex-wrap gap-1.5 items-start"
+        }
+      >
       {appointment.status === "pending" ? (
         <>
           <form action={confirmAppointment}>
             <input type="hidden" name="appointment_id" value={appointment.id} />
             <PendingSubmitButton
               label={t("common.confirm")}
-              className={`primary-button ${btnClass}`}
+              className={compactPrimaryClass}
             />
           </form>
           <form action={rejectAppointment}>
             <input type="hidden" name="appointment_id" value={appointment.id} />
             <PendingSubmitButton
               label={t("common.reject")}
-              className={`demo-button ${btnClass}`}
-              style={{ minHeight: compact ? 32 : 40 }}
+              className={compactSecondaryClass}
             />
           </form>
         </>
@@ -394,7 +404,7 @@ function AppointmentActions({
         ? canManageFinance && (
             <button
               type="button"
-              className={`primary-button ${btnClass}`}
+              className={compactPrimaryClass}
               onClick={onCompletePay}
             >
               {t("calendar.completePay")}
@@ -407,8 +417,7 @@ function AppointmentActions({
           <input type="hidden" name="appointment_id" value={appointment.id} />
           <PendingSubmitButton
             label={t("status.noShow")}
-            className="demo-button"
-            style={{ minHeight: compact ? 32 : 40 }}
+            className={compactSecondaryClass}
           />
         </form>
       ) : null}
