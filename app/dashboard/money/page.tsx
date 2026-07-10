@@ -104,6 +104,7 @@ export default async function MoneyPage() {
 
   return (
     <MoneyView
+      businessId={businessId}
       stats={stats}
       cashUpiSplit={cashUpiSplit}
       showInventorySpend={showInventorySpend}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Clock, X } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import { markStaffAttendance } from "@/lib/attendance/actions";
+import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import type {
   ActiveStaffMember,
   AttendanceStatus,
@@ -13,6 +14,7 @@ import type {
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type AttendanceViewProps = {
+  businessId: string;
   staff: ActiveStaffMember[];
   todayAttendance: StaffAttendanceRow[];
   monthSummaries: MonthStaffAttendanceSummary[];
@@ -222,6 +224,7 @@ function AttendanceButtons({
 }
 
 export function AttendanceView({
+  businessId,
   staff,
   todayAttendance,
   monthSummaries,
@@ -232,6 +235,8 @@ export function AttendanceView({
   lateFineAmount,
 }: AttendanceViewProps) {
   const { t } = useT();
+
+  useBusinessRealtimeRefresh({ businessId, tableSet: "attendance" });
   const [tab, setTab] = useState<"today" | "month">("today");
   const todayHeader = t("attendance.todayHeader", {
     date: todayDate,

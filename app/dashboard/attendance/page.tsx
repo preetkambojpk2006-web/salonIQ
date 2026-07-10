@@ -38,6 +38,7 @@ export default async function AttendancePage() {
 
   return (
     <AttendanceView
+      businessId={businessId}
       staff={staff}
       todayAttendance={todayAttendance}
       monthSummaries={monthData.summaries}

@@ -18,6 +18,7 @@ import { OnlinePendingRequests } from "@/components/appointments/online-pending-
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import type { WalkinQueueRow } from "@/lib/walkin/types";
+import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import { formatTime12h } from "@/lib/format/time";
 
 type TodayViewProps = {
@@ -47,6 +48,12 @@ export function TodayView({
   lowStockProducts = [],
   initialWalkinQueue = [],
 }: TodayViewProps) {
+  useBusinessRealtimeRefresh({
+    businessId,
+    tableSet: "today",
+    enabled: Boolean(businessId),
+  });
+
   const hasBookingsToday = metrics.bookingsToday > 0;
   const hasUpcoming = upcoming.length > 0;
   const hasOnlinePending = onlinePending.length > 0;

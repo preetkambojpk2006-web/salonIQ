@@ -16,6 +16,7 @@ import { DelayWhatsAppModal, type DelayAffectedEntry } from "@/components/whatsa
 import { PaymentWhatsAppModal } from "@/components/whatsapp/PaymentWhatsAppModal";
 import type { CascadePreview } from "@/lib/appointments/cascade";
 import type { PaymentMethod } from "@/lib/payments/types";
+import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import { WhatsAppCopyButtons } from "@/components/appointments/whatsapp-copy-buttons";
@@ -37,6 +38,7 @@ import { useT } from "@/lib/i18n/LanguageContext";
 type CalendarViewProps = {
   appointments: Appointment[];
   onlinePending?: Appointment[];
+  businessId?: string | null;
   businessName: string;
   googleReviewLink?: string | null;
   canManageFinance?: boolean;
@@ -574,6 +576,7 @@ const AppointmentBlock = memo(function AppointmentBlock({
 export function CalendarView({
   appointments,
   onlinePending = [],
+  businessId = null,
   businessName,
   googleReviewLink = null,
   canManageFinance = true,
@@ -586,6 +589,8 @@ export function CalendarView({
 }: CalendarViewProps) {
   const { t } = useT();
   const router = useRouter();
+
+  useBusinessRealtimeRefresh({ businessId, tableSet: "calendar" });
   const [localAppointments, setLocalAppointments] = useState(appointments);
   const [localOnlinePending, setLocalOnlinePending] = useState(onlinePending);
   const [showForm, setShowForm] = useState(openBooking);

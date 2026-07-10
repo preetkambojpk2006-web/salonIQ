@@ -5,6 +5,7 @@ import { CashUpiSplit } from "@/components/money/CashUpiSplit";
 import { InventorySpendSummary } from "@/components/money/InventorySpendSummary";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useT } from "@/lib/i18n/LanguageContext";
+import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
 
@@ -17,6 +18,7 @@ function formatInr(amount: number): string {
 }
 
 type MoneyViewProps = {
+  businessId?: string | null;
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
   showInventorySpend?: boolean;
@@ -26,6 +28,7 @@ type MoneyViewProps = {
 };
 
 export function MoneyView({
+  businessId = null,
   stats,
   cashUpiSplit,
   showInventorySpend = false,
@@ -34,6 +37,8 @@ export function MoneyView({
   staffPanels,
 }: MoneyViewProps) {
   const { t } = useT();
+
+  useBusinessRealtimeRefresh({ businessId, tableSet: "money" });
 
   const pendingPaymentContext =
     stats.pendingCount === 0
