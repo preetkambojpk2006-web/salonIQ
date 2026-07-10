@@ -2,6 +2,7 @@
 
 import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
 import { getOnboardingRedirect, getOnboardingStep } from "@/lib/onboarding/status";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -12,7 +13,7 @@ function getAuthRedirectUrl(path: string) {
     headersList.get("origin") ??
     (headersList.get("x-forwarded-host")
       ? `https://${headersList.get("x-forwarded-host")}`
-      : "http://localhost:3000");
+      : getSiteUrl());
 
   return `${origin}${path}`;
 }
