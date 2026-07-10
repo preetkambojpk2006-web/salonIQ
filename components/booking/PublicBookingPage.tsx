@@ -47,6 +47,7 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
     null
   );
   const [selectedStaff, setSelectedStaff] = useState<PublicBookingStaff | null>(null);
+  const [availableStaff, setAvailableStaff] = useState<PublicBookingStaff[]>([]);
   const [date, setDate] = useState(todayDateIso());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [busyStarts, setBusyStarts] = useState<string[]>([]);
@@ -119,7 +120,6 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
       };
       setContext(bookingContext);
       setSelectedService(bookingContext.services[0] ?? null);
-      setSelectedStaff(bookingContext.staff[0] ?? null);
       setLoading(false);
     }
 
@@ -128,6 +128,42 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
       cancelled = true;
     };
   }, [slug]);
+
+  useEffect(() => {
+    if (!context || !date) return;
+
+    let cancelled = false;
+
+    async function loadStaffForDate() {
+      const supabase = createClient();
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_public_booking_staff",
+        { p_slug: slug, p_date: date }
+      );
+
+      if (cancelled) return;
+
+      if (rpcError || data === null) {
+        setAvailableStaff([]);
+        setSelectedStaff(null);
+        return;
+      }
+
+      const staff = Array.isArray(data) ? (data as PublicBookingStaff[]) : [];
+      setAvailableStaff(staff);
+      setSelectedStaff((current) => {
+        if (current && staff.some((member) => member.name === current.name)) {
+          return current;
+        }
+        return staff[0] ?? null;
+      });
+    }
+
+    void loadStaffForDate();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, date, context]);
 
   useEffect(() => {
     if (!selectedStaff || !date) {
@@ -298,6 +334,7 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
 
   const setupIncomplete =
     context.services.length === 0 || context.staff.length === 0;
+  const bookableStaff = availableStaff;
 
   return (
     <div
@@ -389,7 +426,7 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
 
             <Section title="2. Staff choose karein">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {context.staff.map((member) => {
+                {bookableStaff.map((member) => {
                   const active = selectedStaff?.name === member.name;
                   return (
                     <button
