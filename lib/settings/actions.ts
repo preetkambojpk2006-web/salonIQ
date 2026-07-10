@@ -4,6 +4,7 @@ import {
   getUserMembership,
   isOwnerOrAdmin,
 } from "@/lib/auth/membership";
+import { enrichOpeningHours } from "@/lib/booking/opening-hours";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -57,9 +58,16 @@ export async function updateBusinessSettings(formData: FormData): Promise<Settin
     daily_revenue_target = parsed > 0 ? parsed : null;
   }
 
-  const opening_hours = openingHoursNote
-    ? { display: openingHoursNote }
-    : {};
+  const { data: existingBusiness } = await supabase
+    .from("businesses")
+    .select("opening_hours")
+    .eq("id", membership.businessId)
+    .maybeSingle();
+
+  const opening_hours = enrichOpeningHours(
+    openingHoursNote,
+    existingBusiness?.opening_hours
+  );
 
   const { error } = await supabase
     .from("businesses")

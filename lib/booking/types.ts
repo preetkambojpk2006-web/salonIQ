@@ -18,6 +18,7 @@ export type PublicBookingGate = {
 export type PublicBookingContext = {
   salon_name: string;
   opening_hours_display: string;
+  opening_hours?: Record<string, unknown> | null;
   services: PublicBookingService[];
   staff: PublicBookingStaff[];
 };

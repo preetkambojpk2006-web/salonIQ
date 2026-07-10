@@ -1,7 +1,12 @@
+import {
+  DEFAULT_BOOKING_CLOSE_HOUR,
+  DEFAULT_BOOKING_OPEN_HOUR,
+  type BookingHours,
+} from "@/lib/booking/opening-hours";
 import { SALON_TIMEZONE } from "@/lib/payments/date-utils";
 
-export const BOOKING_OPEN_HOUR = 10;
-export const BOOKING_CLOSE_HOUR = 20;
+export const BOOKING_OPEN_HOUR = DEFAULT_BOOKING_OPEN_HOUR;
+export const BOOKING_CLOSE_HOUR = DEFAULT_BOOKING_CLOSE_HOUR;
 export const BOOKING_SLOT_MINUTES = 30;
 export const BOOKING_ASSUMED_BUSY_MINUTES = 60;
 
@@ -18,22 +23,31 @@ export function istSlotIso(date: string, hour: number, minute: number): string {
   return `${date}T${pad2(hour)}:${pad2(minute)}:00+05:30`;
 }
 
-export function generateDaySlots(date: string): TimeSlotOption[] {
+export function generateDaySlots(
+  date: string,
+  hours: BookingHours = {
+    openHour: BOOKING_OPEN_HOUR,
+    closeHour: BOOKING_CLOSE_HOUR,
+  }
+): TimeSlotOption[] {
   const slots: TimeSlotOption[] = [];
+  const openMinutes = hours.openHour * 60;
+  const closeMinutes = hours.closeHour * 60;
 
-  for (let hour = BOOKING_OPEN_HOUR; hour < BOOKING_CLOSE_HOUR; hour++) {
-    for (const minute of [0, 30]) {
-      if (hour === BOOKING_CLOSE_HOUR - 1 && minute === 30) {
-        continue;
-      }
-      const iso = istSlotIso(date, hour, minute);
-      const label = new Date(iso).toLocaleTimeString("en-IN", {
-        hour: "numeric",
-        minute: "2-digit",
-        timeZone: SALON_TIMEZONE,
-      });
-      slots.push({ label, iso });
-    }
+  for (
+    let totalMinutes = openMinutes;
+    totalMinutes < closeMinutes;
+    totalMinutes += BOOKING_SLOT_MINUTES
+  ) {
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = totalMinutes % 60;
+    const iso = istSlotIso(date, hour, minute);
+    const label = new Date(iso).toLocaleTimeString("en-IN", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: SALON_TIMEZONE,
+    });
+    slots.push({ label, iso });
   }
 
   return slots;
@@ -52,18 +66,21 @@ export function isSlotAvailable(params: {
   slotIso: string;
   durationMins: number;
   busyStarts: string[];
+  closeHour?: number;
   now?: Date;
 }): boolean {
   const now = params.now ?? new Date();
   const slotStart = new Date(params.slotIso).getTime();
   const slotEnd = slotStart + params.durationMins * 60_000;
+  const closeHour = params.closeHour ?? BOOKING_CLOSE_HOUR;
 
   if (slotStart <= now.getTime()) {
     return false;
   }
 
-  const closeMs =
-    new Date(istSlotIso(params.slotIso.slice(0, 10), BOOKING_CLOSE_HOUR, 0)).getTime();
+  const closeMs = new Date(
+    istSlotIso(params.slotIso.slice(0, 10), closeHour, 0)
+  ).getTime();
   if (slotEnd > closeMs) {
     return false;
   }

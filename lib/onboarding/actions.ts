@@ -6,6 +6,7 @@ import {
   markOnboardingComplete,
 } from "@/lib/onboarding/status";
 import { withOnboardingSkip } from "@/lib/onboarding/skips";
+import { enrichOpeningHours } from "@/lib/booking/opening-hours";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -57,9 +58,7 @@ export async function createBusiness(formData: FormData) {
     redirect("/onboarding/branch");
   }
 
-  const opening_hours = openingHoursNote
-    ? { display: openingHoursNote }
-    : {};
+  const opening_hours = enrichOpeningHours(openingHoursNote);
 
   const { data: createdBusiness, error } = await supabase
     .from("businesses")

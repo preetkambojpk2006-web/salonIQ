@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { publicBookingErrorMessage } from "@/lib/booking/errors";
 import {
+  formatBookingHoursLabel,
+  parseOpeningHoursForBooking,
+} from "@/lib/booking/opening-hours";
+import {
   generateDaySlots,
   isSlotAvailable,
   maxBookingDateIso,
@@ -108,6 +112,10 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
         ...raw,
         services: Array.isArray(raw.services) ? raw.services : [],
         staff: Array.isArray(raw.staff) ? raw.staff : [],
+        opening_hours:
+          raw.opening_hours && typeof raw.opening_hours === "object"
+            ? (raw.opening_hours as Record<string, unknown>)
+            : null,
       };
       setContext(bookingContext);
       setSelectedService(bookingContext.services[0] ?? null);
@@ -160,16 +168,27 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
     };
   }, [slug, selectedStaff, date]);
 
+  const bookingHours = useMemo(
+    () =>
+      parseOpeningHoursForBooking(
+        context?.opening_hours ?? {
+          display: context?.opening_hours_display ?? "",
+        }
+      ),
+    [context?.opening_hours, context?.opening_hours_display]
+  );
+
   const availableSlots = useMemo(() => {
     if (!selectedService) return [];
-    return generateDaySlots(date).filter((slot) =>
+    return generateDaySlots(date, bookingHours).filter((slot) =>
       isSlotAvailable({
         slotIso: slot.iso,
         durationMins: selectedService.duration_mins,
         busyStarts,
+        closeHour: bookingHours.closeHour,
       })
     );
-  }, [date, selectedService, busyStarts]);
+  }, [date, selectedService, busyStarts, bookingHours]);
 
   const handleSubmit = useCallback(async () => {
     if (!selectedService || !selectedStaff || !selectedSlot) {
@@ -314,11 +333,11 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
           </h1>
           {context.opening_hours_display ? (
             <p style={{ margin: "8px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
-              {context.opening_hours_display} · Slots 10am–8pm
+              {context.opening_hours_display} · {formatBookingHoursLabel(bookingHours)}
             </p>
           ) : (
             <p style={{ margin: "8px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
-              Slots 10am–8pm (IST)
+              {formatBookingHoursLabel(bookingHours)}
             </p>
           )}
         </header>
