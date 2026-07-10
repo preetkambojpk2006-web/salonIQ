@@ -224,8 +224,8 @@ function CalendarDayGridInner({
                   left: 8,
                   right: 8,
                   top: layout.topPx + 4,
-                  height: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
-                  maxHeight: gridHeightPx - layout.topPx - 4,
+                  minHeight: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
+                  height: "auto",
                   zIndex: 1,
                   overflow: "visible",
                 }}

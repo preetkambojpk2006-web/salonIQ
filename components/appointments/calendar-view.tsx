@@ -364,7 +364,10 @@ function AppointmentActions({
   }
 
   return (
-    <div style={{ display: "grid", gap: 6 }}>
+    <div
+      className={compact ? "calendar-booking-card-actions" : undefined}
+      style={{ display: "grid", gap: 6 }}
+    >
       <AppointmentSourceTag appointment={appointment} />
       <div className="flex flex-wrap gap-1.5 items-start">
       {appointment.status === "pending" ? (
@@ -453,7 +456,9 @@ const AppointmentBlock = memo(function AppointmentBlock({
     const isCompleted = appointment.status === "completed";
 
     return (
-      <div className="calendar-booking-card">
+      <div
+        className={`calendar-booking-card${isCompleted ? " is-completed" : " is-open"}`}
+      >
         {shouldShowReliabilityAlert(appointment) &&
         appointment.customer_reliability ? (
           <ReliabilityAlert reliability={appointment.customer_reliability} />
@@ -463,10 +468,10 @@ const AppointmentBlock = memo(function AppointmentBlock({
         >
           <button
             type="button"
-            className="booking-block"
+            className="booking-block calendar-booking-card-details"
             style={{
               ...openDetailButtonStyle,
-              height: gridOptions ? "100%" : undefined,
+              height: isCompleted && gridOptions ? "100%" : undefined,
               display: "grid",
               alignContent: "start",
               gap: 4,
@@ -474,25 +479,23 @@ const AppointmentBlock = memo(function AppointmentBlock({
             onClick={onOpenDetail}
             aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
           >
-            {gridOptions ? (
-              gridOptions.showTimes ? (
-                <>
-                  <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
-                    {blockTitle(appointment)}
-                  </strong>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#8A8A8A" }}>
-                    {gridOptions.timeLabel}
-                  </span>
-                </>
-              ) : (
-                <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
-                  {gridOptions.serviceLabel}
-                </strong>
-              )
-            ) : (
+            {isCompleted && gridOptions && !gridOptions.showTimes ? (
               <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
-                {blockTitle(appointment)}
+                {gridOptions.serviceLabel}
               </strong>
+            ) : (
+              <>
+                <strong style={{ display: "block", lineHeight: 1.3, minWidth: 0 }}>
+                  {appointment.customer_name ?? "Walk-in"}
+                </strong>
+                <span className="calendar-booking-meta">
+                  {appointment.service_name ?? "Service"}
+                </span>
+                <span className="calendar-booking-meta">
+                  {gridOptions?.timeLabel ??
+                    formatTime12h(appointment.start_time)}
+                </span>
+              </>
             )}
           </button>
           {isCompleted ? (

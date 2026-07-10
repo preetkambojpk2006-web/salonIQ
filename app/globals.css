@@ -1972,6 +1972,11 @@
     min-height: 0;
   }
 
+  .calendar-booking-card.is-open {
+    height: auto;
+    min-height: 100%;
+  }
+
   .calendar-booking-card-body {
     position: relative;
     flex: 1;
@@ -1980,11 +1985,37 @@
     border-radius: 16px;
   }
 
+  .calendar-booking-card.is-open .calendar-booking-card-body {
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+
   .calendar-booking-card-body .booking-block {
     height: 100%;
     width: 100%;
     border-radius: 16px;
     box-sizing: border-box;
+  }
+
+  .calendar-booking-card.is-open .calendar-booking-card-body .booking-block {
+    height: auto;
+  }
+
+  .calendar-booking-card-details {
+    flex-shrink: 0;
+  }
+
+  .calendar-booking-meta {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8a8a8a;
+    line-height: 1.3;
+    min-width: 0;
+  }
+
+  .calendar-booking-card-actions {
+    flex-shrink: 0;
   }
 
   .calendar-booking-card-body.is-completed .booking-block {
