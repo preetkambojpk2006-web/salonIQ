@@ -25,12 +25,12 @@ const SLOT_HEIGHT_PX = 74;
 const GRID_START_HOUR = TIME_SLOTS[0]?.hour ?? 10;
 const GRID_BOTTOM_PADDING_PX = 20;
 const MIN_BLOCK_HEIGHT_PX = SLOT_HEIGHT_PX / 2;
-const SHORT_BLOCK_HEIGHT_PX = MIN_BLOCK_HEIGHT_PX;
+const GRID_ACTIONS_MIN_HEIGHT_PX = 88;
 
 export type GridBlockOptions = {
-  showTimes: boolean;
   timeLabel: string;
-  serviceLabel: string;
+  heightPx: number;
+  showCardActions: boolean;
 };
 
 function staffLabel(appointment: Appointment): string {
@@ -87,16 +87,15 @@ function blockLayout(appointment: Appointment): {
     new Date(appointment.start_time),
     appointment.end_time ? new Date(appointment.end_time) : null
   );
-  const showTimes = heightPx > SHORT_BLOCK_HEIGHT_PX;
-  const serviceLabel = appointment.service_name?.trim() || "Service";
+  const showCardActions = heightPx >= GRID_ACTIONS_MIN_HEIGHT_PX;
 
   return {
     topPx: Math.max(0, topPx),
     heightPx,
     gridOptions: {
-      showTimes,
       timeLabel: `${formatTime12hInSalon(appointment.start_time)} – ${formatTime12hInSalon(end.toISOString())}`,
-      serviceLabel,
+      heightPx,
+      showCardActions,
     },
   };
 }
@@ -219,15 +218,10 @@ function CalendarDayGridInner({
             return (
               <div
                 key={appointment.id}
+                className="cal-grid-slot"
                 style={{
-                  position: "absolute",
-                  left: 8,
-                  right: 8,
                   top: layout.topPx + 4,
-                  minHeight: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
-                  height: "auto",
-                  zIndex: 1,
-                  overflow: "visible",
+                  height: Math.max(MIN_BLOCK_HEIGHT_PX, layout.heightPx - 8),
                 }}
               >
                 {renderBlock(
