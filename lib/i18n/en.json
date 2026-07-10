@@ -392,6 +392,7 @@
   "branches.noBranches": "No branches yet",
   "branches.noBranchesDesc": "Update salon details in Settings. Option to add new branches coming soon.",
   "branches.openSettings": "Open Settings",
+  "branches.limitReached": "You have reached your branch limit. Contact us to upgrade your plan.",
   "services.completeOnboarding": "Complete onboarding first — then you can manage services and staff here.",
   "services.setupTitle": "Finish salon setup",
   "services.setupAction": "Continue onboarding",

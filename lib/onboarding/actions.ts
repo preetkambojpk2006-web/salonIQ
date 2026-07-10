@@ -3,6 +3,10 @@
 import { getAuthenticatedLandingPath } from "@/lib/auth/business-approval";
 import { maybeAutoApproveForDemo } from "@/lib/auth/demo-autoapprove";
 import {
+  BRANCH_LIMIT_ERROR_CODE,
+  checkBranchCreationAllowed,
+} from "@/lib/branches/limit";
+import {
   markOnboardingComplete,
 } from "@/lib/onboarding/status";
 import { withOnboardingSkip } from "@/lib/onboarding/skips";
@@ -124,13 +128,11 @@ export async function createBranch(formData: FormData) {
     redirect("/onboarding/branch?error=Please enter a branch name");
   }
 
-  const { count } = await supabase
-    .from("branches")
-    .select("id", { count: "exact", head: true })
-    .eq("business_id", business.id);
-
-  if (count && count > 0) {
-    redirect("/onboarding/staff");
+  const limitCheck = await checkBranchCreationAllowed(supabase, business.id);
+  if (!limitCheck.ok) {
+    redirect(
+      `/onboarding/branch?error=${encodeURIComponent(BRANCH_LIMIT_ERROR_CODE)}`
+    );
   }
 
   const { error } = await supabase.from("branches").insert({

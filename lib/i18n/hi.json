@@ -392,6 +392,7 @@
   "branches.noBranches": "Abhi koi branch nahi hai",
   "branches.noBranchesDesc": "Settings se salon details update karein. Nayi branch add karne ke liye hum jald option denge.",
   "branches.openSettings": "Settings kholo",
+  "branches.limitReached": "Aapki branch limit poori ho gayi hai. Plan upgrade ke liye humse contact karein.",
   "services.completeOnboarding": "Pehle onboarding complete karein — phir services aur staff yahan manage kar sakte ho.",
   "services.setupTitle": "Salon setup complete karein",
   "services.setupAction": "Onboarding continue karein",
