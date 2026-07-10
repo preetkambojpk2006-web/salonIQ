@@ -6,7 +6,9 @@ import {
   getActiveStaff,
   getBusinessLateFineAmount,
   getMonthAttendance,
+  getMonthAttendanceRecords,
   getTodayAttendance,
+  getWeekAttendanceRecords,
   getIstDateParts,
 } from "@/lib/attendance/queries";
 import { redirect } from "next/navigation";
@@ -27,12 +29,16 @@ export default async function AttendancePage() {
   const businessId = membership.businessId;
   const { year, month } = currentIstYearMonth();
 
-  const [staff, todayAttendance, monthData, lateFineAmount] = await Promise.all([
-    getActiveStaff(businessId),
-    getTodayAttendance(businessId),
-    getMonthAttendance(businessId, year, month),
-    getBusinessLateFineAmount(businessId),
-  ]);
+  const [staff, todayAttendance, weekRecords, monthRecords, lateFineAmount] =
+    await Promise.all([
+      getActiveStaff(businessId),
+      getTodayAttendance(businessId),
+      getWeekAttendanceRecords(businessId),
+      getMonthAttendanceRecords(businessId),
+      getBusinessLateFineAmount(businessId),
+    ]);
+
+  const monthData = await getMonthAttendance(businessId, year, month, staff);
 
   const { formatted: todayDate, weekdayLabel: todayWeekday } = getIstDateParts();
 
@@ -42,6 +48,8 @@ export default async function AttendancePage() {
       staff={staff}
       todayAttendance={todayAttendance}
       monthSummaries={monthData.summaries}
+      weekRecords={weekRecords}
+      monthRecords={monthRecords}
       totalOutstandingFines={monthData.totalOutstandingFines}
       todayDate={todayDate}
       todayWeekday={todayWeekday}

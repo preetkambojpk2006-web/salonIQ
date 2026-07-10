@@ -1,14 +1,18 @@
 "use server";
 
 import {
-  getUserMembership,
-  isOwnerOrAdmin,
-} from "@/lib/auth/membership";
-import { markAttendance as markAttendanceDb } from "@/lib/attendance/queries";
+  checkInStaffAttendance,
+  correctStaffAttendanceStatus,
+  markStaffAbsentAttendance,
+} from "@/lib/attendance/queries";
 import type {
   AttendanceStatus,
   MarkAttendanceResult,
 } from "@/lib/attendance/types";
+import {
+  getUserMembership,
+  isOwnerOrAdmin,
+} from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -29,33 +33,91 @@ async function requireOwnerOrAdmin(): Promise<
   if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
     return {
       ok: false,
-      error: "Sirf owner ya admin attendance mark kar sakte hain.",
+      error: "Only owner or admin can manage attendance.",
     };
   }
 
   return { ok: true, businessId: membership.businessId };
 }
 
-export async function markStaffAttendance(
+function parseLateFineAmount(formData: FormData): number | undefined {
+  const lateFineRaw = (formData.get("late_fine_amount") as string)?.trim();
+  return lateFineRaw && Number.isFinite(Number(lateFineRaw))
+    ? Number(lateFineRaw)
+    : undefined;
+}
+
+function parseStaffForm(formData: FormData): {
+  staffId: string;
+  staffName: string;
+} | { error: string } {
+  const staffId = (formData.get("staff_id") as string)?.trim();
+  const staffName = (formData.get("staff_name") as string)?.trim();
+
+  if (!staffId || !staffName) {
+    return { error: "Staff info missing." };
+  }
+
+  return { staffId, staffName };
+}
+
+async function revalidateAttendance(result: MarkAttendanceResult) {
+  if (result.ok) {
+    revalidatePath("/dashboard/attendance");
+  }
+  return result;
+}
+
+/** Server-time check-in — ignores any client date/time. */
+export async function checkInStaff(
   formData: FormData
 ): Promise<MarkAttendanceResult> {
   const access = await requireOwnerOrAdmin();
   if (!access.ok) return access;
 
-  const staffId = (formData.get("staff_id") as string)?.trim();
-  const staffName = (formData.get("staff_name") as string)?.trim();
+  const staff = parseStaffForm(formData);
+  if ("error" in staff) return { ok: false, error: staff.error };
+
+  return revalidateAttendance(
+    await checkInStaffAttendance({
+      businessId: access.businessId,
+      staffId: staff.staffId,
+      staffName: staff.staffName,
+      lateFineAmount: parseLateFineAmount(formData),
+    })
+  );
+}
+
+export async function markStaffAbsent(
+  formData: FormData
+): Promise<MarkAttendanceResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  const staff = parseStaffForm(formData);
+  if ("error" in staff) return { ok: false, error: staff.error };
+
+  return revalidateAttendance(
+    await markStaffAbsentAttendance({
+      businessId: access.businessId,
+      staffId: staff.staffId,
+      staffName: staff.staffName,
+      lateFineAmount: parseLateFineAmount(formData),
+    })
+  );
+}
+
+/** Owner correction — status only, check-in time unchanged. */
+export async function correctStaffAttendance(
+  formData: FormData
+): Promise<MarkAttendanceResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  const staff = parseStaffForm(formData);
+  if ("error" in staff) return { ok: false, error: staff.error };
+
   const statusRaw = (formData.get("status") as string)?.trim();
-  const date = (formData.get("date") as string)?.trim() || undefined;
-  const lateFineRaw = (formData.get("late_fine_amount") as string)?.trim();
-  const lateFineAmount =
-    lateFineRaw && Number.isFinite(Number(lateFineRaw))
-      ? Number(lateFineRaw)
-      : undefined;
-
-  if (!staffId || !staffName) {
-    return { ok: false, error: "Staff info missing." };
-  }
-
   if (
     statusRaw !== "present" &&
     statusRaw !== "absent" &&
@@ -66,18 +128,13 @@ export async function markStaffAttendance(
 
   const status = statusRaw as AttendanceStatus;
 
-  const result = await markAttendanceDb({
-    businessId: access.businessId,
-    staffId,
-    staffName,
-    date,
-    status,
-    lateFineAmount,
-  });
-
-  if (result.ok) {
-    revalidatePath("/dashboard/attendance");
-  }
-
-  return result;
+  return revalidateAttendance(
+    await correctStaffAttendanceStatus({
+      businessId: access.businessId,
+      staffId: staff.staffId,
+      staffName: staff.staffName,
+      status,
+      lateFineAmount: parseLateFineAmount(formData),
+    })
+  );
 }
