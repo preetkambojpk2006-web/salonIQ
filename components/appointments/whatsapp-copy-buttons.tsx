@@ -14,6 +14,7 @@ type WhatsAppCopyButtonsProps = {
   businessName: string;
   onCopied: () => void;
   compact?: boolean;
+  menuPlacement?: "top" | "bottom";
 };
 
 async function copyText(text: string): Promise<boolean> {
@@ -29,6 +30,8 @@ export function WhatsAppCopyButtons({
   appointment,
   businessName,
   onCopied,
+  compact = false,
+  menuPlacement = "bottom",
 }: WhatsAppCopyButtonsProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -62,7 +65,7 @@ export function WhatsAppCopyButtons({
     <div ref={rootRef} className="wa-copy-menu">
       <button
         type="button"
-        className="wa-copy-menu-trigger"
+        className={`wa-copy-menu-trigger${compact ? " is-compact" : ""}`}
         aria-label={t("calendar.copyActions")}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -74,7 +77,10 @@ export function WhatsAppCopyButtons({
         <MoreHorizontal size={16} strokeWidth={1.5} aria-hidden />
       </button>
       {open ? (
-        <div className="wa-copy-menu-panel" role="menu">
+        <div
+          className={`wa-copy-menu-panel${menuPlacement === "top" ? " is-above" : ""}`}
+          role="menu"
+        >
           <button
             type="button"
             role="menuitem"

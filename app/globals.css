@@ -1964,6 +1964,65 @@
     letter-spacing: 0.01em;
   }
 
+  .calendar-booking-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .calendar-booking-card-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: visible;
+    border-radius: 16px;
+  }
+
+  .calendar-booking-card-body .booking-block {
+    height: 100%;
+    width: 100%;
+    border-radius: 16px;
+    box-sizing: border-box;
+  }
+
+  .calendar-booking-card-body.is-completed .booking-block {
+    padding-right: 76px;
+  }
+
+  .calendar-booking-corner {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100% - 12px);
+    pointer-events: none;
+  }
+
+  .calendar-booking-corner > * {
+    pointer-events: auto;
+  }
+
+  .appointment-row-content {
+    position: relative;
+    min-width: 0;
+    overflow: visible;
+    border-radius: 16px;
+  }
+
+  .appointment-row-content.is-completed button {
+    padding-right: 76px;
+  }
+
+  .appointment-row-content .calendar-booking-corner {
+    top: 8px;
+    right: 8px;
+  }
+
   .calendar-payment-pending-badge {
     display: inline-flex;
     align-items: center;
@@ -2009,6 +2068,12 @@
     transform: scale(0.98);
   }
 
+  .wa-copy-menu-trigger.is-compact {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
   .wa-copy-menu-panel {
     position: absolute;
     top: calc(100% + 4px);
@@ -2020,6 +2085,11 @@
     border-radius: 16px;
     background: #f9f8f3;
     box-shadow: var(--shadow);
+  }
+
+  .wa-copy-menu-panel.is-above {
+    top: auto;
+    bottom: calc(100% + 4px);
   }
 
   .wa-copy-menu-item {
