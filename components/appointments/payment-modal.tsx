@@ -155,7 +155,10 @@ export function PaymentModal({
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
 
-        <VibeCard notes={appointment.customer_notes} />
+        <VibeCard
+          notes={appointment.notes}
+          customerNotes={appointment.customer_notes}
+        />
 
         <div className="payment-modal-header">
           <div style={{ minWidth: 0, flex: 1 }}>

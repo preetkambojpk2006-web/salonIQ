@@ -124,7 +124,10 @@ export function AppointmentDetailModal({
           <ReliabilityAlert reliability={appointment.customer_reliability} />
         ) : null}
 
-        <VibeCard notes={appointment.customer_notes} />
+        <VibeCard
+          notes={appointment.notes}
+          customerNotes={appointment.customer_notes}
+        />
 
         {canEditTime &&
         onEditTime &&

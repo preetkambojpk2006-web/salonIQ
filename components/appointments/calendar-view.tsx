@@ -652,6 +652,31 @@ export function CalendarView({
     setDetailAppointment(appointment);
   }, []);
 
+  // Keep the open detail modal in sync with realtime/optimistic updates.
+  const liveDetailAppointment = useMemo(() => {
+    if (!detailAppointment) return null;
+    return (
+      mergedAppointments.find((row) => row.id === detailAppointment.id) ??
+      detailAppointment
+    );
+  }, [detailAppointment, mergedAppointments]);
+
+  // Close the modal gracefully if the appointment disappears or gets
+  // cancelled by an external update while it is open.
+  useEffect(() => {
+    if (!detailAppointment) return;
+    const live = mergedAppointments.find(
+      (row) => row.id === detailAppointment.id
+    );
+    if (!live) {
+      setDetailAppointment(null);
+      return;
+    }
+    if (live.status === "cancelled" && detailAppointment.status !== "cancelled") {
+      setDetailAppointment(null);
+    }
+  }, [detailAppointment, mergedAppointments]);
+
   const handleCompletePay = useCallback((appointment: Appointment) => {
     setDetailAppointment(null);
     setPayAppointment(appointment);
@@ -893,38 +918,44 @@ export function CalendarView({
                 <OnlinePendingRequests appointments={localOnlinePending} />
               ) : null}
 
-              {grouped.map(([key, dayAppointments]) => (
-                <div key={key}>
-                  <p className="eyebrow" style={{ marginBottom: 12 }}>
-                    {formatDateHeading(dayAppointments[0].start_time, t)}
-                    {viewMode === "month"
-                      ? ` — ${dayAppointments.length} ${
-                          dayAppointments.length === 1 ? "booking" : "bookings"
-                        }`
-                      : null}
-                  </p>
-                  <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
-                    {dayAppointments
-                      .filter((appointment) => !onlinePendingIds.has(appointment.id))
-                      .map((appointment) => (
-                      <AppointmentBlock
-                        key={appointment.id}
-                        appointment={appointment}
-                        onOpenDetail={() => handleOpenDetail(appointment)}
-                      />
-                    ))}
-                  </div>
-                  {viewMode !== "month" ? (
-                    <div className="hidden desktop:block">
-                      <CalendarDayGrid
-                        dayAppointments={dayAppointments}
-                        onCompletePay={handleCompletePay}
-                        renderBlock={renderGridBlock}
-                      />
+              {grouped.map(([key, dayAppointments]) => {
+                // Online-pending bookings live in the OnlinePendingRequests
+                // panel only — keep them out of both the list and the grid.
+                const staffDayAppointments = dayAppointments.filter(
+                  (appointment) => !onlinePendingIds.has(appointment.id)
+                );
+
+                return (
+                  <div key={key}>
+                    <p className="eyebrow" style={{ marginBottom: 12 }}>
+                      {formatDateHeading(dayAppointments[0].start_time, t)}
+                      {viewMode === "month"
+                        ? ` — ${dayAppointments.length} ${
+                            dayAppointments.length === 1 ? "booking" : "bookings"
+                          }`
+                        : null}
+                    </p>
+                    <div className="appointment-list stagger-list" style={{ marginBottom: 16 }}>
+                      {staffDayAppointments.map((appointment) => (
+                        <AppointmentBlock
+                          key={appointment.id}
+                          appointment={appointment}
+                          onOpenDetail={() => handleOpenDetail(appointment)}
+                        />
+                      ))}
                     </div>
-                  ) : null}
-                </div>
-              ))}
+                    {viewMode !== "month" && staffDayAppointments.length > 0 ? (
+                      <div className="hidden desktop:block">
+                        <CalendarDayGrid
+                          dayAppointments={staffDayAppointments}
+                          onCompletePay={handleCompletePay}
+                          renderBlock={renderGridBlock}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
@@ -934,18 +965,18 @@ export function CalendarView({
         <NewBookingForm onClose={closeForm} error={openBooking ? error : undefined} />
       ) : null}
 
-      {detailAppointment ? (
+      {liveDetailAppointment ? (
         <AppointmentDetailModal
-          appointment={detailAppointment}
+          appointment={liveDetailAppointment}
           businessName={businessName}
           canEditTime={canEditAppointmentTime}
           onEditTime={handleOpenEditTime}
           onClose={() => setDetailAppointment(null)}
           actions={
             <AppointmentActions
-              appointment={detailAppointment}
+              appointment={liveDetailAppointment}
               businessName={businessName}
-              onCompletePay={() => handleCompletePay(detailAppointment)}
+              onCompletePay={() => handleCompletePay(liveDetailAppointment)}
               onCopied={handleCopied}
               canManageFinance={canManageFinance}
             />

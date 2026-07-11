@@ -4,13 +4,22 @@ import { Sparkles } from "lucide-react";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type VibeCardProps = {
+  /** Booking-time notes (appointments.notes). */
   notes: string | null | undefined;
+  /** Customer profile notes (customers.notes join). */
+  customerNotes?: string | null;
 };
 
-export function VibeCard({ notes }: VibeCardProps) {
+export function VibeCard({ notes, customerNotes }: VibeCardProps) {
   const { t } = useT();
-  const trimmed = notes?.trim();
-  if (!trimmed) return null;
+  const bookingNote = notes?.trim();
+  const customerNote = customerNotes?.trim();
+  // Skip the duplicate line if both fields carry the same text.
+  const lines = [bookingNote, customerNote].filter(
+    (line, index, all): line is string =>
+      Boolean(line) && all.indexOf(line) === index
+  );
+  if (lines.length === 0) return null;
 
   return (
     <div
@@ -37,16 +46,19 @@ export function VibeCard({ notes }: VibeCardProps) {
         <Sparkles size={13} strokeWidth={2.25} aria-hidden />
         {t("customers.vibeLabel")}
       </p>
-      <p
-        style={{
-          margin: "8px 0 0",
-          fontSize: 14,
-          color: "#1A1A1A",
-          lineHeight: 1.5,
-        }}
-      >
-        {trimmed}
-      </p>
+      {lines.map((line) => (
+        <p
+          key={line}
+          style={{
+            margin: "8px 0 0",
+            fontSize: 14,
+            color: "#1A1A1A",
+            lineHeight: 1.5,
+          }}
+        >
+          {line}
+        </p>
+      ))}
     </div>
   );
 }

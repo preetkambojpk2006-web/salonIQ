@@ -29,6 +29,7 @@ export function MessageActions({
   const [copyToast, setCopyToast] = useState(false);
   const resolvedCopyLabel = copyLabel ?? t("whatsapp.copyMessage");
   const resolvedSendLabel = sendLabel ?? t("whatsapp.sendWhatsApp");
+  const hasPhone = Boolean(phone?.trim());
 
   const handleCopy = useCallback(async () => {
     try {
@@ -58,11 +59,18 @@ export function MessageActions({
         <button
           type="button"
           onClick={handleSend}
+          disabled={!hasPhone}
           className={`${BTN_BASE} border-0 bg-[#1FA873] text-white hover:brightness-105`}
         >
           {resolvedSendLabel}
         </button>
       </div>
+
+      {!hasPhone ? (
+        <p className="mt-2 mb-0 text-[13px] font-semibold text-[#8A8A8A]">
+          {t("whatsapp.noPhone")}
+        </p>
+      ) : null}
 
       <Toast
         message={t("whatsapp.messageCopied")}
