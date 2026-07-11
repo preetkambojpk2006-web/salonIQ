@@ -54,6 +54,7 @@ export default async function SettingsPage() {
     gst_inclusive?: boolean;
     online_booking_enabled?: boolean;
     review_prompt_enabled?: boolean;
+    review_filter_enabled?: boolean;
     google_review_url?: string | null;
     instagram_prompt_enabled?: boolean;
     instagram_url?: string | null;
@@ -122,6 +123,9 @@ export default async function SettingsPage() {
         <ReviewsSocialSettingsPanel
           initialReviewPromptEnabled={
             businessWithExtras?.review_prompt_enabled ?? false
+          }
+          initialReviewFilterEnabled={
+            businessWithExtras?.review_filter_enabled !== false
           }
           initialGoogleReviewUrl={
             businessWithExtras?.google_review_url ??

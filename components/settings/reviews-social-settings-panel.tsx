@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n/LanguageContext";
 
 type ReviewsSocialSettingsPanelProps = {
   initialReviewPromptEnabled?: boolean;
+  initialReviewFilterEnabled?: boolean;
   initialGoogleReviewUrl?: string;
   initialInstagramPromptEnabled?: boolean;
   initialInstagramUrl?: string;
@@ -57,6 +58,7 @@ function SettingsToggle({
 
 export function ReviewsSocialSettingsPanel({
   initialReviewPromptEnabled = false,
+  initialReviewFilterEnabled = true,
   initialGoogleReviewUrl = "",
   initialInstagramPromptEnabled = false,
   initialInstagramUrl = "",
@@ -65,6 +67,9 @@ export function ReviewsSocialSettingsPanel({
   const router = useRouter();
   const [reviewPromptEnabled, setReviewPromptEnabled] = useState(
     initialReviewPromptEnabled
+  );
+  const [reviewFilterEnabled, setReviewFilterEnabled] = useState(
+    initialReviewFilterEnabled
   );
   const [googleReviewUrl, setGoogleReviewUrl] = useState(initialGoogleReviewUrl);
   const [instagramPromptEnabled, setInstagramPromptEnabled] = useState(
@@ -80,11 +85,13 @@ export function ReviewsSocialSettingsPanel({
 
   useEffect(() => {
     setReviewPromptEnabled(initialReviewPromptEnabled);
+    setReviewFilterEnabled(initialReviewFilterEnabled);
     setGoogleReviewUrl(initialGoogleReviewUrl);
     setInstagramPromptEnabled(initialInstagramPromptEnabled);
     setInstagramUrl(initialInstagramUrl);
   }, [
     initialReviewPromptEnabled,
+    initialReviewFilterEnabled,
     initialGoogleReviewUrl,
     initialInstagramPromptEnabled,
     initialInstagramUrl,
@@ -97,6 +104,10 @@ export function ReviewsSocialSettingsPanel({
     formData.set(
       "review_prompt_enabled",
       reviewPromptEnabled ? "true" : "false"
+    );
+    formData.set(
+      "review_filter_enabled",
+      reviewFilterEnabled ? "true" : "false"
     );
     formData.set("google_review_url", googleReviewUrl);
     formData.set(
@@ -166,6 +177,23 @@ export function ReviewsSocialSettingsPanel({
               style={{ borderRadius: 10, borderColor: "#E0DAD0" }}
             />
           </div>
+
+          {reviewPromptEnabled ? (
+            <>
+              <SettingsToggle
+                id="review-filter-enabled"
+                label={t("settings.reviewFilterEnable")}
+                checked={reviewFilterEnabled}
+                onChange={setReviewFilterEnabled}
+              />
+              <p
+                className="text-body"
+                style={{ margin: 0, fontSize: 13, color: "#8A8A8A", lineHeight: 1.45 }}
+              >
+                {t("settings.reviewFilterHelp")}
+              </p>
+            </>
+          ) : null}
 
           <SettingsToggle
             id="instagram-prompt-enabled"

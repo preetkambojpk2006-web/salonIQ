@@ -36,6 +36,70 @@ function invoiceNumberFromId(id: string): string {
   return id.replace(/-/g, "").slice(-8).toUpperCase();
 }
 
+function StarRating({
+  value,
+  onChange,
+  label,
+}: {
+  value: number | null;
+  onChange: (rating: number) => void;
+  label: string;
+}) {
+  return (
+    <div>
+      <p
+        style={{
+          margin: "0 0 10px",
+          fontSize: 13,
+          fontWeight: 600,
+          color: "#8A8A8A",
+        }}
+      >
+        {label}
+      </p>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        {[1, 2, 3, 4, 5].map((rating) => {
+          const selected = value !== null && rating <= value;
+
+          return (
+            <button
+              key={rating}
+              type="button"
+              aria-label={`${rating} star${rating === 1 ? "" : "s"}`}
+              onClick={() => onChange(rating)}
+              style={{
+                display: "grid",
+                placeItems: "center",
+                minWidth: 44,
+                minHeight: 44,
+                padding: 0,
+                border: 0,
+                borderRadius: 10,
+                background: "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <Star
+                size={16}
+                strokeWidth={1.5}
+                fill={selected ? "#1FA873" : "none"}
+                color={selected ? "#1FA873" : "#8A8A8A"}
+                aria-hidden
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function PaymentWhatsAppModal({
   appointment,
   businessName,
@@ -47,11 +111,13 @@ export function PaymentWhatsAppModal({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { t } = useT();
   const [showInvoice, setShowInvoice] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const reviewLink = googleReviewLink?.trim() ?? "";
 
   const social = reviewsSocial ?? {
     reviewPromptEnabled: false,
     googleReviewUrl: null,
+    reviewFilterEnabled: true,
     instagramPromptEnabled: false,
     instagramUrl: null,
   };
@@ -59,6 +125,18 @@ export function PaymentWhatsAppModal({
   const showGoogleButton = showGoogleReviewPrompt(social);
   const showInstagramButton = showInstagramPrompt(social);
   const showSocialSection = hasReviewsSocialPrompts(social);
+  const useStarFilter =
+    showGoogleButton &&
+    social.reviewFilterEnabled &&
+    Boolean(social.googleReviewUrl?.trim());
+  const showDirectGoogleButton =
+    showGoogleButton &&
+    Boolean(social.googleReviewUrl?.trim()) &&
+    !social.reviewFilterEnabled;
+  const showGoogleAfterHighRating =
+    useStarFilter && selectedRating !== null && selectedRating >= 4;
+  const showLowRatingFollowUp =
+    useStarFilter && selectedRating !== null && selectedRating <= 3;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -88,6 +166,15 @@ export function PaymentWhatsAppModal({
       googleReviewLink: reviewLink,
     });
   }, [appointment.customer_name, businessName, reviewLink]);
+
+  const followUpMessage = useMemo(
+    () =>
+      t("whatsapp.reviewFollowUpMessage", {
+        customerName: appointment.customer_name ?? "Customer",
+        salonName: businessName,
+      }),
+    [appointment.customer_name, businessName, t]
+  );
 
   const phone = appointment.customer_phone ?? "";
 
@@ -211,29 +298,60 @@ export function PaymentWhatsAppModal({
               <div
                 style={{
                   display: "grid",
-                  gap: 8,
+                  gap: 12,
                   marginTop: 12,
                 }}
               >
                 {showGoogleButton && social.googleReviewUrl ? (
-                  <a
-                    href={social.googleReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="payment-btn-mint"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      textDecoration: "none",
-                      borderRadius: 10,
-                    }}
-                  >
-                    <Star size={16} strokeWidth={1.5} aria-hidden />
-                    {t("payment.openGoogleReview")}
-                    <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
-                  </a>
+                  <>
+                    {useStarFilter ? (
+                      <StarRating
+                        value={selectedRating}
+                        onChange={setSelectedRating}
+                        label={t("payment.rateExperience")}
+                      />
+                    ) : null}
+                    {showGoogleAfterHighRating || showDirectGoogleButton ? (
+                      <a
+                        href={social.googleReviewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="payment-btn-mint"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          textDecoration: "none",
+                          borderRadius: 10,
+                        }}
+                      >
+                        <Star size={16} strokeWidth={1.5} aria-hidden />
+                        {t("payment.openGoogleReview")}
+                        <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
+                      </a>
+                    ) : null}
+                    {showLowRatingFollowUp ? (
+                      <div style={{ display: "grid", gap: 10 }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 13,
+                            color: "#8A8A8A",
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {t("payment.reviewFollowUpNote")}
+                        </p>
+                        <MessageActions
+                          phone={phone}
+                          message={followUpMessage}
+                          copyLabel={t("whatsapp.copyMessage")}
+                          sendLabel={t("payment.messageCustomerFollowUp")}
+                        />
+                      </div>
+                    ) : null}
+                  </>
                 ) : null}
                 {showInstagramButton && social.instagramUrl ? (
                   <a

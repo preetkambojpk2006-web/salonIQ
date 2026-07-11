@@ -109,6 +109,7 @@ export async function updateReviewsSocialSettings(
   }
 
   const reviewPromptEnabled = formData.get("review_prompt_enabled") === "true";
+  const reviewFilterEnabled = formData.get("review_filter_enabled") === "true";
   const instagramPromptEnabled =
     formData.get("instagram_prompt_enabled") === "true";
   const googleReviewUrl =
@@ -133,6 +134,7 @@ export async function updateReviewsSocialSettings(
     .from("businesses")
     .update({
       review_prompt_enabled: reviewPromptEnabled,
+      review_filter_enabled: reviewFilterEnabled,
       google_review_url: googleReviewUrl,
       google_review_link: googleReviewUrl,
       instagram_prompt_enabled: instagramPromptEnabled,

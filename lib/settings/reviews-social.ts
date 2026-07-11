@@ -8,6 +8,7 @@ export type ReviewsSocialSettings = {
 export type ReviewsSocialPrompts = {
   reviewPromptEnabled: boolean;
   googleReviewUrl: string | null;
+  reviewFilterEnabled: boolean;
   instagramPromptEnabled: boolean;
   instagramUrl: string | null;
 };
@@ -15,6 +16,7 @@ export type ReviewsSocialPrompts = {
 export function reviewsSocialFromBusiness(
   business: {
     review_prompt_enabled?: boolean | null;
+    review_filter_enabled?: boolean | null;
     google_review_url?: string | null;
     google_review_link?: string | null;
     instagram_prompt_enabled?: boolean | null;
@@ -29,6 +31,7 @@ export function reviewsSocialFromBusiness(
   return {
     reviewPromptEnabled: business?.review_prompt_enabled === true,
     googleReviewUrl,
+    reviewFilterEnabled: business?.review_filter_enabled !== false,
     instagramPromptEnabled: business?.instagram_prompt_enabled === true,
     instagramUrl: business?.instagram_url?.trim() || null,
   };
