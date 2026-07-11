@@ -232,6 +232,7 @@
   "payment.card": "Card",
   "payment.saveError": "Payment save nahi ho payi.",
   "payment.amountRequired": "Payment lene se pehle amount set karein",
+  "payment.amountTooHigh": "Amount maximum limit se zyada hai.",
   "payment.amountLabel": "Rashi",
   "payment.editAmount": "Amount edit karein",
   "payment.commissionWarning": "Payment record ho gayi. Staff commission save nahi hui — Money → Staff se retry karein.",

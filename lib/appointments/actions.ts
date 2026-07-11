@@ -469,6 +469,27 @@ export async function rejectAppointment(formData: FormData) {
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not reject");
 
+  const businessId = await getOwnerBusinessId();
+  const { data: appointment } = businessId
+    ? await supabase
+        .from("appointments")
+        .select("id, business_id, status")
+        .eq("id", appointmentId)
+        .eq("business_id", businessId)
+        .maybeSingle()
+    : { data: null };
+
+  if (!appointment) {
+    redirect("/dashboard/calendar?error=Could not reject");
+  }
+
+  if (appointment.status !== "pending" && appointment.status !== "confirmed") {
+    redirect(
+      "/dashboard/calendar?error=" +
+        encodeURIComponent("Sirf pending ya confirmed booking reject ho sakti hai.")
+    );
+  }
+
   const error = await setAppointmentStatus(appointmentId, "cancelled");
   if (error) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
@@ -489,28 +510,39 @@ export async function markNoShow(formData: FormData) {
   const appointmentId = (formData.get("appointment_id") as string)?.trim();
   if (!appointmentId) redirect("/dashboard/calendar?error=Could not update");
 
-  const { data: appointment } = await supabase
-    .from("appointments")
-    .select("status, customer_id, business_id")
-    .eq("id", appointmentId)
-    .maybeSingle();
+  const businessId = await getOwnerBusinessId();
+  const { data: appointment } = businessId
+    ? await supabase
+        .from("appointments")
+        .select("id, status, customer_id, business_id")
+        .eq("id", appointmentId)
+        .eq("business_id", businessId)
+        .maybeSingle()
+    : { data: null };
 
   if (!appointment) {
     redirect("/dashboard/calendar?error=Could not update");
   }
 
-  if (appointment.status !== "no_show") {
-    const error = await setAppointmentStatus(appointmentId, "no_show");
-    if (error) {
-      redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
-    }
+  if (appointment.status !== "pending" && appointment.status !== "confirmed") {
+    redirect(
+      "/dashboard/calendar?error=" +
+        encodeURIComponent(
+          "Sirf pending ya confirmed booking no-show mark ho sakti hai."
+        )
+    );
+  }
 
-    if (appointment.customer_id) {
-      void incrementCustomerNoShowCount(
-        appointment.customer_id,
-        appointment.business_id
-      );
-    }
+  const error = await setAppointmentStatus(appointmentId, "no_show");
+  if (error) {
+    redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (appointment.customer_id) {
+    void incrementCustomerNoShowCount(
+      appointment.customer_id,
+      appointment.business_id
+    );
   }
 
   revalidatePath("/dashboard/calendar");

@@ -232,6 +232,7 @@
   "payment.card": "Card",
   "payment.saveError": "Could not save payment.",
   "payment.amountRequired": "Set an amount before taking payment",
+  "payment.amountTooHigh": "Amount exceeds maximum allowed value.",
   "payment.amountLabel": "Amount",
   "payment.editAmount": "Edit amount",
   "payment.commissionWarning": "Payment recorded. Staff commission could not be saved — retry from Money → Staff.",

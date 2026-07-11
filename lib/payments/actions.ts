@@ -9,6 +9,9 @@ import { revalidatePath } from "next/cache";
 
 const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending"];
 
+/** Server-side cap on a single payment: ₹10 lakh. */
+const MAX_PAYMENT_AMOUNT = 1_000_000;
+
 export type RecordPaymentResult =
   | { ok: true; commissionWarning?: boolean }
   | { ok: false; error: string };
@@ -84,6 +87,10 @@ export async function recordAppointmentPayment(
 
   if (!Number.isFinite(amount) || amount < 0) {
     return { ok: false, error: "Invalid payment amount." };
+  }
+
+  if (amount > MAX_PAYMENT_AMOUNT) {
+    return { ok: false, error: "Amount exceeds maximum allowed value." };
   }
 
   const isPaid = method === "cash" || method === "upi";
