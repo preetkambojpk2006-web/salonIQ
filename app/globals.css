@@ -1705,12 +1705,11 @@
     border-radius: 10px;
     background: #f9f8f3;
     box-sizing: border-box;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
   }
 
   .payment-modal-amount-control:focus-within {
     border-color: #1fa873;
-    box-shadow: 0 0 0 2px rgba(31, 168, 115, 0.15);
   }
 
   .payment-modal-amount-symbol {
@@ -1727,7 +1726,7 @@
     margin: 0;
     padding: 0;
     border: 0;
-    background: transparent;
+    background: #f9f8f3;
     font-size: 20px;
     font-weight: 700;
     color: #1a1a1a;
@@ -1735,6 +1734,14 @@
     box-shadow: none;
     appearance: textfield;
     -moz-appearance: textfield;
+  }
+
+  .payment-modal-amount-input:focus,
+  .payment-modal-amount-input:focus-visible {
+    border: 0;
+    outline: none;
+    box-shadow: none;
+    background: #f9f8f3;
   }
 
   .payment-modal-amount-input:disabled {
