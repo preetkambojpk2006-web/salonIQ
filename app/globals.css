@@ -726,6 +726,41 @@
     text-align: center;
   }
 
+  .coming-soon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  .coming-soon-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--mint-soft);
+    color: var(--mint);
+  }
+
+  .coming-soon-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #1a1a1a;
+  }
+
+  .coming-soon-subtitle {
+    margin: 0;
+    max-width: 460px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #8a8a8a;
+  }
+
   .two-column,
   .receptionist-layout {
     display: grid;

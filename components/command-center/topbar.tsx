@@ -1,6 +1,7 @@
 "use client";
 
 import type { WorkspaceContext } from "@/lib/command-center/get-workspace";
+import { setSelectedBranchCookie } from "@/lib/command-center/branch-cookie";
 import { getActiveNavId } from "@/lib/command-center/navigation";
 import { useT } from "@/lib/i18n/LanguageContext";
 import { usePathname, useRouter } from "next/navigation";
@@ -35,6 +36,17 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
     return null;
   }
 
+  const showBranchSelect = workspace.branches.length > 1;
+  const selectedBranchId =
+    workspace.selectedBranchId ?? workspace.branches[0]?.id ?? "";
+
+  function handleBranchChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const branchId = event.target.value;
+    if (!branchId || branchId === selectedBranchId) return;
+    setSelectedBranchCookie(branchId);
+    window.location.reload();
+  }
+
   return (
     <header className="topbar">
       <div>
@@ -45,12 +57,13 @@ export function CommandTopbar({ workspace }: CommandTopbarProps) {
       </div>
 
       <div className="topbar-actions">
-        {workspace.branches.length > 0 ? (
+        {showBranchSelect ? (
           <select
             id="branch-select"
             className="branch-select"
             aria-label="Select branch"
-            defaultValue={workspace.branches[0]?.id}
+            value={selectedBranchId}
+            onChange={handleBranchChange}
           >
             {workspace.branches.map((branch) => (
               <option key={branch.id} value={branch.id}>

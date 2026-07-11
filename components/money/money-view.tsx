@@ -88,6 +88,7 @@ export function MoneyView({
   ];
 
   const maxIncome = Math.max(...incomeBars.map((b) => b.value), 1);
+  const hasRealExpenseData = stats.expensesPlaceholder > 0;
   const isEmptySalon =
     stats.revenueToday === 0 &&
     stats.revenueWeek === 0 &&
@@ -110,7 +111,7 @@ export function MoneyView({
     );
   }
 
-  const showProfitBreakdown = stats.revenueWeek > 0;
+  const showProfitBreakdown = stats.revenueWeek > 0 && hasRealExpenseData;
 
   return (
     <div className="view-stack">
@@ -174,6 +175,12 @@ export function MoneyView({
           </div>
         </div>
       </section>
+      ) : stats.revenueWeek > 0 ? (
+        <section className="panel">
+          <div className="coming-soon-card">
+            <p className="coming-soon-subtitle">{t("money.plComingSoon")}</p>
+          </div>
+        </section>
       ) : null}
     </div>
   );
