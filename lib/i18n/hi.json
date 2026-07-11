@@ -301,6 +301,8 @@
   "calendar.title": "Daily staff calendar",
   "calendar.onlinePending": "Online pending ({count})",
   "calendar.onlineConfirm": "Online · Confirm karein",
+  "calendar.online": "Online",
+  "calendar.pending": "Pending",
   "calendar.completePay": "Complete + Pay",
   "calendar.unassigned": "Unassigned",
   "calendar.emptyTitle": "Aaj koi booking nahi",

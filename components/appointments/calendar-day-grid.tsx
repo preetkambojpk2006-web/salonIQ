@@ -28,13 +28,10 @@ const GRID_BOTTOM_PADDING_PX = 20;
 const CARD_MIN_HEIGHT_PX = 64;
 /** Below this block height, merge service + time on one line. */
 const GRID_COMPACT_MAX_HEIGHT_PX = 88;
-/** Block height required before showing inline Complete / No-show actions. */
-const GRID_ACTIONS_MIN_HEIGHT_PX = 112;
 
 export type GridBlockOptions = {
   timeLabel: string;
   heightPx: number;
-  showCardActions: boolean;
   isCompact: boolean;
 };
 
@@ -90,7 +87,6 @@ function blockLayout(appointment: Appointment): {
     new Date(appointment.start_time),
     appointment.end_time ? new Date(appointment.end_time) : null
   );
-  const showCardActions = heightPx >= GRID_ACTIONS_MIN_HEIGHT_PX;
   const isCompact = heightPx < GRID_COMPACT_MAX_HEIGHT_PX;
 
   return {
@@ -99,7 +95,6 @@ function blockLayout(appointment: Appointment): {
     gridOptions: {
       timeLabel: `${formatTime12hInSalon(appointment.start_time)} – ${formatTime12hInSalon(end.toISOString())}`,
       heightPx,
-      showCardActions,
       isCompact,
     },
   };
@@ -219,9 +214,6 @@ function CalendarDayGridInner({
 
           {(appointmentsByStaff.get(name) ?? []).map((appointment) => {
             const layout = blockLayout(appointment);
-            const slotMinHeight = layout.gridOptions.showCardActions
-              ? GRID_ACTIONS_MIN_HEIGHT_PX
-              : CARD_MIN_HEIGHT_PX;
 
             return (
               <div
@@ -229,8 +221,8 @@ function CalendarDayGridInner({
                 className="cal-grid-slot"
                 style={{
                   top: layout.topPx + 4,
-                  minHeight: slotMinHeight,
-                  height: Math.max(slotMinHeight, layout.heightPx - 8),
+                  minHeight: CARD_MIN_HEIGHT_PX,
+                  height: Math.max(CARD_MIN_HEIGHT_PX, layout.heightPx - 8),
                 }}
               >
                 {renderBlock(

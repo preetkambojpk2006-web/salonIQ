@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { AlertTriangle, Ban } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CalendarDayGrid, type GridBlockOptions } from "@/components/appointments/calendar-day-grid";
 import { NewBookingForm } from "@/components/appointments/new-booking-form";
@@ -31,7 +31,6 @@ import {
   isOnlinePendingAppointment,
   mergeAppointments,
 } from "@/lib/appointments/utils";
-import type { CustomerReliability } from "@/lib/customers/types";
 import { formatTime12h } from "@/lib/format/time";
 import { calendarDayInTimezone, SALON_TIMEZONE, todayCalendarDay, mondayOfWeekCalendarDay, addCalendarDays } from "@/lib/payments/date-utils";
 import { useT } from "@/lib/i18n/LanguageContext";
@@ -93,10 +92,6 @@ function hasAnyCustomerPhone(entries: DelayAffectedEntry[]): boolean {
   return entries.some((entry) => Boolean(entry.customer_phone?.trim()));
 }
 
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
-
 function formatDateHeading(
   iso: string,
   t: (key: string) => string
@@ -124,13 +119,6 @@ function formatDateHeading(
 
 function dateKey(iso: string): string {
   return calendarDayInTimezone(iso, SALON_TIMEZONE);
-}
-
-function staffLabel(
-  appointment: Appointment,
-  t: (key: string) => string
-): string {
-  return appointment.staff_name?.trim() || t("calendar.unassigned");
 }
 
 function safeDecodeError(error: string): string {
@@ -163,49 +151,6 @@ function PendingSubmitButton({
     >
       {pending ? (pendingLabel ?? t("common.saving")) : label}
     </button>
-  );
-}
-
-function ReliabilityAlert({
-  reliability,
-}: {
-  reliability: CustomerReliability;
-}) {
-  const { t } = useT();
-  if (reliability === "good") return null;
-
-  const isWarning = reliability === "warning";
-
-  return (
-    <div
-      role="status"
-      style={{
-        width: "100%",
-        marginBottom: 8,
-        padding: "8px 12px",
-        borderRadius: 10,
-        border: `1px solid ${isWarning ? "#C9A96E" : "#D94F4F"}`,
-        background: isWarning ? "#E8D9C0" : "#FCE8E8",
-        fontSize: 13,
-        fontWeight: 600,
-        color: "#1A1A1A",
-        lineHeight: 1.4,
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-      }}
-    >
-      {isWarning ? (
-        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
-      ) : (
-        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
-      )}
-      <span>
-        {isWarning
-          ? t("appointment.reliabilityWarning")
-          : t("appointment.reliabilityBlacklist")}
-      </span>
-    </div>
   );
 }
 
@@ -293,25 +238,55 @@ function PaidStatusBadge({ isPaid }: { isPaid: boolean }) {
   return <span className="cal-pending-badge">{t("status.pending")}</span>;
 }
 
-function CardPendingTag({
-  appointment,
-  compact = false,
-}: {
-  appointment: Appointment;
-  compact?: boolean;
-}) {
+type GridVariant = "completed" | "online" | "upcoming";
+
+function gridVariant(appointment: Appointment): GridVariant {
+  if (
+    appointment.status === "completed" ||
+    appointment.payment_status === "paid"
+  ) {
+    return "completed";
+  }
+  if (isOnlinePendingAppointment(appointment)) {
+    return "online";
+  }
+  return "upcoming";
+}
+
+/** Compact single-line status badge used in the list rows. */
+function StatusBadge({ appointment }: { appointment: Appointment }) {
   const { t } = useT();
-  if (appointment.status !== "pending") return null;
+
+  if (
+    appointment.status === "completed" ||
+    appointment.payment_status === "paid"
+  ) {
+    return <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />;
+  }
+
+  if (appointment.status === "no_show") {
+    return <span className="cal-status cal-status--muted">{t("status.noShow")}</span>;
+  }
+
+  if (appointment.status === "cancelled") {
+    return (
+      <span className="cal-status cal-status--muted">{t("status.cancelled")}</span>
+    );
+  }
+
+  if (appointment.status === "pending") {
+    if (isOnlinePendingAppointment(appointment)) {
+      return <span className="cal-status cal-status--online">{t("calendar.online")}</span>;
+    }
+    return <span className="cal-status cal-status--pending">{t("calendar.pending")}</span>;
+  }
 
   return (
-    <span className={`cal-card-tag${compact ? " cal-card-tag--aside" : ""}`}>
-      {isOnlinePendingAppointment(appointment)
-        ? t("calendar.onlineConfirm")
-        : t("status.pending")}
-    </span>
+    <span className="cal-status cal-status--confirmed">{t("status.confirmed")}</span>
   );
 }
 
+/** Top-right corner content inside a grid card. Informational only. */
 function GridCardAside({
   appointment,
   businessName,
@@ -321,27 +296,13 @@ function GridCardAside({
   businessName: string;
   onCopied: () => void;
 }) {
-  const isCompleted = appointment.status === "completed";
-  const showPendingTag = appointment.status === "pending";
-  const showPaymentBadge =
-    isCompleted || appointment.payment_status === "paid";
+  const { t } = useT();
+  const variant = gridVariant(appointment);
 
-  if (!showPendingTag && !showPaymentBadge && !isCompleted) {
-    return null;
-  }
-
-  return (
-    <div
-      className="cal-card-aside"
-      onClick={(event) => event.stopPropagation()}
-    >
-      {showPendingTag ? (
-        <CardPendingTag appointment={appointment} compact />
-      ) : null}
-      {showPaymentBadge ? (
+  if (variant === "completed") {
+    return (
+      <div className="cal-card-aside" onClick={(event) => event.stopPropagation()}>
         <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
-      ) : null}
-      {isCompleted ? (
         <WhatsAppCopyButtons
           appointment={appointment}
           businessName={businessName}
@@ -349,40 +310,39 @@ function GridCardAside({
           compact
           menuPlacement="top"
         />
-      ) : null}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  if (variant === "online") {
+    return (
+      <div className="cal-card-aside">
+        <span className="cal-status cal-status--online">{t("calendar.online")}</span>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function GridBookingCard({
   appointment,
   gridOptions,
   businessName,
-  onCompletePay,
   onCopied,
   onOpenDetail,
-  canManageFinance = true,
 }: {
   appointment: Appointment;
   gridOptions: GridBlockOptions;
   businessName: string;
-  onCompletePay: () => void;
   onCopied: () => void;
   onOpenDetail: () => void;
-  canManageFinance?: boolean;
 }) {
-  const { t } = useT();
-  const isConfirmed = appointment.status === "confirmed";
-  const showActions =
-    isConfirmed &&
-    canManageFinance &&
-    gridOptions.showCardActions;
+  const variant = gridVariant(appointment);
   const serviceLabel = appointment.service_name ?? "Service";
 
   return (
-    <div
-      className={`cal-card cal-card--grid${showActions ? " has-actions" : ""}`}
-    >
+    <div className={`cal-card cal-card--grid cal-card--${variant}`}>
       <div className="cal-card-row">
         <button
           type="button"
@@ -417,56 +377,53 @@ function GridBookingCard({
           onCopied={onCopied}
         />
       </div>
-
-      {showActions ? (
-        <div
-          className="cal-card-actions"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="cal-card-btn cal-card-btn--primary"
-            onClick={onCompletePay}
-          >
-            {t("calendar.completePay")}
-          </button>
-          <form action={markNoShow}>
-            <input type="hidden" name="appointment_id" value={appointment.id} />
-            <PendingSubmitButton
-              label={t("status.noShow")}
-              className="cal-card-btn cal-card-btn--secondary"
-            />
-          </form>
-        </div>
-      ) : null}
     </div>
   );
 }
 
-function MonthListCard({
+/** Clean single-line list row: time · name · service · status. Opens modal. */
+function AppointmentListRow({
   appointment,
   onOpenDetail,
 }: {
   appointment: Appointment;
   onOpenDetail: () => void;
 }) {
+  const variant = gridVariant(appointment);
+  const flagged =
+    shouldShowReliabilityAlert(appointment) &&
+    appointment.customer_reliability != null;
+
   return (
     <button
       type="button"
-      className="cal-card cal-card--list"
+      className={`cal-list-row cal-list-row--${variant}`}
       onClick={onOpenDetail}
       aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
     >
-      <CardPendingTag appointment={appointment} />
-      <span className="cal-card-line cal-card-name">
-        {appointment.customer_name ?? "Walk-in"}
-      </span>
-      <span className="cal-card-line cal-card-service">
-        {appointment.service_name ?? "Service"}
-      </span>
-      <span className="cal-card-line cal-card-time">
+      <span className="cal-list-time">
         {formatTime12h(appointment.start_time)}
       </span>
+      <span className="cal-list-body">
+        {flagged ? (
+          <AlertTriangle
+            size={14}
+            strokeWidth={1.5}
+            className="cal-list-warn"
+            aria-hidden
+          />
+        ) : null}
+        <span className="cal-list-name">
+          {appointment.customer_name ?? "Walk-in"}
+        </span>
+        <span className="cal-list-sep" aria-hidden>
+          ·
+        </span>
+        <span className="cal-list-service">
+          {appointment.service_name ?? "Service"}
+        </span>
+      </span>
+      <StatusBadge appointment={appointment} />
     </button>
   );
 }
@@ -563,145 +520,33 @@ function AppointmentActions({
   );
 }
 
-function blockTitle(appointment: Appointment): string {
-  const name = appointment.customer_name ?? "Walk-in";
-  const service = appointment.service_name ?? "Service";
-  return `${name} - ${service}`;
-}
-
-const openDetailButtonStyle: React.CSSProperties = {
-  width: "100%",
-  padding: 0,
-  border: "none",
-  background: "transparent",
-  textAlign: "left",
-  cursor: "pointer",
-};
-
 const AppointmentBlock = memo(function AppointmentBlock({
   appointment,
   businessName,
-  onCompletePay,
   onCopied,
   onOpenDetail,
-  canManageFinance = true,
-  compact = false,
   gridOptions,
 }: {
   appointment: Appointment;
   businessName: string;
-  onCompletePay: () => void;
   onCopied: () => void;
   onOpenDetail: () => void;
-  canManageFinance?: boolean;
-  compact?: boolean;
   gridOptions?: GridBlockOptions;
 }) {
-  const { t } = useT();
-  const isCompleted = appointment.status === "completed";
-
   if (gridOptions) {
     return (
       <GridBookingCard
         appointment={appointment}
         gridOptions={gridOptions}
         businessName={businessName}
-        onCompletePay={onCompletePay}
         onCopied={onCopied}
         onOpenDetail={onOpenDetail}
-        canManageFinance={canManageFinance}
       />
-    );
-  }
-
-  if (!compact && isCompleted) {
-    return (
-      <article className="appointment-row appointment-row--summary">
-        <span className="appointment-time">
-          {formatTime12h(appointment.start_time)}
-        </span>
-        <button
-          type="button"
-          className="appointment-row-summary"
-          onClick={onOpenDetail}
-          aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
-          style={openDetailButtonStyle}
-        >
-          <span className="cal-summary-line">
-            <strong className="cal-card-line">{blockTitle(appointment)}</strong>
-            <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
-          </span>
-        </button>
-      </article>
-    );
-  }
-
-  if (compact) {
-    return (
-      <MonthListCard appointment={appointment} onOpenDetail={onOpenDetail} />
     );
   }
 
   return (
-    <article className="appointment-row">
-      <span className="appointment-time">
-        {formatTime12h(appointment.start_time)}
-      </span>
-      <div
-        className={`appointment-row-content${isCompleted ? " is-completed" : ""}`}
-      >
-        <button
-          type="button"
-          onClick={onOpenDetail}
-          aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
-          style={{
-            ...openDetailButtonStyle,
-            color: "inherit",
-            font: "inherit",
-            width: "100%",
-          }}
-        >
-          {shouldShowReliabilityAlert(appointment) &&
-          appointment.customer_reliability ? (
-            <ReliabilityAlert reliability={appointment.customer_reliability} />
-          ) : null}
-          <strong className="cal-card-line" style={{ display: "block", fontSize: 15 }}>
-            {blockTitle(appointment)}
-          </strong>
-          {!isCompleted ? (
-            <>
-              <p style={{ margin: "4px 0 0", color: "#8A8A8A" }}>
-                {staffLabel(appointment, t)}
-              </p>
-              {appointment.total_amount > 0 ? (
-                <p style={{ margin: "4px 0 0" }}>{formatRs(appointment.total_amount)}</p>
-              ) : null}
-            </>
-          ) : null}
-        </button>
-        {isCompleted ? (
-          <div
-            className="cal-card-corner"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
-            <WhatsAppCopyButtons
-              appointment={appointment}
-              businessName={businessName}
-              onCopied={onCopied}
-            />
-          </div>
-        ) : null}
-      </div>
-      <AppointmentActions
-        appointment={appointment}
-        businessName={businessName}
-        onCompletePay={onCompletePay}
-        onCopied={onCopied}
-        canManageFinance={canManageFinance}
-        cornerActionsHandled={isCompleted}
-      />
-    </article>
+    <AppointmentListRow appointment={appointment} onOpenDetail={onOpenDetail} />
   );
 });
 
@@ -982,21 +827,18 @@ export function CalendarView({
   const renderGridBlock = useCallback(
     (
       appointment: Appointment,
-      onPay: () => void,
+      _onPay: () => void,
       gridOptions?: GridBlockOptions
     ) => (
       <AppointmentBlock
         appointment={appointment}
         businessName={businessName}
-        onCompletePay={onPay}
         onCopied={handleCopied}
         onOpenDetail={() => handleOpenDetail(appointment)}
-        canManageFinance={canManageFinance}
-        compact
         gridOptions={gridOptions}
       />
     ),
-    [businessName, canManageFinance, handleCopied, handleOpenDetail]
+    [businessName, handleCopied, handleOpenDetail]
   );
 
   const openNewBooking = () => {
@@ -1100,11 +942,8 @@ export function CalendarView({
                         key={appointment.id}
                         appointment={appointment}
                         businessName={businessName}
-                        onCompletePay={() => handleCompletePay(appointment)}
                         onCopied={handleCopied}
                         onOpenDetail={() => handleOpenDetail(appointment)}
-                        canManageFinance={canManageFinance}
-                        compact={viewMode === "month"}
                       />
                     ))}
                   </div>

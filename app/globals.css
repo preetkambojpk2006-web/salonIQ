@@ -2028,7 +2028,7 @@
     left: 8px;
     right: 8px;
     z-index: 1;
-    overflow: visible;
+    overflow: hidden;
     min-width: 0;
     min-height: 64px;
   }
@@ -2043,12 +2043,30 @@
     background: #f9f8f3;
     box-shadow: 0 1px 3px rgba(26, 26, 26, 0.06);
     color: #1a1a1a;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .cal-card--grid {
     min-height: 64px;
     height: 100%;
+  }
+
+  /* Grid card variants — left accent distinguishes booking state */
+  .cal-card--upcoming {
+    border-left: 3px solid #1fa873;
+  }
+
+  .cal-card--online {
+    border-left: 3px solid #f87171;
+  }
+
+  .cal-card--completed {
+    background: #f0ede8;
+    border-color: #e4ded4;
+  }
+
+  .cal-card--completed .cal-card-name {
+    color: #6b6b6b;
   }
 
   .cal-card--list {
@@ -2080,7 +2098,7 @@
     background: transparent;
     text-align: left;
     cursor: pointer;
-    overflow: visible;
+    overflow: hidden;
     box-sizing: border-box;
   }
 
@@ -2193,48 +2211,125 @@
     line-height: 1.2;
   }
 
-  .cal-card-actions {
-    flex-shrink: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px;
-    padding: 0 12px 10px;
-    overflow: visible;
-  }
-
-  .cal-card-actions form {
+  /* Compact status pills (list rows + online grid cards) */
+  .cal-status {
     display: inline-flex;
-    margin: 0;
-  }
-
-  .cal-card-btn {
-    min-height: 24px;
-    padding: 0 8px;
-    border-radius: 10px;
+    align-items: center;
+    max-width: 100%;
+    padding: 2px 8px;
+    border-radius: 999px;
     font-size: 10px;
     font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cal-status--online {
+    background: rgba(248, 113, 113, 0.14);
+    color: #d9534f;
+  }
+
+  .cal-status--pending {
+    background: rgba(224, 122, 47, 0.14);
+    color: #e07a2f;
+  }
+
+  .cal-status--confirmed {
+    background: rgba(31, 168, 115, 0.12);
+    color: #1fa873;
+  }
+
+  .cal-status--muted {
+    background: #f0ede8;
+    color: #8a8a8a;
+  }
+
+  /* TODAY / day-week list rows — single line, informational, opens modal */
+  .cal-list-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-left: 3px solid transparent;
+    border-radius: 12px;
+    background: var(--paper);
+    text-align: left;
     cursor: pointer;
-    flex: 0 0 auto;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: var(--transition);
   }
 
-  .cal-card-btn--primary {
-    border: 0;
-    background: #1fa873;
-    color: #fff;
+  .cal-list-row:hover {
+    border-color: rgba(31, 168, 115, 0.35);
+    background: #fff;
   }
 
-  .cal-card-btn--secondary {
-    border: 1px solid #e0dad0;
-    background: #f9f8f3;
+  .cal-list-row--upcoming {
+    border-left-color: #1fa873;
+  }
+
+  .cal-list-row--online {
+    border-left-color: #f87171;
+  }
+
+  .cal-list-row--completed {
+    background: #f0ede8;
+    border-color: #e4ded4;
+  }
+
+  .cal-list-time {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1fa873;
+    white-space: nowrap;
+  }
+
+  .cal-list-body {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .cal-list-name {
+    flex-shrink: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 700;
     color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .cal-card-btn:disabled {
-    opacity: 0.65;
-    cursor: wait;
+  .cal-list-sep {
+    flex-shrink: 0;
+    color: #c9c4ba;
+  }
+
+  .cal-list-service {
+    flex-shrink: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8a8a8a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cal-list-warn {
+    flex-shrink: 0;
+    display: inline-flex;
+    color: #d9534f;
   }
 
   .cal-summary-line {
