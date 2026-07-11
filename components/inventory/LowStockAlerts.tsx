@@ -50,7 +50,7 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
             gap: 8,
           }}
         >
-          <AlertTriangle size={18} strokeWidth={2} color="#D94F4F" aria-hidden />
+          <AlertTriangle size={16} strokeWidth={1.5} color="#D94F4F" aria-hidden />
           {t("inventory.lowStock")}
         </h2>
         <span
@@ -120,7 +120,7 @@ export function LowStockAlerts({ lowStockProducts }: LowStockAlertsProps) {
                 gap: 4,
               }}
             >
-              <AlertTriangle size={12} strokeWidth={2} aria-hidden />
+              <AlertTriangle size={16} strokeWidth={1.5} aria-hidden />
               {t("inventory.lowStockBadge")}
             </span>
           </div>

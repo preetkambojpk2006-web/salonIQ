@@ -491,7 +491,7 @@ function ProductRow({
                   gap: 4,
                 }}
               >
-                <AlertTriangle size={12} strokeWidth={2} aria-hidden />
+                <AlertTriangle size={16} strokeWidth={1.5} aria-hidden />
                 {t("inventory.lowStockBadge")}
               </span>
             ) : null}

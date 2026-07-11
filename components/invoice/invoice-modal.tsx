@@ -183,7 +183,7 @@ export function InvoiceModal({
             aria-label={t("common.close")}
             disabled={downloading}
           >
-            <X size={18} strokeWidth={1.5} aria-hidden />
+            <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
 

@@ -718,7 +718,9 @@ export function CalendarView({
 
   const handleOpenEditTime = useCallback(() => {
     if (!detailAppointment) return;
-    setEditTimeAppointment(detailAppointment);
+    const appointment = detailAppointment;
+    setDetailAppointment(null);
+    setEditTimeAppointment(appointment);
   }, [detailAppointment]);
 
   const handleEditTimeClose = useCallback(() => {
@@ -728,6 +730,7 @@ export function CalendarView({
   const handleTimePreview = useCallback(
     (preview: CascadePreview, newStart: Date, newEnd: Date) => {
       if (!editTimeAppointment) return;
+      setDetailAppointment(null);
       setEditTimeAppointment(null);
       setCascadeFlow({
         appointment: editTimeAppointment,
@@ -794,14 +797,6 @@ export function CalendarView({
           return row;
         })
       );
-
-      if (appointment) {
-        setDetailAppointment({
-          ...appointment,
-          start_time: preview.anchor.new_start,
-          end_time: preview.anchor.new_end,
-        });
-      }
 
       router.refresh();
 

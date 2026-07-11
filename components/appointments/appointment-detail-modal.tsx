@@ -51,9 +51,9 @@ function ReliabilityAlert({
       }}
     >
       {isWarning ? (
-        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+        <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
       ) : (
-        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+        <Ban size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
       )}
       <span>
         {isWarning

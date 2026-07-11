@@ -50,9 +50,9 @@ function ReliabilityBadge({ reliability }: { reliability: CustomerReliability })
       }}
     >
       {isWarning ? (
-        <AlertTriangle size={12} strokeWidth={2.25} aria-hidden />
+        <AlertTriangle size={16} strokeWidth={1.5} aria-hidden />
       ) : (
-        <Ban size={12} strokeWidth={2.25} aria-hidden />
+        <Ban size={16} strokeWidth={1.5} aria-hidden />
       )}
       {isWarning ? "Warning" : "Blacklisted"}
     </span>
@@ -232,7 +232,7 @@ function LoyaltyProgressSection({
             color: "#fff",
           }}
         >
-          <Gift size={13} strokeWidth={2.25} aria-hidden />
+          <Gift size={16} strokeWidth={1.5} aria-hidden />
           {t("customers.rewardReady")}
         </span>
       ) : (

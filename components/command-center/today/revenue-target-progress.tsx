@@ -113,7 +113,7 @@ export function RevenueTargetProgress({
         }}
       >
         {targetMet ? (
-          <CheckCircle size={16} strokeWidth={2.25} color="#1FA873" aria-hidden />
+          <CheckCircle size={16} strokeWidth={1.5} color="#1FA873" aria-hidden />
         ) : null}
         {targetMet
           ? t("today.targetProgressDone", {

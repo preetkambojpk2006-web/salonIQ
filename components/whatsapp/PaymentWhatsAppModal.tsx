@@ -114,7 +114,7 @@ export function PaymentWhatsAppModal({
               className="payment-modal-close"
               aria-label={t("common.close")}
             >
-              <X size={18} strokeWidth={1.5} aria-hidden />
+              <X size={16} strokeWidth={1.5} aria-hidden />
             </button>
           </div>
 

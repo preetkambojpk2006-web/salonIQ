@@ -222,7 +222,7 @@ export function CascadePreviewModal({
                       gap: 8,
                     }}
                   >
-                    <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+                    <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
                     <span>{warning}</span>
                   </div>
                 ))}
@@ -246,7 +246,7 @@ export function CascadePreviewModal({
                   gap: 8,
                 }}
               >
-                <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+                <Ban size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
                 <span>{t("cascade.blocked")}</span>
               </div>
             ) : null}

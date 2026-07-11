@@ -534,7 +534,7 @@ export function CoachPage({ insights }: CoachPageProps) {
                     <Bot
                       className="shrink-0"
                       size={16}
-                      strokeWidth={1.75}
+                      strokeWidth={1.5}
                       color={TOKENS.textDark}
                       aria-hidden
                     />

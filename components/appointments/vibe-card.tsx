@@ -43,7 +43,7 @@ export function VibeCard({ notes, customerNotes }: VibeCardProps) {
           gap: 6,
         }}
       >
-        <Sparkles size={13} strokeWidth={2.25} aria-hidden />
+        <Sparkles size={16} strokeWidth={1.5} aria-hidden />
         {t("customers.vibeLabel")}
       </p>
       {lines.map((line) => (

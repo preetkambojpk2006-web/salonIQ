@@ -142,6 +142,7 @@ function StaffTodayCard({
   const { toast, setToast, dismiss } = useAttendanceToast();
   const requestSeq = useRef(0);
   const [showCorrection, setShowCorrection] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const status = attendanceRow?.status ?? null;
   const isCheckedIn = status === "present" || status === "late";
@@ -158,6 +159,8 @@ function StaffTodayCard({
     extra?: (formData: FormData) => void,
     onSuccess?: () => void
   ) => {
+    if (isSubmitting) return;
+
     const formData = new FormData();
     formData.set("staff_id", staffMember.id);
     formData.set("staff_name", staffMember.name);
@@ -165,6 +168,7 @@ function StaffTodayCard({
     extra?.(formData);
 
     const seq = (requestSeq.current += 1);
+    setIsSubmitting(true);
 
     void action(formData)
       .then((result) => {
@@ -204,6 +208,11 @@ function StaffTodayCard({
             message: t("attendance.networkError"),
             variant: "error",
           });
+        }
+      })
+      .finally(() => {
+        if (requestSeq.current === seq) {
+          setIsSubmitting(false);
         }
       });
   };
@@ -310,6 +319,7 @@ function StaffTodayCard({
           <button
             type="button"
             onClick={() => runAction(checkInStaff)}
+            disabled={isSubmitting}
             className="primary-button"
             style={{
               flex: "1 1 140px",
@@ -327,6 +337,7 @@ function StaffTodayCard({
           <button
             type="button"
             onClick={() => runAction(markStaffAbsent)}
+            disabled={isSubmitting}
             style={{
               flex: "1 1 120px",
               minHeight: 44,
@@ -394,6 +405,7 @@ function StaffTodayCard({
                     <button
                       key={nextStatus}
                       type="button"
+                      disabled={isSubmitting}
                       onClick={() =>
                         runAction(
                           correctStaffAttendance,
