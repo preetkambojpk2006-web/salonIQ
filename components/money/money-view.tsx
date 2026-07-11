@@ -4,18 +4,11 @@ import type { ReactNode } from "react";
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
 import { InventorySpendSummary } from "@/components/money/InventorySpendSummary";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatInr } from "@/lib/format/currency";
 import { useT } from "@/lib/i18n/LanguageContext";
 import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
 import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
-
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
-
-function formatInr(amount: number): string {
-  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
 
 type MoneyViewProps = {
   businessId?: string | null;
@@ -50,28 +43,28 @@ export function MoneyView({
       key: "today",
       className: "metric-card success",
       label: t("money.todayRevenue"),
-      value: formatRs(stats.revenueToday),
+      value: formatInr(stats.revenueToday),
       context: t("money.todayRevenueContext"),
     },
     {
       key: "week",
       className: "metric-card",
       label: t("money.thisWeek"),
-      value: formatRs(stats.revenueWeek),
+      value: formatInr(stats.revenueWeek),
       context: t("money.weekContext"),
     },
     {
       key: "pending",
       className: "metric-card warning",
       label: t("money.pendingPayments"),
-      value: formatRs(stats.pendingAmount),
+      value: formatInr(stats.pendingAmount),
       context: pendingPaymentContext,
     },
     {
       key: "profit",
       className: "metric-card",
       label: t("money.netProfitWeek"),
-      value: formatRs(stats.netProfit),
+      value: formatInr(stats.netProfit),
       context: t("money.expensesComingSoon"),
     },
   ];
@@ -150,7 +143,7 @@ export function MoneyView({
               <div key={bar.label} className="bar-row">
                 <header>
                   <span>{bar.label}</span>
-                  <span>{formatRs(bar.value)}</span>
+                  <span>{formatInr(bar.value)}</span>
                 </header>
                 <div className="bar-track">
                   <span
@@ -165,7 +158,7 @@ export function MoneyView({
               <div key={bar.label} className="bar-row">
                 <header>
                   <span>{bar.label}</span>
-                  <span>{formatRs(bar.value)}</span>
+                  <span>{formatInr(bar.value)}</span>
                 </header>
                 <div className="bar-track">
                   <span style={{ width: bar.value > 0 ? "40%" : "4%" }} />

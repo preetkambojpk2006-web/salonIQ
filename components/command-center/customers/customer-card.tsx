@@ -14,13 +14,10 @@ import {
 } from "@/lib/customers/loyalty-progress";
 import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer, CustomerReliability } from "@/lib/customers/types";
+import { formatInr } from "@/lib/format/currency";
 import { MessageActions } from "@/components/whatsapp/MessageActions";
 import { rewardEarned } from "@/lib/whatsapp/templates";
 import { useT } from "@/lib/i18n/LanguageContext";
-
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
 
 type CustomerCardProps = {
   customer: Customer;
@@ -360,7 +357,7 @@ function CustomerCardInner({ customer, rewardConfig, salonName }: CustomerCardPr
       <span className={tag.className}>{tag.label}</span>
       <p className="customer-name">{customer.name}</p>
       {customer.phone ? <p>{customer.phone}</p> : null}
-      <strong>{formatRs(customer.total_spend)}</strong>
+      <strong>{formatInr(customer.total_spend)}</strong>
       <p>{getCustomerVisitLine(customer, t("customers.addVisitNotes"))}</p>
       <LoyaltyProgressSection
         customer={customer}

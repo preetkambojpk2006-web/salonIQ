@@ -1,9 +1,6 @@
 import type { TodayMetrics } from "@/lib/dashboard/today-queries";
+import { formatInr } from "@/lib/format/currency";
 import { useT } from "@/lib/i18n/LanguageContext";
-
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
 
 type SummaryGridProps = {
   metrics: TodayMetrics;
@@ -18,7 +15,7 @@ export function SummaryGrid({ metrics, showFinance = true }: SummaryGridProps) {
       key: "revenue",
       className: "metric-card success",
       label: t("today.metricRevenue"),
-      value: formatRs(metrics.revenueToday),
+      value: formatInr(metrics.revenueToday),
       context: metrics.revenueContext,
     },
     {
@@ -32,7 +29,7 @@ export function SummaryGrid({ metrics, showFinance = true }: SummaryGridProps) {
       key: "pending",
       className: "metric-card warning",
       label: t("today.metricPending"),
-      value: formatRs(metrics.pendingAmount),
+      value: formatInr(metrics.pendingAmount),
       context: metrics.pendingContext,
     },
     {

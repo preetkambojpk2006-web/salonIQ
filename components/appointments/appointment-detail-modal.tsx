@@ -5,6 +5,7 @@ import { AlertTriangle, Ban } from "lucide-react";
 import { VibeCard } from "@/components/appointments/vibe-card";
 import type { Appointment } from "@/lib/appointments/types";
 import type { CustomerReliability } from "@/lib/customers/types";
+import { formatInr } from "@/lib/format/currency";
 import { formatTime12h } from "@/lib/format/time";
 import { useT } from "@/lib/i18n/LanguageContext";
 
@@ -16,10 +17,6 @@ type AppointmentDetailModalProps = {
   onEditTime?: () => void;
   actions: React.ReactNode;
 };
-
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
 
 function ReliabilityAlert({
   reliability,
@@ -105,7 +102,7 @@ export function AppointmentDetailModal({
             </p>
             {appointment.total_amount > 0 ? (
               <p className="payment-modal-amount">
-                {formatRs(appointment.total_amount)}
+                {formatInr(appointment.total_amount)}
               </p>
             ) : null}
           </div>
