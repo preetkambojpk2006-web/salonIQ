@@ -286,30 +286,15 @@ function StatusBadge({ appointment }: { appointment: Appointment }) {
   );
 }
 
-/** Top-right corner content inside a grid card. Informational only. */
-function GridCardAside({
-  appointment,
-  businessName,
-  onCopied,
-}: {
-  appointment: Appointment;
-  businessName: string;
-  onCopied: () => void;
-}) {
+/** Top-right corner content inside a grid card. Informational only — no actions. */
+function GridCardAside({ appointment }: { appointment: Appointment }) {
   const { t } = useT();
   const variant = gridVariant(appointment);
 
   if (variant === "completed") {
     return (
-      <div className="cal-card-aside" onClick={(event) => event.stopPropagation()}>
+      <div className="cal-card-aside">
         <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
-        <WhatsAppCopyButtons
-          appointment={appointment}
-          businessName={businessName}
-          onCopied={onCopied}
-          compact
-          menuPlacement="top"
-        />
       </div>
     );
   }
@@ -328,14 +313,10 @@ function GridCardAside({
 function GridBookingCard({
   appointment,
   gridOptions,
-  businessName,
-  onCopied,
   onOpenDetail,
 }: {
   appointment: Appointment;
   gridOptions: GridBlockOptions;
-  businessName: string;
-  onCopied: () => void;
   onOpenDetail: () => void;
 }) {
   const variant = gridVariant(appointment);
@@ -371,11 +352,7 @@ function GridBookingCard({
           </div>
         </button>
 
-        <GridCardAside
-          appointment={appointment}
-          businessName={businessName}
-          onCopied={onCopied}
-        />
+        <GridCardAside appointment={appointment} />
       </div>
     </div>
   );
@@ -522,14 +499,10 @@ function AppointmentActions({
 
 const AppointmentBlock = memo(function AppointmentBlock({
   appointment,
-  businessName,
-  onCopied,
   onOpenDetail,
   gridOptions,
 }: {
   appointment: Appointment;
-  businessName: string;
-  onCopied: () => void;
   onOpenDetail: () => void;
   gridOptions?: GridBlockOptions;
 }) {
@@ -538,8 +511,6 @@ const AppointmentBlock = memo(function AppointmentBlock({
       <GridBookingCard
         appointment={appointment}
         gridOptions={gridOptions}
-        businessName={businessName}
-        onCopied={onCopied}
         onOpenDetail={onOpenDetail}
       />
     );
@@ -832,13 +803,11 @@ export function CalendarView({
     ) => (
       <AppointmentBlock
         appointment={appointment}
-        businessName={businessName}
-        onCopied={handleCopied}
         onOpenDetail={() => handleOpenDetail(appointment)}
         gridOptions={gridOptions}
       />
     ),
-    [businessName, handleCopied, handleOpenDetail]
+    [handleOpenDetail]
   );
 
   const openNewBooking = () => {
@@ -941,8 +910,6 @@ export function CalendarView({
                       <AppointmentBlock
                         key={appointment.id}
                         appointment={appointment}
-                        businessName={businessName}
-                        onCopied={handleCopied}
                         onOpenDetail={() => handleOpenDetail(appointment)}
                       />
                     ))}
