@@ -16,6 +16,26 @@ export type RecordPaymentResult =
   | { ok: true; commissionWarning?: boolean }
   | { ok: false; error: string };
 
+/** Translate RPC exception codes into the same user-facing messages as before. */
+function mapPaymentRpcError(message: string): string {
+  if (message.includes("APPOINTMENT_NOT_FOUND")) {
+    return "Booking not found.";
+  }
+  if (message.includes("INVALID_STATUS")) {
+    return "Is booking par payment record nahi ho sakti.";
+  }
+  if (message.includes("ALREADY_PAID")) {
+    return "Paid booking ko pending mark nahi kar sakte.";
+  }
+  if (message.includes("INVALID_AMOUNT")) {
+    return "Amount exceeds maximum allowed value.";
+  }
+  if (message.includes("NOT_AUTHORIZED")) {
+    return "Aapko is booking par payment record karne ki permission nahi hai.";
+  }
+  return message;
+}
+
 export async function recordAppointmentPayment(
   formData: FormData
 ): Promise<RecordPaymentResult> {
@@ -101,72 +121,30 @@ export async function recordAppointmentPayment(
   const now = new Date().toISOString();
   const rowBusinessId = appointment.business_id as string;
 
-  const { data: existingPayment, error: existingError } = await supabase
-    .from("payments")
-    .select("id, status")
-    .eq("appointment_id", appointmentId)
-    .eq("business_id", rowBusinessId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingError) {
-    console.error("recordAppointmentPayment lookup:", existingError.message);
-    return { ok: false, error: existingError.message };
-  }
-
-  if (
-    !isPaid &&
-    (existingPayment?.status === "paid" || appointment.payment_status === "paid")
-  ) {
+  if (!isPaid && appointment.payment_status === "paid") {
     return {
       ok: false,
       error: "Paid booking ko pending mark nahi kar sakte.",
     };
   }
 
-  const paymentPayload = {
-    business_id: rowBusinessId,
-    appointment_id: appointmentId,
-    customer_name: customerName,
-    amount,
-    method,
-    status: isPaid ? ("paid" as const) : ("unpaid" as const),
-    paid_at: isPaid ? now : null,
-  };
+  // Atomic RPC: payment upsert + appointment status update happen in one
+  // DB transaction — either both writes land or neither does.
+  const { error: rpcError } = await supabase.rpc(
+    "record_appointment_payment_atomic",
+    {
+      p_appointment_id: appointmentId,
+      p_business_id: rowBusinessId,
+      p_amount: amount,
+      p_method: method,
+      p_customer_name: customerName,
+      p_paid_at: now,
+    }
+  );
 
-  let paymentError: { message: string } | null = null;
-
-  if (existingPayment?.id) {
-    const { error } = await supabase
-      .from("payments")
-      .update(paymentPayload)
-      .eq("id", existingPayment.id)
-      .eq("business_id", rowBusinessId);
-    paymentError = error;
-  } else {
-    const { error } = await supabase.from("payments").insert(paymentPayload);
-    paymentError = error;
-  }
-
-  if (paymentError) {
-    console.error("recordAppointmentPayment insert:", paymentError.message);
-    return { ok: false, error: paymentError.message };
-  }
-
-  const { error: updateError } = await supabase
-    .from("appointments")
-    .update({
-      status: "completed",
-      payment_status: isPaid ? "paid" : "unpaid",
-      total_amount: amount,
-    })
-    .eq("id", appointmentId)
-    .eq("business_id", rowBusinessId);
-
-  if (updateError) {
-    console.error("recordAppointmentPayment appointment:", updateError.message);
-    return { ok: false, error: updateError.message };
+  if (rpcError) {
+    console.error("recordAppointmentPayment rpc:", rpcError.message);
+    return { ok: false, error: mapPaymentRpcError(rpcError.message) };
   }
 
   revalidatePath("/dashboard/calendar");

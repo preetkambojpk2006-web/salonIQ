@@ -9,9 +9,7 @@ import {
   insertStaffAdvance,
   normalizeStaffName,
   roundMoney,
-  settleOutstandingAdvancesForStaff,
 } from "@/lib/staff/advances";
-import { settleOutstandingFinesForStaff } from "@/lib/staff/fines";
 import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
 import { getGrossUnpaidCommissionForStaff } from "@/lib/staff/payouts";
 import type {
@@ -135,44 +133,46 @@ export async function settleStaffPayout(
 
   const settledAt = new Date().toISOString();
 
-  const { error: earningsError } = await supabase
-    .from("staff_earnings")
-    .update({ status: "paid" })
-    .eq("business_id", businessId)
-    .eq("staff_name", staffName)
-    .eq("status", "unpaid");
+  // Atomic RPC: earnings marked paid + fines deducted + advances settled in
+  // one DB transaction — a mid-flight failure rolls back everything.
+  const { data: settlement, error: settleError } = await supabase.rpc(
+    "settle_staff_payout_atomic",
+    {
+      p_business_id: businessId,
+      p_staff_name: staffName,
+      p_settled_at: settledAt,
+    }
+  );
 
-  if (earningsError) {
-    console.error("settleStaffPayout earnings:", earningsError.message);
-    return { ok: false, error: earningsError.message };
+  if (settleError) {
+    console.error("settleStaffPayout rpc:", settleError.message);
+    if (settleError.message.includes("NO_UNPAID_COMMISSION")) {
+      return { ok: false, error: "Is staff ka koi unpaid commission nahi hai." };
+    }
+    if (settleError.message.includes("NOT_AUTHORIZED")) {
+      return {
+        ok: false,
+        error: "Sirf owner ya admin staff payout settle kar sakte hain.",
+      };
+    }
+    return { ok: false, error: settleError.message };
   }
 
-  const fineApplied = await settleOutstandingFinesForStaff({
-    businessId,
-    staffName,
-    deductionBudget: grossUnpaid,
-    deductedAt: settledAt,
-  });
-
-  const advanceApplied = await settleOutstandingAdvancesForStaff({
-    businessId,
-    staffName,
-    deductionBudget: roundMoney(grossUnpaid - fineApplied),
-    settledAt,
-  });
-
-  const netPaid = roundMoney(
-    Math.max(0, grossUnpaid - fineApplied - advanceApplied)
-  );
+  const result = (settlement ?? {}) as {
+    gross_unpaid?: number | string;
+    fine_applied?: number | string;
+    advance_applied?: number | string;
+    net_paid?: number | string;
+  };
 
   revalidatePath("/dashboard/money");
   revalidatePath("/dashboard/attendance");
   return {
     ok: true,
-    grossUnpaid,
-    fineApplied,
-    advanceApplied,
-    netPaid,
+    grossUnpaid: roundMoney(Number(result.gross_unpaid ?? grossUnpaid)),
+    fineApplied: roundMoney(Number(result.fine_applied ?? 0)),
+    advanceApplied: roundMoney(Number(result.advance_applied ?? 0)),
+    netPaid: roundMoney(Number(result.net_paid ?? 0)),
   };
 }
 

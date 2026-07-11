@@ -158,40 +158,32 @@ export async function applyAppointmentTimeCascade(
     };
   }
 
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
   const supabase = createClient();
   const { preview } = previewResult;
 
-  const { error: anchorError } = await supabase
-    .from("appointments")
-    .update({
-      start_time: preview.anchor.new_start,
-      end_time: preview.anchor.new_end,
-    })
-    .eq("id", preview.anchor.id);
-
-  if (anchorError) {
-    console.error("applyAppointmentTimeCascade anchor:", anchorError.message);
-    return { ok: false, error: anchorError.message };
-  }
-
-  if (preview.shifted.length > 0) {
-    const shiftResults = await Promise.all(
-      preview.shifted.map((row) =>
-        supabase
-          .from("appointments")
-          .update({
-            start_time: row.new_start,
-            end_time: row.new_end,
-          })
-          .eq("id", row.id)
-      )
-    );
-
-    const shiftError = shiftResults.find((result) => result.error)?.error;
-    if (shiftError) {
-      console.error("applyAppointmentTimeCascade shifted:", shiftError.message);
-      return { ok: false, error: shiftError.message };
+  // Atomic RPC: anchor + all shifted rows update in one DB transaction —
+  // a mid-flight failure rolls back the whole cascade.
+  const { error: cascadeError } = await supabase.rpc(
+    "apply_appointment_cascade_atomic",
+    {
+      p_business_id: access.businessId,
+      p_anchor_id: preview.anchor.id,
+      p_anchor_start: preview.anchor.new_start,
+      p_anchor_end: preview.anchor.new_end,
+      p_shifted: preview.shifted.map((row) => ({
+        id: row.id,
+        new_start: row.new_start,
+        new_end: row.new_end,
+      })),
     }
+  );
+
+  if (cascadeError) {
+    console.error("applyAppointmentTimeCascade rpc:", cascadeError.message);
+    return { ok: false, error: cascadeError.message };
   }
 
   revalidatePath("/dashboard/calendar");
