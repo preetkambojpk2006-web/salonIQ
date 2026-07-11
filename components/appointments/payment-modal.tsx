@@ -19,8 +19,16 @@ type PaymentModalProps = {
   onError: (message: string) => void;
 };
 
-function formatRs(amount: number): string {
-  return `Rs ${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+function initialAmountValue(appointment: Appointment): string {
+  const raw = appointment.total_amount;
+  if (!Number.isFinite(raw) || raw < 0) return "0";
+  return String(Math.round(raw));
+}
+
+function parseAmountInput(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed);
 }
 
 function ReliabilityAlert({
@@ -53,9 +61,9 @@ function ReliabilityAlert({
       }}
     >
       {isWarning ? (
-        <AlertTriangle size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+        <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
       ) : (
-        <Ban size={16} strokeWidth={2} className="shrink-0" aria-hidden />
+        <Ban size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
       )}
       <span>
         {isWarning
@@ -76,6 +84,10 @@ export function PaymentModal({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [amountError, setAmountError] = useState<string | null>(null);
+  const [amountInput, setAmountInput] = useState(() =>
+    initialAmountValue(appointment)
+  );
+  const bookingAmount = initialAmountValue(appointment);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -83,17 +95,21 @@ export function PaymentModal({
     if (!dialog.open) dialog.showModal();
   }, []);
 
+  useEffect(() => {
+    setAmountInput(bookingAmount);
+    setAmountError(null);
+  }, [appointment.id, bookingAmount]);
+
   const handleClose = useCallback(() => {
     if (isSaving) return;
     dialogRef.current?.close();
     onClose();
   }, [isSaving, onClose]);
 
+  const normalizedAmount = parseAmountInput(amountInput);
+
   const handlePay = async (method: PaymentMethod) => {
-    if ((method === "cash" || method === "upi") && amount <= 0) {
-      setAmountError(t("payment.amountRequired"));
-      return;
-    }
+    const isPaid = method === "cash" || method === "upi";
 
     setAmountError(null);
     setIsSaving(true);
@@ -101,6 +117,10 @@ export function PaymentModal({
       const formData = new FormData();
       formData.set("appointment_id", appointment.id);
       formData.set("method", method);
+
+      if (isPaid) {
+        formData.set("amount", String(normalizedAmount));
+      }
 
       const result = await recordAppointmentPayment(formData);
 
@@ -125,7 +145,6 @@ export function PaymentModal({
 
   const canMarkPending =
     appointment.payment_status !== "paid" && appointment.status !== "completed";
-  const amount = appointment.total_amount > 0 ? appointment.total_amount : 0;
   const customer = appointment.customer_name ?? t("appointment.customer");
 
   return (
@@ -139,14 +158,38 @@ export function PaymentModal({
         <VibeCard notes={appointment.customer_notes} />
 
         <div className="payment-modal-header">
-          <div>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <p className="eyebrow">{t("payment.title")}</p>
             <h3>{t("payment.completeCollect")}</h3>
             <p className="payment-modal-meta">
               {customer}
               {appointment.service_name ? ` · ${appointment.service_name}` : ""}
             </p>
-            <p className="payment-modal-amount">{formatRs(amount)}</p>
+
+            <label className="payment-modal-amount-field">
+              <span className="payment-modal-amount-label">
+                {t("payment.amountLabel")}
+              </span>
+              <span className="payment-modal-amount-control">
+                <span className="payment-modal-amount-symbol" aria-hidden>
+                  ₹
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  className="payment-modal-amount-input"
+                  value={amountInput}
+                  disabled={isSaving}
+                  onChange={(event) => setAmountInput(event.target.value)}
+                  onBlur={() => {
+                    setAmountInput(String(parseAmountInput(amountInput)));
+                  }}
+                  aria-label={t("payment.amountLabel")}
+                />
+              </span>
+            </label>
           </div>
           <button
             type="button"
@@ -155,15 +198,9 @@ export function PaymentModal({
             aria-label={t("common.close")}
             disabled={isSaving}
           >
-            <X size={18} strokeWidth={2} aria-hidden />
+            <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
-
-        {amount <= 0 ? (
-          <p className="alert-danger" role="alert" style={{ marginBottom: 12 }}>
-            {t("payment.amountRequired")}
-          </p>
-        ) : null}
 
         {amountError ? (
           <p className="alert-danger" role="alert" style={{ marginBottom: 12 }}>
@@ -175,21 +212,14 @@ export function PaymentModal({
           <button
             type="button"
             className="payment-btn-mint"
-            disabled={isSaving || amount <= 0}
+            disabled={isSaving}
             onClick={() => handlePay("cash")}
           >
             {isSaving ? (
               t("common.saving")
             ) : (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                <Check size={16} strokeWidth={2.25} aria-hidden />
+              <span className="payment-btn-label">
+                <Check size={16} strokeWidth={1.5} aria-hidden />
                 {t("payment.cash")}
               </span>
             )}
@@ -197,21 +227,14 @@ export function PaymentModal({
           <button
             type="button"
             className="payment-btn-mint"
-            disabled={isSaving || amount <= 0}
+            disabled={isSaving}
             onClick={() => handlePay("upi")}
           >
             {isSaving ? (
               t("common.saving")
             ) : (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                <Check size={16} strokeWidth={2.25} aria-hidden />
+              <span className="payment-btn-label">
+                <Check size={16} strokeWidth={1.5} aria-hidden />
                 {t("payment.upi")}
               </span>
             )}

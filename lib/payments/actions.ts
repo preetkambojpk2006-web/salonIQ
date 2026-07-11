@@ -71,14 +71,24 @@ export async function recordAppointmentPayment(
     ? customers[0]?.name ?? null
     : customers?.name ?? null;
 
-  const amount = Number(appointment.total_amount ?? 0);
+  const amountOverrideRaw = (formData.get("amount") as string)?.trim();
+  let amount = Number(appointment.total_amount ?? 0);
+
+  if (amountOverrideRaw) {
+    const parsed = Number(amountOverrideRaw);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return { ok: false, error: "Invalid payment amount." };
+    }
+    amount = parsed;
+  }
+
   if (!Number.isFinite(amount) || amount < 0) {
     return { ok: false, error: "Invalid payment amount." };
   }
 
   const isPaid = method === "cash" || method === "upi";
-  if (isPaid && amount <= 0) {
-    return { ok: false, error: "Paid amount 0 se zyada hona chahiye." };
+  if (isPaid && amount < 0) {
+    return { ok: false, error: "Paid amount 0 se kam nahi ho sakta." };
   }
 
   const now = new Date().toISOString();
@@ -142,6 +152,7 @@ export async function recordAppointmentPayment(
     .update({
       status: "completed",
       payment_status: isPaid ? "paid" : "unpaid",
+      total_amount: amount,
     })
     .eq("id", appointmentId)
     .eq("business_id", rowBusinessId);

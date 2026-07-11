@@ -293,12 +293,18 @@ function PaidStatusBadge({ isPaid }: { isPaid: boolean }) {
   return <span className="cal-pending-badge">{t("status.pending")}</span>;
 }
 
-function CardPendingTag({ appointment }: { appointment: Appointment }) {
+function CardPendingTag({
+  appointment,
+  compact = false,
+}: {
+  appointment: Appointment;
+  compact?: boolean;
+}) {
   const { t } = useT();
   if (appointment.status !== "pending") return null;
 
   return (
-    <span className="cal-card-tag">
+    <span className={`cal-card-tag${compact ? " cal-card-tag--aside" : ""}`}>
       {isOnlinePendingAppointment(appointment)
         ? t("calendar.onlineConfirm")
         : t("status.pending")}
@@ -306,7 +312,7 @@ function CardPendingTag({ appointment }: { appointment: Appointment }) {
   );
 }
 
-function CardCornerActions({
+function GridCardAside({
   appointment,
   businessName,
   onCopied,
@@ -315,19 +321,35 @@ function CardCornerActions({
   businessName: string;
   onCopied: () => void;
 }) {
+  const isCompleted = appointment.status === "completed";
+  const showPendingTag = appointment.status === "pending";
+  const showPaymentBadge =
+    isCompleted || appointment.payment_status === "paid";
+
+  if (!showPendingTag && !showPaymentBadge && !isCompleted) {
+    return null;
+  }
+
   return (
     <div
-      className="cal-card-corner"
+      className="cal-card-aside"
       onClick={(event) => event.stopPropagation()}
     >
-      <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
-      <WhatsAppCopyButtons
-        appointment={appointment}
-        businessName={businessName}
-        onCopied={onCopied}
-        compact
-        menuPlacement="top"
-      />
+      {showPendingTag ? (
+        <CardPendingTag appointment={appointment} compact />
+      ) : null}
+      {showPaymentBadge ? (
+        <PaidStatusBadge isPaid={appointment.payment_status === "paid"} />
+      ) : null}
+      {isCompleted ? (
+        <WhatsAppCopyButtons
+          appointment={appointment}
+          businessName={businessName}
+          onCopied={onCopied}
+          compact
+          menuPlacement="top"
+        />
+      ) : null}
     </div>
   );
 }
@@ -350,40 +372,51 @@ function GridBookingCard({
   canManageFinance?: boolean;
 }) {
   const { t } = useT();
-  const isCompleted = appointment.status === "completed";
   const isConfirmed = appointment.status === "confirmed";
   const showActions =
     isConfirmed &&
     canManageFinance &&
     gridOptions.showCardActions;
+  const serviceLabel = appointment.service_name ?? "Service";
 
   return (
     <div
-      className={`cal-card${isCompleted ? " is-completed" : ""}${showActions ? " has-actions" : ""}`}
+      className={`cal-card cal-card--grid${showActions ? " has-actions" : ""}`}
     >
-      {isCompleted ? (
-        <CardCornerActions
+      <div className="cal-card-row">
+        <button
+          type="button"
+          className="cal-card-main"
+          onClick={onOpenDetail}
+          aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
+        >
+          <div className="cal-card-text">
+            <span className="cal-card-line cal-card-name">
+              {appointment.customer_name ?? "Walk-in"}
+            </span>
+            {gridOptions.isCompact ? (
+              <span className="cal-card-line cal-card-meta">
+                {serviceLabel} · {gridOptions.timeLabel}
+              </span>
+            ) : (
+              <>
+                <span className="cal-card-line cal-card-service">
+                  {serviceLabel}
+                </span>
+                <span className="cal-card-line cal-card-time">
+                  {gridOptions.timeLabel}
+                </span>
+              </>
+            )}
+          </div>
+        </button>
+
+        <GridCardAside
           appointment={appointment}
           businessName={businessName}
           onCopied={onCopied}
         />
-      ) : null}
-
-      <button
-        type="button"
-        className="cal-card-main"
-        onClick={onOpenDetail}
-        aria-label={`Open booking for ${appointment.customer_name ?? "customer"}`}
-      >
-        <CardPendingTag appointment={appointment} />
-        <span className="cal-card-line cal-card-name">
-          {appointment.customer_name ?? "Walk-in"}
-        </span>
-        <span className="cal-card-line cal-card-service">
-          {appointment.service_name ?? "Service"}
-        </span>
-        <span className="cal-card-line cal-card-time">{gridOptions.timeLabel}</span>
-      </button>
+      </div>
 
       {showActions ? (
         <div
