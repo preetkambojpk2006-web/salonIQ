@@ -8,6 +8,7 @@ import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { listServices, listStaffMembers } from "@/lib/salon/queries";
 import { reviewsSocialFromBusiness } from "@/lib/settings/reviews-social";
+import { parseInternalBookingHours } from "@/lib/booking/opening-hours";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   const appRole = membership?.appRole ?? "staff";
   const reviewsSocial = reviewsSocialFromBusiness(business);
+  const bookingHours = parseInternalBookingHours(business?.opening_hours);
 
   return (
     <CalendarView
@@ -51,6 +53,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       reviewsSocial={reviewsSocial}
       services={services}
       staffMembers={staffMembers}
+      bookingHours={bookingHours}
       canManageFinance={canManageFinance(appRole)}
       canEditAppointmentTime={isOwnerOrAdmin(appRole)}
       openBooking={searchParams?.booking === "new"}

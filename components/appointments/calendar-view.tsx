@@ -27,6 +27,7 @@ import {
   rejectAppointment,
 } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import type { BookingHours } from "@/lib/booking/opening-hours";
 import type { SalonService, SalonStaff } from "@/lib/salon/types";
 import {
   isOnlinePendingAppointment,
@@ -45,6 +46,7 @@ type CalendarViewProps = {
   reviewsSocial?: ReviewsSocialPrompts;
   services?: SalonService[];
   staffMembers?: SalonStaff[];
+  bookingHours?: BookingHours;
   canManageFinance?: boolean;
   canEditAppointmentTime?: boolean;
   openBooking?: boolean;
@@ -533,6 +535,7 @@ export function CalendarView({
   reviewsSocial,
   services = [],
   staffMembers = [],
+  bookingHours,
   canManageFinance = true,
   canEditAppointmentTime = false,
   openBooking = false,
@@ -948,6 +951,7 @@ export function CalendarView({
                       <div className="hidden desktop:block">
                         <CalendarDayGrid
                           dayAppointments={staffDayAppointments}
+                          bookingHours={bookingHours}
                           onCompletePay={handleCompletePay}
                           renderBlock={renderGridBlock}
                         />
@@ -967,6 +971,7 @@ export function CalendarView({
           error={openBooking ? error : undefined}
           services={services}
           staffMembers={staffMembers}
+          bookingHours={bookingHours}
         />
       ) : null}
 

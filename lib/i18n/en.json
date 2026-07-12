@@ -642,6 +642,7 @@
   "booking.optional": "(optional)",
   "booking.notesPlaceholder": "Any special requests",
   "booking.saveBooking": "Save booking",
+  "booking.noTimeSlots": "No slots within opening hours for this date.",
   "staff.servicePrices": "Service prices",
   "staff.priceOverride": "{service} price",
   "staff.priceOverridePlaceholder": "Default: {amount}",

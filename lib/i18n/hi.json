@@ -642,6 +642,7 @@
   "booking.optional": "(optional)",
   "booking.notesPlaceholder": "Koi special request",
   "booking.saveBooking": "Booking save karein",
+  "booking.noTimeSlots": "Is date ke liye opening hours ke andar koi slot nahi.",
   "staff.servicePrices": "Service prices",
   "staff.priceOverride": "{service} ki price",
   "staff.priceOverridePlaceholder": "Default: {amount}",

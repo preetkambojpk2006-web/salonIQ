@@ -23,6 +23,33 @@ export function istSlotIso(date: string, hour: number, minute: number): string {
   return `${date}T${pad2(hour)}:${pad2(minute)}:00+05:30`;
 }
 
+/** Hourly rows for the internal calendar grid (open through close, inclusive). */
+export function buildCalendarHourRows(
+  hours: BookingHours = {
+    openHour: BOOKING_OPEN_HOUR,
+    closeHour: BOOKING_CLOSE_HOUR,
+  }
+): { hour: number; label: string }[] {
+  const rows: { hour: number; label: string }[] = [];
+
+  for (let hour = hours.openHour; hour <= hours.closeHour; hour++) {
+    const iso = istSlotIso("2000-01-01", hour, 0);
+    const label = new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      hour12: true,
+      timeZone: SALON_TIMEZONE,
+    });
+    rows.push({ hour, label });
+  }
+
+  return rows;
+}
+
+/** Extract HH:MM from an IST slot ISO for form submission. */
+export function slotIsoToFormTime(iso: string): string {
+  return iso.slice(11, 16);
+}
+
 export function generateDaySlots(
   date: string,
   hours: BookingHours = {

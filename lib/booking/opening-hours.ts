@@ -2,6 +2,8 @@ import { parseOpeningHours } from "@/lib/onboarding/skips";
 
 export const DEFAULT_BOOKING_OPEN_HOUR = 9;
 export const DEFAULT_BOOKING_CLOSE_HOUR = 20;
+/** Internal calendar / owner booking fallback when no hours configured. */
+export const INTERNAL_DEFAULT_CLOSE_HOUR = 21;
 
 export type BookingHours = {
   openHour: number;
@@ -68,7 +70,10 @@ export function parseHoursFromDisplay(display: string): BookingHours | null {
   return normalizeHours(openHour, closeHour);
 }
 
-export function parseOpeningHoursForBooking(raw: unknown): BookingHours {
+export function parseOpeningHoursForBooking(
+  raw: unknown,
+  fallbackCloseHour = DEFAULT_BOOKING_CLOSE_HOUR
+): BookingHours {
   const record = parseOpeningHours(raw);
 
   const structuredOpen = Number(record.open_hour);
@@ -93,8 +98,13 @@ export function parseOpeningHoursForBooking(raw: unknown): BookingHours {
 
   return {
     openHour: DEFAULT_BOOKING_OPEN_HOUR,
-    closeHour: DEFAULT_BOOKING_CLOSE_HOUR,
+    closeHour: fallbackCloseHour,
   };
+}
+
+/** Owner-facing calendar/booking — 9am–9pm when salon hours are not set. */
+export function parseInternalBookingHours(raw: unknown): BookingHours {
+  return parseOpeningHoursForBooking(raw, INTERNAL_DEFAULT_CLOSE_HOUR);
 }
 
 /** Persist display text plus parsed open/close hours on businesses.opening_hours. */

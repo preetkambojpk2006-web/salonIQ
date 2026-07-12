@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createAppointment } from "@/lib/appointments/actions";
-import { todayDateIso } from "@/lib/booking/slots";
+import {
+  generateDaySlots,
+  slotIsoToFormTime,
+  todayDateIso,
+} from "@/lib/booking/slots";
+import type { BookingHours } from "@/lib/booking/opening-hours";
+import { parseInternalBookingHours } from "@/lib/booking/opening-hours";
 import { getResolvedServicePrice } from "@/lib/staff/service-price-actions";
 import type { SalonService, SalonStaff } from "@/lib/salon/types";
 import { Toast } from "@/components/ui/toast";
@@ -14,6 +20,7 @@ type NewBookingFormProps = {
   error?: string;
   services?: SalonService[];
   staffMembers?: SalonStaff[];
+  bookingHours?: BookingHours;
 };
 
 function safeDecode(value: string): string {
@@ -29,6 +36,7 @@ export function NewBookingForm({
   error,
   services = [],
   staffMembers = [],
+  bookingHours,
 }: NewBookingFormProps) {
   const { t } = useT();
   const router = useRouter();
@@ -39,6 +47,7 @@ export function NewBookingForm({
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const today = todayDateIso();
+  const resolvedHours = bookingHours ?? parseInternalBookingHours(null);
 
   const activeServices = useMemo(
     () => services.filter((service) => service.is_active),
@@ -56,6 +65,28 @@ export function NewBookingForm({
     activeStaff[0]?.id ?? ""
   );
   const [amountInput, setAmountInput] = useState("");
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  const timeSlots = useMemo(
+    () => generateDaySlots(selectedDate, resolvedHours),
+    [selectedDate, resolvedHours]
+  );
+
+  const [selectedTime, setSelectedTime] = useState("");
+
+  useEffect(() => {
+    if (timeSlots.length === 0) {
+      setSelectedTime("");
+      return;
+    }
+
+    setSelectedTime((current) => {
+      const currentStillValid = timeSlots.some(
+        (slot) => slotIsoToFormTime(slot.iso) === current
+      );
+      return currentStillValid ? current : slotIsoToFormTime(timeSlots[0]!.iso);
+    });
+  }, [timeSlots]);
 
   const selectedService = activeServices.find(
     (service) => service.id === selectedServiceId
@@ -214,7 +245,8 @@ export function NewBookingForm({
                   name="date"
                   type="date"
                   required
-                  defaultValue={today}
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
                   className="input-field"
                 />
               </div>
@@ -222,13 +254,24 @@ export function NewBookingForm({
                 <label htmlFor="booking-time" className="field-label">
                   {t("booking.timeLabel")} <span className="text-coral">*</span>
                 </label>
-                <input
-                  id="booking-time"
-                  name="time"
-                  type="time"
-                  required
-                  className="input-field"
-                />
+                {timeSlots.length > 0 ? (
+                  <select
+                    id="booking-time"
+                    name="time"
+                    required
+                    className="input-field"
+                    value={selectedTime}
+                    onChange={(event) => setSelectedTime(event.target.value)}
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot.iso} value={slotIsoToFormTime(slot.iso)}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm text-muted">{t("booking.noTimeSlots")}</p>
+                )}
               </div>
             </div>
 
@@ -303,7 +346,7 @@ export function NewBookingForm({
             <button type="button" onClick={onClose} className="btn-ghost-os flex-1">
               {t("common.cancel")}
             </button>
-            <button type="submit" className="btn-dark flex-1" disabled={isPending}>
+            <button type="submit" className="btn-dark flex-1" disabled={isPending || timeSlots.length === 0}>
               {isPending ? t("common.saving") : t("booking.saveBooking")}
             </button>
           </div>

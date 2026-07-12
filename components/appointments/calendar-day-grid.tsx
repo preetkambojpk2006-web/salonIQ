@@ -3,26 +3,14 @@
 import { memo, useMemo } from "react";
 import type { Appointment } from "@/lib/appointments/types";
 import { effectiveEndTime } from "@/lib/appointments/cascade";
+import type { BookingHours } from "@/lib/booking/opening-hours";
+import { parseInternalBookingHours } from "@/lib/booking/opening-hours";
+import { buildCalendarHourRows } from "@/lib/booking/slots";
 import { formatTime12hInSalon } from "@/lib/format/time";
 import { SALON_TIMEZONE } from "@/lib/payments/date-utils";
 
-const TIME_SLOTS = [
-  { hour: 10, label: "10 AM" },
-  { hour: 11, label: "11 AM" },
-  { hour: 12, label: "12 PM" },
-  { hour: 13, label: "1 PM" },
-  { hour: 14, label: "2 PM" },
-  { hour: 15, label: "3 PM" },
-  { hour: 16, label: "4 PM" },
-  { hour: 17, label: "5 PM" },
-  { hour: 18, label: "6 PM" },
-  { hour: 19, label: "7 PM" },
-  { hour: 20, label: "8 PM" },
-];
-
 /** Matches `.calendar-cell { min-height: 74px }` in globals.css — one hour row */
 const SLOT_HEIGHT_PX = 74;
-const GRID_START_HOUR = TIME_SLOTS[0]?.hour ?? 10;
 const GRID_BOTTOM_PADDING_PX = 20;
 /** Minimum readable card height in the grid (customer + service + time). */
 const CARD_MIN_HEIGHT_PX = 64;
@@ -60,9 +48,12 @@ function appointmentStartParts(iso: string): { hour: number; minute: number } {
   return { hour, minute };
 }
 
-function minutesFromGridStart(iso: string): number {
+function minutesFromGridStart(
+  iso: string,
+  gridStartHour: number
+): number {
   const { hour, minute } = appointmentStartParts(iso);
-  return (hour - GRID_START_HOUR) * 60 + minute;
+  return (hour - gridStartHour) * 60 + minute;
 }
 
 function durationMinutes(startIso: string, endIso: string | null): number {
@@ -71,12 +62,17 @@ function durationMinutes(startIso: string, endIso: string | null): number {
   return Math.max(30, (end.getTime() - start.getTime()) / (60 * 1000));
 }
 
-function blockLayout(appointment: Appointment): {
+function blockLayout(
+  appointment: Appointment,
+  gridStartHour: number
+): {
   topPx: number;
   heightPx: number;
   gridOptions: GridBlockOptions;
 } {
-  const topPx = (minutesFromGridStart(appointment.start_time) / 60) * SLOT_HEIGHT_PX;
+  const topPx =
+    (minutesFromGridStart(appointment.start_time, gridStartHour) / 60) *
+    SLOT_HEIGHT_PX;
   const durationMins = durationMinutes(
     appointment.start_time,
     appointment.end_time
@@ -102,6 +98,7 @@ function blockLayout(appointment: Appointment): {
 
 type CalendarDayGridProps = {
   dayAppointments: Appointment[];
+  bookingHours?: BookingHours;
   onCompletePay: (appointment: Appointment) => void;
   renderBlock: (
     appointment: Appointment,
@@ -112,9 +109,17 @@ type CalendarDayGridProps = {
 
 function CalendarDayGridInner({
   dayAppointments,
+  bookingHours,
   onCompletePay,
   renderBlock,
 }: CalendarDayGridProps) {
+  const resolvedHours = bookingHours ?? parseInternalBookingHours(null);
+  const timeSlots = useMemo(
+    () => buildCalendarHourRows(resolvedHours),
+    [resolvedHours]
+  );
+  const gridStartHour = resolvedHours.openHour;
+
   const staffColumns = useMemo(() => {
     const names = new Set<string>();
     for (const appointment of dayAppointments) {
@@ -145,16 +150,16 @@ function CalendarDayGridInner({
     return map;
   }, [dayAppointments]);
 
-  const gridHeightPx = TIME_SLOTS.length * SLOT_HEIGHT_PX + GRID_BOTTOM_PADDING_PX;
+  const gridHeightPx = timeSlots.length * SLOT_HEIGHT_PX + GRID_BOTTOM_PADDING_PX;
   const bodyRowStart = 2;
-  const bodyRowEnd = bodyRowStart + TIME_SLOTS.length;
+  const bodyRowEnd = bodyRowStart + timeSlots.length;
 
   return (
     <div
       className="calendar-grid"
       style={{
         gridTemplateColumns: `86px repeat(${staffColumns.length}, minmax(160px, 1fr))`,
-        gridTemplateRows: `46px repeat(${TIME_SLOTS.length}, ${SLOT_HEIGHT_PX}px)`,
+        gridTemplateRows: `46px repeat(${timeSlots.length}, ${SLOT_HEIGHT_PX}px)`,
         paddingBottom: GRID_BOTTOM_PADDING_PX,
       }}
     >
@@ -171,7 +176,7 @@ function CalendarDayGridInner({
         </div>
       ))}
 
-      {TIME_SLOTS.map((slot, index) => (
+      {timeSlots.map((slot, index) => (
         <div
           key={slot.hour}
           className="calendar-cell time"
@@ -196,7 +201,7 @@ function CalendarDayGridInner({
             background: "#fff",
           }}
         >
-          {TIME_SLOTS.map((slot, index) => (
+          {timeSlots.map((slot, index) => (
             <div
               key={slot.hour}
               aria-hidden
@@ -213,7 +218,7 @@ function CalendarDayGridInner({
           ))}
 
           {(appointmentsByStaff.get(name) ?? []).map((appointment) => {
-            const layout = blockLayout(appointment);
+            const layout = blockLayout(appointment, gridStartHour);
 
             return (
               <div
