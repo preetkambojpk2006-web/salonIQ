@@ -714,7 +714,10 @@ export function CalendarView({
         );
       }
 
-      if (payAppointment && (method === "cash" || method === "upi")) {
+      if (
+        payAppointment &&
+        (method === "cash" || method === "upi" || method === "split")
+      ) {
         setWhatsappPayment({ appointment: payAppointment, paymentMethod: method });
       }
 

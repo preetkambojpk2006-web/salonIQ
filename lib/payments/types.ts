@@ -1,4 +1,4 @@
-export type PaymentMethod = "cash" | "upi" | "card" | "pending";
+export type PaymentMethod = "cash" | "upi" | "card" | "pending" | "split";
 export type PaymentRecordStatus = "paid" | "unpaid" | "partial";
 
 export type Payment = {
@@ -8,6 +8,8 @@ export type Payment = {
   customer_name: string | null;
   amount: number;
   method: PaymentMethod;
+  cash_amount: number | null;
+  upi_amount: number | null;
   status: PaymentRecordStatus;
   paid_at: string | null;
   created_at: string;

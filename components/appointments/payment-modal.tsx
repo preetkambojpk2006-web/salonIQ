@@ -87,6 +87,9 @@ export function PaymentModal({
   const [amountInput, setAmountInput] = useState(() =>
     initialAmountValue(appointment)
   );
+  const [splitMode, setSplitMode] = useState(false);
+  const [cashInput, setCashInput] = useState("0");
+  const [upiInput, setUpiInput] = useState("0");
   const bookingAmount = initialAmountValue(appointment);
 
   useEffect(() => {
@@ -98,6 +101,9 @@ export function PaymentModal({
   useEffect(() => {
     setAmountInput(bookingAmount);
     setAmountError(null);
+    setSplitMode(false);
+    setCashInput("0");
+    setUpiInput("0");
   }, [appointment.id, bookingAmount]);
 
   const handleClose = useCallback(() => {
@@ -107,9 +113,37 @@ export function PaymentModal({
   }, [isSaving, onClose]);
 
   const normalizedAmount = parseAmountInput(amountInput);
+  const cashValue = parseAmountInput(cashInput);
+  const upiValue = parseAmountInput(upiInput);
+  const splitMatches =
+    normalizedAmount > 0 && cashValue + upiValue === normalizedAmount;
+
+  const enterSplit = () => {
+    setAmountError(null);
+    setCashInput(String(normalizedAmount));
+    setUpiInput("0");
+    setSplitMode(true);
+  };
+
+  const exitSplit = () => {
+    setSplitMode(false);
+    setAmountError(null);
+  };
+
+  const handleCashChange = (value: string) => {
+    setCashInput(value);
+    const remaining = normalizedAmount - parseAmountInput(value);
+    setUpiInput(String(remaining > 0 ? remaining : 0));
+  };
+
+  const handleUpiChange = (value: string) => {
+    setUpiInput(value);
+    const remaining = normalizedAmount - parseAmountInput(value);
+    setCashInput(String(remaining > 0 ? remaining : 0));
+  };
 
   const handlePay = async (method: PaymentMethod) => {
-    const isPaid = method === "cash" || method === "upi";
+    const isPaid = method === "cash" || method === "upi" || method === "split";
 
     setAmountError(null);
     setIsSaving(true);
@@ -120,6 +154,11 @@ export function PaymentModal({
 
       if (isPaid) {
         formData.set("amount", String(normalizedAmount));
+      }
+
+      if (method === "split") {
+        formData.set("cash_amount", String(cashValue));
+        formData.set("upi_amount", String(upiValue));
       }
 
       const result = await recordAppointmentPayment(formData);
@@ -185,7 +224,7 @@ export function PaymentModal({
                   inputMode="numeric"
                   className="payment-modal-amount-input"
                   value={amountInput}
-                  disabled={isSaving}
+                  disabled={isSaving || splitMode}
                   onChange={(event) => setAmountInput(event.target.value)}
                   onBlur={() => {
                     setAmountInput(String(parseAmountInput(amountInput)));
@@ -212,46 +251,148 @@ export function PaymentModal({
           </p>
         ) : null}
 
-        <div className="payment-modal-actions">
-          <button
-            type="button"
-            className="payment-btn-mint"
-            disabled={isSaving}
-            onClick={() => handlePay("cash")}
-          >
-            {isSaving ? (
-              t("common.saving")
-            ) : (
-              <span className="payment-btn-label">
-                <Check size={16} strokeWidth={1.5} aria-hidden />
-                {t("payment.cash")}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            className="payment-btn-mint"
-            disabled={isSaving}
-            onClick={() => handlePay("upi")}
-          >
-            {isSaving ? (
-              t("common.saving")
-            ) : (
-              <span className="payment-btn-label">
-                <Check size={16} strokeWidth={1.5} aria-hidden />
-                {t("payment.upi")}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            className="payment-btn-ghost"
-            disabled={isSaving || !canMarkPending}
-            onClick={() => handlePay("pending")}
-          >
-            {isSaving ? t("common.saving") : t("payment.markPending")}
-          </button>
-        </div>
+        {splitMode ? (
+          <div className="payment-modal-split">
+            <div className="payment-modal-split-fields">
+              <label className="payment-modal-amount-field">
+                <span className="payment-modal-amount-label">
+                  {t("payment.cashAmount")}
+                </span>
+                <span className="payment-modal-amount-control">
+                  <span className="payment-modal-amount-symbol" aria-hidden>
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    className="payment-modal-amount-input"
+                    value={cashInput}
+                    disabled={isSaving}
+                    onChange={(event) => handleCashChange(event.target.value)}
+                    onBlur={() => setCashInput(String(cashValue))}
+                    aria-label={t("payment.cashAmount")}
+                  />
+                </span>
+              </label>
+              <label className="payment-modal-amount-field">
+                <span className="payment-modal-amount-label">
+                  {t("payment.upiAmount")}
+                </span>
+                <span className="payment-modal-amount-control">
+                  <span className="payment-modal-amount-symbol" aria-hidden>
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    className="payment-modal-amount-input"
+                    value={upiInput}
+                    disabled={isSaving}
+                    onChange={(event) => handleUpiChange(event.target.value)}
+                    onBlur={() => setUpiInput(String(upiValue))}
+                    aria-label={t("payment.upiAmount")}
+                  />
+                </span>
+              </label>
+            </div>
+
+            <p
+              className="payment-modal-meta"
+              style={{ marginTop: 4, fontWeight: 600 }}
+            >
+              {t("payment.splitTotal", { total: String(normalizedAmount) })}
+            </p>
+
+            {!splitMatches ? (
+              <p
+                className="alert-danger"
+                role="alert"
+                style={{ marginTop: 8, marginBottom: 0 }}
+              >
+                {t("payment.splitMismatch", { total: String(normalizedAmount) })}
+              </p>
+            ) : null}
+
+            <div className="payment-modal-actions" style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="payment-btn-mint"
+                disabled={isSaving || !splitMatches}
+                onClick={() => handlePay("split")}
+              >
+                {isSaving ? (
+                  t("common.saving")
+                ) : (
+                  <span className="payment-btn-label">
+                    <Check size={16} strokeWidth={1.5} aria-hidden />
+                    {t("payment.confirmSplit")}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className="payment-btn-ghost"
+                disabled={isSaving}
+                onClick={exitSplit}
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="payment-modal-actions">
+            <button
+              type="button"
+              className="payment-btn-mint"
+              disabled={isSaving}
+              onClick={() => handlePay("cash")}
+            >
+              {isSaving ? (
+                t("common.saving")
+              ) : (
+                <span className="payment-btn-label">
+                  <Check size={16} strokeWidth={1.5} aria-hidden />
+                  {t("payment.cash")}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="payment-btn-mint"
+              disabled={isSaving}
+              onClick={() => handlePay("upi")}
+            >
+              {isSaving ? (
+                t("common.saving")
+              ) : (
+                <span className="payment-btn-label">
+                  <Check size={16} strokeWidth={1.5} aria-hidden />
+                  {t("payment.upi")}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="payment-btn-ghost"
+              disabled={isSaving}
+              onClick={enterSplit}
+            >
+              {t("payment.split")}
+            </button>
+            <button
+              type="button"
+              className="payment-btn-ghost"
+              disabled={isSaving || !canMarkPending}
+              onClick={() => handlePay("pending")}
+            >
+              {isSaving ? t("common.saving") : t("payment.markPending")}
+            </button>
+          </div>
+        )}
       </div>
     </dialog>
   );

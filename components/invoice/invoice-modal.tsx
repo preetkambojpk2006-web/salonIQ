@@ -27,6 +27,7 @@ function paymentMethodLabel(
   if (method === "cash") return t("payment.cash");
   if (method === "upi") return t("payment.upi");
   if (method === "card") return t("payment.card");
+  if (method === "split") return `${t("payment.cash")} + ${t("payment.upi")}`;
   return t("payment.markPending");
 }
 

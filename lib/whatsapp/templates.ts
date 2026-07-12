@@ -14,6 +14,7 @@ function paymentMethodLabel(method: PaymentMethod | string | null | undefined): 
   if (method === "upi") return "UPI";
   if (method === "card") return "Card";
   if (method === "pending") return "Pending";
+  if (method === "split") return "Cash + UPI";
   return "Payment";
 }
 

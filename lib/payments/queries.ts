@@ -135,6 +135,10 @@ async function fetchPaymentMethodCounts(businessId: string) {
     if (row.method === "cash") cashCount += 1;
     else if (row.method === "upi") upiCount += 1;
     else if (row.method === "pending") pendingMethodCount += 1;
+    else if (row.method === "split") {
+      cashCount += 1;
+      upiCount += 1;
+    }
   }
 
   return { cashCount, upiCount, pendingMethodCount };
@@ -157,7 +161,7 @@ export async function getCashUpiSplit(
 
   const { data, error } = await supabase
     .from("payments")
-    .select("amount, method")
+    .select("amount, method, cash_amount, upi_amount")
     .eq("business_id", businessId)
     .eq("status", "paid")
     .not("paid_at", "is", null)
@@ -178,6 +182,9 @@ export async function getCashUpiSplit(
       cash += amount;
     } else if (row.method === "upi") {
       upi += amount;
+    } else if (row.method === "split") {
+      cash += Number(row.cash_amount ?? 0);
+      upi += Number(row.upi_amount ?? 0);
     }
   }
 

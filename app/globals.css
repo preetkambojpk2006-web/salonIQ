@@ -1790,6 +1790,26 @@
     margin: 0;
   }
 
+  .payment-modal-split {
+    margin-top: 16px;
+  }
+
+  .payment-modal-split-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .payment-modal-split-fields .payment-modal-amount-field {
+    margin: 0;
+  }
+
+  @media (max-width: 380px) {
+    .payment-modal-split-fields {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .payment-btn-label {
     display: inline-flex;
     align-items: center;

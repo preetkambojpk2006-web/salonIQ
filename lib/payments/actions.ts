@@ -8,7 +8,7 @@ import { todayCalendarDay } from "@/lib/payments/date-utils";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending"];
+const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending", "split"];
 
 /** Server-side cap on a single payment: ₹10 lakh. */
 const MAX_PAYMENT_AMOUNT = 1_000_000;
@@ -34,7 +34,16 @@ function mapPaymentRpcError(message: string): string {
   if (message.includes("NOT_AUTHORIZED")) {
     return "Aapko is booking par payment record karne ki permission nahi hai.";
   }
+  if (message.includes("INVALID_SPLIT")) {
+    return "Cash + UPI total amount ke barabar hona chahiye.";
+  }
   return message;
+}
+
+function parseSplitAmount(value: FormDataEntryValue | null): number {
+  const parsed = Number((value as string)?.trim());
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed);
 }
 
 export async function recordAppointmentPayment(
@@ -114,9 +123,24 @@ export async function recordAppointmentPayment(
     return { ok: false, error: "Amount exceeds maximum allowed value." };
   }
 
-  const isPaid = method === "cash" || method === "upi";
+  const isPaid = method === "cash" || method === "upi" || method === "split";
   if (isPaid && amount < 0) {
     return { ok: false, error: "Paid amount 0 se kam nahi ho sakta." };
+  }
+
+  let cashAmount: number | null = null;
+  let upiAmount: number | null = null;
+
+  if (method === "split") {
+    cashAmount = parseSplitAmount(formData.get("cash_amount"));
+    upiAmount = parseSplitAmount(formData.get("upi_amount"));
+
+    if (cashAmount + upiAmount !== Math.round(amount)) {
+      return {
+        ok: false,
+        error: "Cash + UPI total amount ke barabar hona chahiye.",
+      };
+    }
   }
 
   const now = new Date().toISOString();
@@ -140,6 +164,8 @@ export async function recordAppointmentPayment(
       p_method: method,
       p_customer_name: customerName,
       p_paid_at: now,
+      p_cash_amount: cashAmount,
+      p_upi_amount: upiAmount,
     }
   );
 
