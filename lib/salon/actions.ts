@@ -339,3 +339,98 @@ export async function toggleSalonStaffActive(
   revalidateSalonPaths();
   return { ok: true };
 }
+
+type StaffServicePriceEntry = {
+  service_id: string;
+  price: number | null;
+};
+
+export async function saveStaffServicePrices(
+  formData: FormData
+): Promise<SalonActionResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  const staffId = (formData.get("staff_id") as string)?.trim();
+  const rawEntries = (formData.get("prices_json") as string)?.trim();
+
+  if (!staffId || !rawEntries) {
+    return { ok: false, error: "Staff service prices save nahi ho paye." };
+  }
+
+  let entries: StaffServicePriceEntry[];
+  try {
+    entries = JSON.parse(rawEntries) as StaffServicePriceEntry[];
+    if (!Array.isArray(entries)) {
+      return { ok: false, error: "Invalid price data." };
+    }
+  } catch {
+    return { ok: false, error: "Invalid price data." };
+  }
+
+  const supabase = createClient();
+
+  const { data: staffRow } = await supabase
+    .from("staff")
+    .select("id")
+    .eq("id", staffId)
+    .eq("business_id", access.businessId)
+    .maybeSingle();
+
+  if (!staffRow?.id) {
+    return { ok: false, error: "Staff member not found." };
+  }
+
+  for (const entry of entries) {
+    const serviceId = entry.service_id?.trim();
+    if (!serviceId) continue;
+
+    const { data: serviceRow } = await supabase
+      .from("services")
+      .select("id")
+      .eq("id", serviceId)
+      .eq("business_id", access.businessId)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (!serviceRow?.id) {
+      continue;
+    }
+
+    if (entry.price == null) {
+      const { error } = await supabase
+        .from("staff_service_prices")
+        .delete()
+        .eq("business_id", access.businessId)
+        .eq("staff_id", staffId)
+        .eq("service_id", serviceId);
+
+      if (error) {
+        return { ok: false, error: error.message };
+      }
+      continue;
+    }
+
+    const price = Number(entry.price);
+    if (!Number.isFinite(price) || price < 0) {
+      return { ok: false, error: "Invalid service price." };
+    }
+
+    const { error } = await supabase.from("staff_service_prices").upsert(
+      {
+        business_id: access.businessId,
+        staff_id: staffId,
+        service_id: serviceId,
+        price,
+      },
+      { onConflict: "staff_id,service_id" }
+    );
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+  }
+
+  revalidateSalonPaths();
+  return { ok: true };
+}

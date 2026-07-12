@@ -6,6 +6,7 @@ import {
 } from "@/lib/appointments/queries";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
+import { listServices, listStaffMembers } from "@/lib/salon/queries";
 import { reviewsSocialFromBusiness } from "@/lib/settings/reviews-social";
 
 export const dynamic = "force-dynamic";
@@ -23,12 +24,20 @@ type CalendarPageProps = {
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const [appointments, onlinePending, business, membership, businessId] =
     await Promise.all([
-    listAppointments(),
-    listOnlinePendingAppointments(),
-    getOwnerBusiness(),
-    getUserMembership(),
-    getOwnerBusinessId(),
-  ]);
+      listAppointments(),
+      listOnlinePendingAppointments(),
+      getOwnerBusiness(),
+      getUserMembership(),
+      getOwnerBusinessId(),
+    ]);
+
+  const [services, staffMembers] = businessId
+    ? await Promise.all([
+        listServices(businessId),
+        listStaffMembers(businessId),
+      ])
+    : [[], []];
+
   const appRole = membership?.appRole ?? "staff";
   const reviewsSocial = reviewsSocialFromBusiness(business);
 
@@ -40,6 +49,8 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       businessName={business?.name ?? "Your salon"}
       googleReviewLink={business?.google_review_link ?? null}
       reviewsSocial={reviewsSocial}
+      services={services}
+      staffMembers={staffMembers}
       canManageFinance={canManageFinance(appRole)}
       canEditAppointmentTime={isOwnerOrAdmin(appRole)}
       openBooking={searchParams?.booking === "new"}

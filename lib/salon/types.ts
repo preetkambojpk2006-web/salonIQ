@@ -24,3 +24,11 @@ export type SalonBranchOption = {
   id: string;
   name: string;
 };
+
+export type StaffServicePrice = {
+  id: string;
+  business_id: string;
+  staff_id: string;
+  service_id: string;
+  price: number;
+};

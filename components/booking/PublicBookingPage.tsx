@@ -17,7 +17,9 @@ import type {
   PublicBookingGate,
   PublicBookingService,
   PublicBookingStaff,
+  PublicStaffServicePrice,
 } from "@/lib/booking/types";
+import { resolvePublicServicePrice } from "@/lib/staff/service-price";
 import { createClient } from "@/lib/supabase/client";
 
 const TOKENS = {
@@ -113,6 +115,9 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
         ...raw,
         services: Array.isArray(raw.services) ? raw.services : [],
         staff: Array.isArray(raw.staff) ? raw.staff : [],
+        staff_service_prices: Array.isArray(raw.staff_service_prices)
+          ? raw.staff_service_prices
+          : [],
         opening_hours:
           raw.opening_hours && typeof raw.opening_hours === "object"
             ? (raw.opening_hours as Record<string, unknown>)
@@ -128,6 +133,22 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
       cancelled = true;
     };
   }, [slug]);
+
+  const priceOverrides = useMemo(
+    () => (context?.staff_service_prices ?? []) as PublicStaffServicePrice[],
+    [context?.staff_service_prices]
+  );
+
+  const displayPriceForService = useCallback(
+    (service: PublicBookingService) =>
+      resolvePublicServicePrice({
+        serviceName: service.name,
+        defaultPrice: Number(service.price),
+        staffName: selectedStaff?.name,
+        overrides: priceOverrides,
+      }),
+    [priceOverrides, selectedStaff?.name]
+  );
 
   useEffect(() => {
     if (!context || !date) return;
@@ -416,7 +437,8 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
                         {service.name}
                       </strong>
                       <p style={{ margin: "4px 0 0", fontSize: 13, color: TOKENS.textMuted }}>
-                        {service.duration_mins} min · {formatInr(Number(service.price))}
+                        {service.duration_mins} min ·{" "}
+                        {formatInr(displayPriceForService(service))}
                       </p>
                     </button>
                   );

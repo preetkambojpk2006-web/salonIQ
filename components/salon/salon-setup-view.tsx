@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import {
   createSalonService,
   createSalonStaffMember,
+  saveStaffServicePrices,
   toggleSalonServiceActive,
   toggleSalonStaffActive,
   updateSalonService,
@@ -17,6 +18,7 @@ import type {
   SalonBranchOption,
   SalonService,
   SalonStaff,
+  StaffServicePrice,
 } from "@/lib/salon/types";
 import { useT } from "@/lib/i18n/LanguageContext";
 
@@ -24,6 +26,7 @@ type SalonSetupViewProps = {
   services: SalonService[];
   staff: SalonStaff[];
   branches: SalonBranchOption[];
+  staffServicePrices?: StaffServicePrice[];
   bookingSlug?: string | null;
 };
 
@@ -230,15 +233,167 @@ function ServiceRow({
   );
 }
 
+function StaffServicePricesPanel({
+  staff,
+  services,
+  overrides,
+  onSaved,
+  onError,
+}: {
+  staff: SalonStaff;
+  services: SalonService[];
+  overrides: StaffServicePrice[];
+  onSaved: () => void;
+  onError: (message: string) => void;
+}) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const activeServices = useMemo(
+    () => services.filter((service) => service.is_active),
+    [services]
+  );
+  const overrideByServiceId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of overrides) {
+      if (row.staff_id === staff.id) {
+        map.set(row.service_id, row.price);
+      }
+    }
+    return map;
+  }, [overrides, staff.id]);
+
+  const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const service of activeServices) {
+      const override = overrideByServiceId.get(service.id);
+      next[service.id] =
+        override !== undefined ? String(override) : "";
+    }
+    setPriceInputs(next);
+  }, [activeServices, overrideByServiceId, staff.id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const entries = activeServices.map((service) => {
+      const raw = priceInputs[service.id]?.trim() ?? "";
+      return {
+        service_id: service.id,
+        price: raw ? Number.parseFloat(raw) : null,
+      };
+    });
+
+    const formData = new FormData();
+    formData.set("staff_id", staff.id);
+    formData.set("prices_json", JSON.stringify(entries));
+
+    const result = await saveStaffServicePrices(formData);
+    setSaving(false);
+
+    if (!result.ok) {
+      onError(result.error);
+      return;
+    }
+
+    onSaved();
+  };
+
+  if (activeServices.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ marginTop: 12, borderTop: "1px solid #E0DAD0", paddingTop: 12 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          padding: 0,
+          border: 0,
+          background: "transparent",
+          color: "#1A1A1A",
+          fontSize: 13,
+          fontWeight: 700,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span>{t("staff.servicePrices")}</span>
+        <span style={{ color: "#8A8A8A", fontSize: 12 }}>{open ? "−" : "+"}</span>
+      </button>
+
+      {open ? (
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          {activeServices.map((service) => (
+            <div
+              key={service.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 120px",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 14, color: "#1A1A1A", fontWeight: 600 }}>
+                {service.name}
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                className="input-field"
+                value={priceInputs[service.id] ?? ""}
+                placeholder={t("staff.priceOverridePlaceholder", {
+                  amount: formatRs(service.price),
+                })}
+                aria-label={t("staff.priceOverride", { service: service.name })}
+                onChange={(event) =>
+                  setPriceInputs((current) => ({
+                    ...current,
+                    [service.id]: event.target.value,
+                  }))
+                }
+                style={fieldStyle}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ minHeight: 40, borderRadius: 10, justifySelf: "start" }}
+          >
+            {saving ? t("common.saving") : t("staff.saveServicePrices")}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function StaffRow({
   staff,
   branches,
+  services,
+  staffServicePrices,
   onUpdated,
+  onPricesSaved,
   onError,
 }: {
   staff: SalonStaff;
   branches: SalonBranchOption[];
+  services: SalonService[];
+  staffServicePrices: StaffServicePrice[];
   onUpdated: () => void;
+  onPricesSaved: () => void;
   onError: (message: string) => void;
 }) {
   const { t } = useT();
@@ -407,6 +562,13 @@ function StaffRow({
           </button>
         </div>
       </div>
+      <StaffServicePricesPanel
+        staff={staff}
+        services={services}
+        overrides={staffServicePrices}
+        onSaved={onPricesSaved}
+        onError={onError}
+      />
     </article>
   );
 }
@@ -415,6 +577,7 @@ export function SalonSetupView({
   services,
   staff,
   branches,
+  staffServicePrices = [],
   bookingSlug = null,
 }: SalonSetupViewProps) {
   const { t } = useT();
@@ -780,8 +943,14 @@ export function SalonSetupView({
                   key={member.id}
                   staff={member}
                   branches={branches}
+                  services={services}
+                  staffServicePrices={staffServicePrices}
                   onUpdated={() => {
                     showToast(t("services.staffUpdatedToast"), "success");
+                    refresh();
+                  }}
+                  onPricesSaved={() => {
+                    showToast(t("staff.servicePricesSaved"), "success");
                     refresh();
                   }}
                   onError={(message) => showToast(message, "error")}

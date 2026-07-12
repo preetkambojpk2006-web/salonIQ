@@ -6,6 +6,7 @@ import {
   listBranchOptions,
   listServices,
   listStaffMembers,
+  listStaffServicePrices,
 } from "@/lib/salon/queries";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +22,11 @@ export default async function ServicesPage() {
     business.booking_slug ??
     (await ensureBusinessBookingSlug(business.id, business.name));
 
-  const [services, staff, branches] = await Promise.all([
+  const [services, staff, branches, staffServicePrices] = await Promise.all([
     listServices(business.id),
     listStaffMembers(business.id),
     listBranchOptions(business.id),
+    listStaffServicePrices(business.id),
   ]);
 
   return (
@@ -32,6 +34,7 @@ export default async function ServicesPage() {
       services={services}
       staff={staff}
       branches={branches}
+      staffServicePrices={staffServicePrices}
       bookingSlug={bookingSlug}
     />
   );

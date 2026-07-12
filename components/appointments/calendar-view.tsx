@@ -27,6 +27,7 @@ import {
   rejectAppointment,
 } from "@/lib/appointments/actions";
 import type { Appointment } from "@/lib/appointments/types";
+import type { SalonService, SalonStaff } from "@/lib/salon/types";
 import {
   isOnlinePendingAppointment,
   mergeAppointments,
@@ -42,6 +43,8 @@ type CalendarViewProps = {
   businessName: string;
   googleReviewLink?: string | null;
   reviewsSocial?: ReviewsSocialPrompts;
+  services?: SalonService[];
+  staffMembers?: SalonStaff[];
   canManageFinance?: boolean;
   canEditAppointmentTime?: boolean;
   openBooking?: boolean;
@@ -528,6 +531,8 @@ export function CalendarView({
   businessName,
   googleReviewLink = null,
   reviewsSocial,
+  services = [],
+  staffMembers = [],
   canManageFinance = true,
   canEditAppointmentTime = false,
   openBooking = false,
@@ -957,7 +962,12 @@ export function CalendarView({
       </div>
 
       {showForm ? (
-        <NewBookingForm onClose={closeForm} error={openBooking ? error : undefined} />
+        <NewBookingForm
+          onClose={closeForm}
+          error={openBooking ? error : undefined}
+          services={services}
+          staffMembers={staffMembers}
+        />
       ) : null}
 
       {liveDetailAppointment ? (

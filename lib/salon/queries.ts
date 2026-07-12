@@ -1,4 +1,4 @@
-import type { SalonBranchOption, SalonService, SalonStaff } from "@/lib/salon/types";
+import type { SalonBranchOption, SalonService, SalonStaff, StaffServicePrice } from "@/lib/salon/types";
 import { createClient } from "@/lib/supabase/server";
 
 type ServiceRow = {
@@ -86,6 +86,30 @@ export async function listBranchOptions(
   }
 
   return data ?? [];
+}
+
+export async function listStaffServicePrices(
+  businessId: string
+): Promise<StaffServicePrice[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("staff_service_prices")
+    .select("id, business_id, staff_id, service_id, price")
+    .eq("business_id", businessId);
+
+  if (error) {
+    console.error("listStaffServicePrices:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    business_id: row.business_id as string,
+    staff_id: row.staff_id as string,
+    service_id: row.service_id as string,
+    price: Number(row.price ?? 0),
+  }));
 }
 
 function mapServiceRow(row: ServiceRow): SalonService {

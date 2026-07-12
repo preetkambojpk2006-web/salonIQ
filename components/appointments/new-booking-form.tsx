@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createAppointment } from "@/lib/appointments/actions";
 import { todayDateIso } from "@/lib/booking/slots";
+import { getResolvedServicePrice } from "@/lib/staff/service-price-actions";
+import type { SalonService, SalonStaff } from "@/lib/salon/types";
 import { Toast } from "@/components/ui/toast";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type NewBookingFormProps = {
   onClose: () => void;
   error?: string;
+  services?: SalonService[];
+  staffMembers?: SalonStaff[];
 };
 
 function safeDecode(value: string): string {
@@ -20,7 +24,12 @@ function safeDecode(value: string): string {
   }
 }
 
-export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
+export function NewBookingForm({
+  onClose,
+  error,
+  services = [],
+  staffMembers = [],
+}: NewBookingFormProps) {
   const { t } = useT();
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -30,6 +39,30 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const today = todayDateIso();
+
+  const activeServices = useMemo(
+    () => services.filter((service) => service.is_active),
+    [services]
+  );
+  const activeStaff = useMemo(
+    () => staffMembers.filter((member) => member.is_active),
+    [staffMembers]
+  );
+
+  const [selectedServiceId, setSelectedServiceId] = useState(
+    activeServices[0]?.id ?? ""
+  );
+  const [selectedStaffId, setSelectedStaffId] = useState(
+    activeStaff[0]?.id ?? ""
+  );
+  const [amountInput, setAmountInput] = useState("");
+
+  const selectedService = activeServices.find(
+    (service) => service.id === selectedServiceId
+  );
+  const selectedStaff = activeStaff.find(
+    (member) => member.id === selectedStaffId
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -43,6 +76,27 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
     setSubmitError(decoded);
     setErrorToast(decoded);
   }, [error]);
+
+  useEffect(() => {
+    if (!selectedServiceId) {
+      setAmountInput("");
+      return;
+    }
+
+    let cancelled = false;
+
+    void getResolvedServicePrice(
+      selectedStaffId || null,
+      selectedServiceId
+    ).then((result) => {
+      if (cancelled || !result.ok) return;
+      setAmountInput(String(result.price));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedServiceId, selectedStaffId]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -118,13 +172,36 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
               <label htmlFor="booking-service" className="field-label">
                 {t("booking.serviceLabel")} <span className="text-coral">*</span>
               </label>
-              <input
-                id="booking-service"
-                name="service_name"
-                required
-                className="input-field"
-                placeholder={t("booking.servicePlaceholder")}
-              />
+              {activeServices.length > 0 ? (
+                <>
+                  <select
+                    id="booking-service"
+                    className="input-field"
+                    value={selectedServiceId}
+                    onChange={(event) => setSelectedServiceId(event.target.value)}
+                    required
+                  >
+                    {activeServices.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="hidden"
+                    name="service_name"
+                    value={selectedService?.name ?? ""}
+                  />
+                </>
+              ) : (
+                <input
+                  id="booking-service"
+                  name="service_name"
+                  required
+                  className="input-field"
+                  placeholder={t("booking.servicePlaceholder")}
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -159,12 +236,35 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
               <label htmlFor="booking-staff" className="field-label">
                 {t("booking.staffName")}
               </label>
-              <input
-                id="booking-staff"
-                name="staff_name"
-                className="input-field"
-                placeholder={t("booking.staffPlaceholder")}
-              />
+              {activeStaff.length > 0 ? (
+                <>
+                  <select
+                    id="booking-staff"
+                    className="input-field"
+                    value={selectedStaffId}
+                    onChange={(event) => setSelectedStaffId(event.target.value)}
+                  >
+                    <option value="">{t("booking.staffOptional")}</option>
+                    {activeStaff.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="hidden"
+                    name="staff_name"
+                    value={selectedStaff?.name ?? ""}
+                  />
+                </>
+              ) : (
+                <input
+                  id="booking-staff"
+                  name="staff_name"
+                  className="input-field"
+                  placeholder={t("booking.staffPlaceholder")}
+                />
+              )}
             </div>
 
             <div>
@@ -179,6 +279,8 @@ export function NewBookingForm({ onClose, error }: NewBookingFormProps) {
                 step="1"
                 className="input-field"
                 placeholder={t("booking.amountPlaceholder")}
+                value={amountInput}
+                onChange={(event) => setAmountInput(event.target.value)}
               />
             </div>
 
