@@ -4,6 +4,7 @@ import { recordCustomerLoyaltyForPayment } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { PaymentMethod } from "@/lib/payments/types";
 import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
+import { todayCalendarDay } from "@/lib/payments/date-utils";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +14,7 @@ const VALID_METHODS: PaymentMethod[] = ["cash", "upi", "pending"];
 const MAX_PAYMENT_AMOUNT = 1_000_000;
 
 export type RecordPaymentResult =
-  | { ok: true; commissionWarning?: boolean }
+  | { ok: true; commissionWarning?: boolean; inventoryWarnings?: string[] }
   | { ok: false; error: string };
 
 /** Translate RPC exception codes into the same user-facing messages as before. */
@@ -63,7 +64,7 @@ export async function recordAppointmentPayment(
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
     .select(
-      "id, business_id, status, payment_status, total_amount, staff_name, customer_id, loyalty_counted_at, customers ( name )"
+      "id, business_id, status, payment_status, total_amount, staff_name, service_name, customer_id, loyalty_counted_at, customers ( name )"
     )
     .eq("id", appointmentId)
     .eq("business_id", businessId)
@@ -153,6 +154,7 @@ export async function recordAppointmentPayment(
   revalidatePath("/dashboard");
 
   let commissionWarning = false;
+  let inventoryWarnings: string[] = [];
 
   if (isPaid) {
     const commissionResult = await recordStaffCommissionForPayment({
@@ -183,7 +185,58 @@ export async function recordAppointmentPayment(
         console.error("recordCustomerLoyaltyForPayment:", err);
       });
     }
+
+    // Auto-deduct recipe ingredients from stock. NEVER blocks payment — any
+    // failure or low-stock item is surfaced as a non-blocking warning only.
+    inventoryWarnings = await deductServiceRecipeStock({
+      supabase,
+      businessId: rowBusinessId,
+      serviceName: appointment.service_name as string | null,
+      txnDate: todayCalendarDay(),
+    });
   }
 
-  return commissionWarning ? { ok: true, commissionWarning: true } : { ok: true };
+  return {
+    ok: true,
+    ...(commissionWarning ? { commissionWarning: true } : {}),
+    ...(inventoryWarnings.length > 0 ? { inventoryWarnings } : {}),
+  };
+}
+
+/** Non-blocking: returns product names that could not be deducted (low stock). */
+async function deductServiceRecipeStock(params: {
+  supabase: ReturnType<typeof createClient>;
+  businessId: string;
+  serviceName: string | null;
+  txnDate: string;
+}): Promise<string[]> {
+  const serviceName = params.serviceName?.trim();
+  if (!serviceName) return [];
+
+  try {
+    const { data, error } = await params.supabase.rpc(
+      "deduct_service_recipe_stock",
+      {
+        p_business_id: params.businessId,
+        p_service_name: serviceName,
+        p_txn_date: params.txnDate,
+      }
+    );
+
+    if (error) {
+      console.error("deductServiceRecipeStock rpc:", error.message);
+      return [];
+    }
+
+    const warnings = (data as { warnings?: unknown } | null)?.warnings;
+    if (Array.isArray(warnings)) {
+      return warnings.filter(
+        (name): name is string => typeof name === "string" && name.length > 0
+      );
+    }
+    return [];
+  } catch (err) {
+    console.error("deductServiceRecipeStock:", err);
+    return [];
+  }
 }

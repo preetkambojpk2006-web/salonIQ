@@ -4,6 +4,8 @@ import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import {
   listBranchOptions,
+  listRecipeProductOptions,
+  listServiceRecipes,
   listServices,
   listStaffMembers,
   listStaffServicePrices,
@@ -22,11 +24,20 @@ export default async function ServicesPage() {
     business.booking_slug ??
     (await ensureBusinessBookingSlug(business.id, business.name));
 
-  const [services, staff, branches, staffServicePrices] = await Promise.all([
+  const [
+    services,
+    staff,
+    branches,
+    staffServicePrices,
+    serviceRecipes,
+    recipeProducts,
+  ] = await Promise.all([
     listServices(business.id),
     listStaffMembers(business.id),
     listBranchOptions(business.id),
     listStaffServicePrices(business.id),
+    listServiceRecipes(business.id),
+    listRecipeProductOptions(business.id),
   ]);
 
   return (
@@ -35,6 +46,8 @@ export default async function ServicesPage() {
       staff={staff}
       branches={branches}
       staffServicePrices={staffServicePrices}
+      serviceRecipes={serviceRecipes}
+      recipeProducts={recipeProducts}
       bookingSlug={bookingSlug}
     />
   );

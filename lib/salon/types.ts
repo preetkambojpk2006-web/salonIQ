@@ -32,3 +32,19 @@ export type StaffServicePrice = {
   service_id: string;
   price: number;
 };
+
+export type ServiceRecipe = {
+  id: string;
+  business_id: string;
+  service_id: string;
+  product_id: string;
+  quantity: number;
+  unit: string | null;
+};
+
+export type RecipeProductOption = {
+  id: string;
+  name: string;
+  unit_type: string;
+  brand_name: string;
+};

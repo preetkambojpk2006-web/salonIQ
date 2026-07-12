@@ -8,6 +8,7 @@ import { Toast } from "@/components/ui/toast";
 import {
   createSalonService,
   createSalonStaffMember,
+  saveServiceRecipe,
   saveStaffServicePrices,
   toggleSalonServiceActive,
   toggleSalonStaffActive,
@@ -15,9 +16,11 @@ import {
   updateSalonStaffMember,
 } from "@/lib/salon/actions";
 import type {
+  RecipeProductOption,
   SalonBranchOption,
   SalonService,
   SalonStaff,
+  ServiceRecipe,
   StaffServicePrice,
 } from "@/lib/salon/types";
 import { useT } from "@/lib/i18n/LanguageContext";
@@ -27,6 +30,8 @@ type SalonSetupViewProps = {
   staff: SalonStaff[];
   branches: SalonBranchOption[];
   staffServicePrices?: StaffServicePrice[];
+  serviceRecipes?: ServiceRecipe[];
+  recipeProducts?: RecipeProductOption[];
   bookingSlug?: string | null;
 };
 
@@ -78,11 +83,17 @@ function ActiveToggle({
 
 function ServiceRow({
   service,
+  products,
+  recipes,
   onUpdated,
+  onRecipeSaved,
   onError,
 }: {
   service: SalonService;
+  products: RecipeProductOption[];
+  recipes: ServiceRecipe[];
   onUpdated: () => void;
+  onRecipeSaved: () => void;
   onError: (message: string) => void;
 }) {
   const { t } = useT();
@@ -229,7 +240,169 @@ function ServiceRow({
           </button>
         </div>
       </div>
+      <ServiceRecipePanel
+        service={service}
+        products={products}
+        recipes={recipes}
+        onSaved={onRecipeSaved}
+        onError={onError}
+      />
     </article>
+  );
+}
+
+function ServiceRecipePanel({
+  service,
+  products,
+  recipes,
+  onSaved,
+  onError,
+}: {
+  service: SalonService;
+  products: RecipeProductOption[];
+  recipes: ServiceRecipe[];
+  onSaved: () => void;
+  onError: (message: string) => void;
+}) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const recipeByProductId = useMemo(() => {
+    const map = new Map<string, ServiceRecipe>();
+    for (const row of recipes) {
+      if (row.service_id === service.id) {
+        map.set(row.product_id, row);
+      }
+    }
+    return map;
+  }, [recipes, service.id]);
+
+  const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const product of products) {
+      const recipe = recipeByProductId.get(product.id);
+      next[product.id] = recipe ? String(recipe.quantity) : "";
+    }
+    setQtyInputs(next);
+  }, [products, recipeByProductId, service.id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const entries = products.map((product) => {
+      const raw = qtyInputs[product.id]?.trim() ?? "";
+      return {
+        product_id: product.id,
+        quantity: raw ? Number.parseFloat(raw) : null,
+        unit: product.unit_type || null,
+      };
+    });
+
+    const formData = new FormData();
+    formData.set("service_id", service.id);
+    formData.set("recipe_json", JSON.stringify(entries));
+
+    const result = await saveServiceRecipe(formData);
+    setSaving(false);
+
+    if (!result.ok) {
+      onError(result.error);
+      return;
+    }
+
+    onSaved();
+  };
+
+  if (products.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ marginTop: 12, borderTop: "1px solid #E0DAD0", paddingTop: 12 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          padding: 0,
+          border: 0,
+          background: "transparent",
+          color: "#1A1A1A",
+          fontSize: 13,
+          fontWeight: 700,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span>{t("services.recipe")}</span>
+        <span style={{ color: "#8A8A8A", fontSize: 12 }}>{open ? "−" : "+"}</span>
+      </button>
+
+      {open ? (
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          <p style={{ margin: 0, fontSize: 12, color: "#8A8A8A", lineHeight: 1.5 }}>
+            {t("services.recipeHelp")}
+          </p>
+          {products.map((product) => (
+            <div
+              key={product.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 96px 56px",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 14, color: "#1A1A1A", fontWeight: 600 }}>
+                {product.name}
+                <span style={{ color: "#8A8A8A", fontWeight: 400 }}>
+                  {product.brand_name ? ` · ${product.brand_name}` : ""}
+                </span>
+              </span>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                className="input-field"
+                value={qtyInputs[product.id] ?? ""}
+                placeholder={t("services.recipeQty")}
+                aria-label={t("services.recipeIngredient", {
+                  product: product.name,
+                })}
+                onChange={(event) =>
+                  setQtyInputs((current) => ({
+                    ...current,
+                    [product.id]: event.target.value,
+                  }))
+                }
+                style={fieldStyle}
+              />
+              <span
+                style={{ fontSize: 13, color: "#8A8A8A" }}
+                aria-label={t("services.recipeUnit")}
+              >
+                {product.unit_type || "—"}
+              </span>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ minHeight: 40, borderRadius: 10, justifySelf: "start" }}
+          >
+            {saving ? t("common.saving") : t("common.save")}
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -578,6 +751,8 @@ export function SalonSetupView({
   staff,
   branches,
   staffServicePrices = [],
+  serviceRecipes = [],
+  recipeProducts = [],
   bookingSlug = null,
 }: SalonSetupViewProps) {
   const { t } = useT();
@@ -793,8 +968,14 @@ export function SalonSetupView({
                 <ServiceRow
                   key={service.id}
                   service={service}
+                  products={recipeProducts}
+                  recipes={serviceRecipes}
                   onUpdated={() => {
                     showToast(t("services.serviceUpdatedToast"), "success");
+                    refresh();
+                  }}
+                  onRecipeSaved={() => {
+                    showToast(t("services.recipeSaved"), "success");
                     refresh();
                   }}
                   onError={(message) => showToast(message, "error")}

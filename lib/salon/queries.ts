@@ -1,4 +1,11 @@
-import type { SalonBranchOption, SalonService, SalonStaff, StaffServicePrice } from "@/lib/salon/types";
+import type {
+  RecipeProductOption,
+  SalonBranchOption,
+  SalonService,
+  SalonStaff,
+  ServiceRecipe,
+  StaffServicePrice,
+} from "@/lib/salon/types";
 import { createClient } from "@/lib/supabase/server";
 
 type ServiceRow = {
@@ -110,6 +117,64 @@ export async function listStaffServicePrices(
     service_id: row.service_id as string,
     price: Number(row.price ?? 0),
   }));
+}
+
+export async function listServiceRecipes(
+  businessId: string
+): Promise<ServiceRecipe[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("service_recipes")
+    .select("id, business_id, service_id, product_id, quantity, unit")
+    .eq("business_id", businessId);
+
+  if (error) {
+    console.error("listServiceRecipes:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    business_id: row.business_id as string,
+    service_id: row.service_id as string,
+    product_id: row.product_id as string,
+    quantity: Number(row.quantity ?? 0),
+    unit: (row.unit as string | null) ?? null,
+  }));
+}
+
+export async function listRecipeProductOptions(
+  businessId: string
+): Promise<RecipeProductOption[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("inventory_products")
+    .select("id, name, unit_type, is_active, inventory_brands ( name )")
+    .eq("business_id", businessId)
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("listRecipeProductOptions:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const brand = (row as { inventory_brands: { name: string } | { name: string }[] | null })
+      .inventory_brands;
+    const brandName = Array.isArray(brand)
+      ? brand[0]?.name ?? "Unknown"
+      : brand?.name ?? "Unknown";
+
+    return {
+      id: row.id as string,
+      name: row.name as string,
+      unit_type: (row.unit_type as string) ?? "",
+      brand_name: brandName,
+    };
+  });
 }
 
 function mapServiceRow(row: ServiceRow): SalonService {

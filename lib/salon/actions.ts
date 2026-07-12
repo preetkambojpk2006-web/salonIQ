@@ -434,3 +434,101 @@ export async function saveStaffServicePrices(
   revalidateSalonPaths();
   return { ok: true };
 }
+
+type ServiceRecipeEntry = {
+  product_id: string;
+  quantity: number | null;
+  unit?: string | null;
+};
+
+export async function saveServiceRecipe(
+  formData: FormData
+): Promise<SalonActionResult> {
+  const access = await requireOwnerOrAdmin();
+  if (!access.ok) return access;
+
+  const serviceId = (formData.get("service_id") as string)?.trim();
+  const rawEntries = (formData.get("recipe_json") as string)?.trim();
+
+  if (!serviceId || !rawEntries) {
+    return { ok: false, error: "Recipe save nahi ho payi." };
+  }
+
+  let entries: ServiceRecipeEntry[];
+  try {
+    entries = JSON.parse(rawEntries) as ServiceRecipeEntry[];
+    if (!Array.isArray(entries)) {
+      return { ok: false, error: "Invalid recipe data." };
+    }
+  } catch {
+    return { ok: false, error: "Invalid recipe data." };
+  }
+
+  const supabase = createClient();
+
+  const { data: serviceRow } = await supabase
+    .from("services")
+    .select("id")
+    .eq("id", serviceId)
+    .eq("business_id", access.businessId)
+    .maybeSingle();
+
+  if (!serviceRow?.id) {
+    return { ok: false, error: "Service not found." };
+  }
+
+  for (const entry of entries) {
+    const productId = entry.product_id?.trim();
+    if (!productId) continue;
+
+    const { data: productRow } = await supabase
+      .from("inventory_products")
+      .select("id")
+      .eq("id", productId)
+      .eq("business_id", access.businessId)
+      .maybeSingle();
+
+    if (!productRow?.id) {
+      continue;
+    }
+
+    if (entry.quantity == null) {
+      const { error } = await supabase
+        .from("service_recipes")
+        .delete()
+        .eq("business_id", access.businessId)
+        .eq("service_id", serviceId)
+        .eq("product_id", productId);
+
+      if (error) {
+        return { ok: false, error: error.message };
+      }
+      continue;
+    }
+
+    const quantity = Number(entry.quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      return { ok: false, error: "Invalid recipe quantity." };
+    }
+
+    const unit = entry.unit?.trim() || null;
+
+    const { error } = await supabase.from("service_recipes").upsert(
+      {
+        business_id: access.businessId,
+        service_id: serviceId,
+        product_id: productId,
+        quantity,
+        unit,
+      },
+      { onConflict: "service_id,product_id" }
+    );
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+  }
+
+  revalidateSalonPaths();
+  return { ok: true };
+}

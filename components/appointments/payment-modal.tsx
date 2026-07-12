@@ -14,7 +14,7 @@ type PaymentModalProps = {
   onClose: () => void;
   onSuccess: (
     method: PaymentMethod,
-    meta?: { commissionWarning?: boolean }
+    meta?: { commissionWarning?: boolean; inventoryWarnings?: string[] }
   ) => void;
   onError: (message: string) => void;
 };
@@ -131,6 +131,7 @@ export function PaymentModal({
 
       onSuccess(method, {
         commissionWarning: result.commissionWarning === true,
+        inventoryWarnings: result.inventoryWarnings,
       });
       dialogRef.current?.close();
       onClose();

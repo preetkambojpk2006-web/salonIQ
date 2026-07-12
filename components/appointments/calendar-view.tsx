@@ -563,6 +563,9 @@ export function CalendarView({
   const [bookingToast, setBookingToast] = useState(showAddedToast);
   const [paymentToast, setPaymentToast] = useState(showPaymentToast);
   const [commissionWarningToast, setCommissionWarningToast] = useState(false);
+  const [inventoryWarningToast, setInventoryWarningToast] = useState<
+    string | null
+  >(null);
   const [paymentErrorToast, setPaymentErrorToast] = useState<string | null>(
     null
   );
@@ -693,11 +696,22 @@ export function CalendarView({
   const handleCopied = useCallback(() => setCopyToast(true), []);
 
   const handlePaymentSuccess = useCallback(
-    (method: PaymentMethod, meta?: { commissionWarning?: boolean }) => {
+    (
+      method: PaymentMethod,
+      meta?: { commissionWarning?: boolean; inventoryWarnings?: string[] }
+    ) => {
       setPaymentToast(true);
 
       if (meta?.commissionWarning) {
         setCommissionWarningToast(true);
+      }
+
+      if (meta?.inventoryWarnings && meta.inventoryWarnings.length > 0) {
+        setInventoryWarningToast(
+          t("payment.inventoryWarning", {
+            products: meta.inventoryWarnings.join(", "),
+          })
+        );
       }
 
       if (payAppointment && (method === "cash" || method === "upi")) {
@@ -707,7 +721,7 @@ export function CalendarView({
       setPayAppointment(null);
       router.refresh();
     },
-    [payAppointment, router]
+    [payAppointment, router, t]
   );
 
   const handlePaymentError = useCallback((message: string) => {
@@ -1069,6 +1083,14 @@ export function CalendarView({
         durationMs={7000}
         style={{ bottom: 148 }}
         onDismiss={() => setCommissionWarningToast(false)}
+      />
+      <Toast
+        message={inventoryWarningToast ?? ""}
+        show={inventoryWarningToast !== null}
+        variant="warning"
+        durationMs={7000}
+        style={{ bottom: 208 }}
+        onDismiss={() => setInventoryWarningToast(null)}
       />
       <Toast
         message={paymentErrorToast ?? ""}
