@@ -408,6 +408,25 @@ export async function getRecentTransactions(
   return (data ?? []).map((row) => mapTransactionRow(row as TransactionRow));
 }
 
+function mapStockInRpcError(message: string): string {
+  if (message.includes("NOT_AUTHORIZED")) {
+    return "Stock in save karne ki permission nahi hai.";
+  }
+  if (message.includes("INVALID_QUANTITY")) {
+    return "Quantity 0 se zyada honi chahiye.";
+  }
+  if (message.includes("INVALID_UNIT_COST")) {
+    return "Unit cost valid hona chahiye.";
+  }
+  if (message.includes("PRODUCT_NOT_FOUND")) {
+    return "Product nahi mila.";
+  }
+  if (message.includes("PRODUCT_INACTIVE")) {
+    return "Inactive product mein stock add nahi kar sakte.";
+  }
+  return message || "Stock in save fail.";
+}
+
 export async function recordStockIn(params: {
   businessId: string;
   productId: string;
@@ -425,67 +444,30 @@ export async function recordStockIn(params: {
 
   const supabase = createClient();
 
-  const { data: product, error: productError } = await supabase
-    .from("inventory_products")
-    .select("id, business_id, current_quantity, avg_unit_cost, is_active")
-    .eq("id", params.productId)
-    .eq("business_id", params.businessId)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("record_stock_in_atomic", {
+    p_business_id: params.businessId,
+    p_product_id: params.productId,
+    p_quantity: params.quantity,
+    p_unit_cost: params.unitCost,
+    p_txn_date: params.txnDate,
+    p_notes: params.notes ?? null,
+  });
 
-  if (productError || !product) {
-    return { ok: false, error: "Product nahi mila." };
+  if (error) {
+    console.error("recordStockIn rpc:", error.message);
+    return { ok: false, error: mapStockInRpcError(error.message) };
   }
 
-  if (!product.is_active) {
-    return { ok: false, error: "Inactive product mein stock add nahi kar sakte." };
+  const result = data as {
+    ok?: boolean;
+    txn_id?: string;
+  } | null;
+
+  if (!result?.ok || !result.txn_id) {
+    return { ok: false, error: "Stock in save fail." };
   }
 
-  const currentQty = roundMoney(Number(product.current_quantity ?? 0));
-  const currentAvg = roundMoney(Number(product.avg_unit_cost ?? 0));
-  const qty = roundMoney(params.quantity);
-  const unitCost = roundMoney(params.unitCost);
-  const totalCost = roundMoney(qty * unitCost);
-  const newQty = roundMoney(currentQty + qty);
-  const newAvg =
-    newQty > 0
-      ? roundMoney((currentQty * currentAvg + qty * unitCost) / newQty)
-      : unitCost;
-
-  const { data: txn, error: txnError } = await supabase
-    .from("inventory_transactions")
-    .insert({
-      business_id: params.businessId,
-      product_id: params.productId,
-      txn_type: "purchase",
-      quantity: qty,
-      unit_cost: unitCost,
-      total_cost: totalCost,
-      txn_date: params.txnDate,
-      notes: params.notes ?? null,
-    })
-    .select("id")
-    .maybeSingle();
-
-  if (txnError || !txn?.id) {
-    console.error("recordStockIn txn:", txnError?.message);
-    return { ok: false, error: txnError?.message ?? "Stock in save fail." };
-  }
-
-  const { error: updateError } = await supabase
-    .from("inventory_products")
-    .update({
-      current_quantity: newQty,
-      avg_unit_cost: newAvg,
-    })
-    .eq("id", params.productId)
-    .eq("business_id", params.businessId);
-
-  if (updateError) {
-    console.error("recordStockIn update:", updateError.message);
-    return { ok: false, error: updateError.message };
-  }
-
-  return { ok: true, id: txn.id };
+  return { ok: true, id: result.txn_id };
 }
 
 export async function recordStockUse(params: {
