@@ -1,14 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { MessageCircle } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import { settleStaffPayout } from "@/lib/staff/actions";
 import type { StaffPayoutRow, StaffPayoutsSummary } from "@/lib/staff/types";
+import { openWhatsAppReminder } from "@/lib/whatsapp/sendLink";
 import { useT } from "@/lib/i18n/LanguageContext";
+
+type StaffContact = {
+  name: string;
+  phone: string | null;
+};
 
 type StaffPayoutsProps = {
   payouts: StaffPayoutsSummary;
+  staffContacts?: StaffContact[];
+  salonName?: string;
+  monthLabel?: string;
 };
 
 const TOKENS = {
@@ -22,6 +32,62 @@ const TOKENS = {
 
 function formatInr(amount: number): string {
   return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+/** Plain grouped number (no ₹) — the message templates already include ₹. */
+function formatAmount(amount: number): string {
+  return amount.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
+function ShareSalaryButton({
+  row,
+  phone,
+  salonName,
+  monthLabel,
+}: {
+  row: StaffPayoutRow;
+  phone: string | null;
+  salonName: string;
+  monthLabel: string;
+}) {
+  const { t } = useT();
+
+  const handleShare = () => {
+    const deductions = row.fineOutstanding + row.advanceOutstanding;
+    const message = t("whatsapp.salaryMessage", {
+      staffName: row.staffName,
+      month: monthLabel,
+      commission: formatAmount(row.grossUnpaid),
+      deductions: formatAmount(deductions),
+      net: formatAmount(row.netPayable),
+      salonName,
+    });
+    openWhatsAppReminder(phone, message);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        minHeight: 36,
+        padding: "0 12px",
+        borderRadius: 10,
+        border: `1px solid ${TOKENS.accentGreen}`,
+        background: "#fff",
+        color: TOKENS.accentGreen,
+        fontSize: 13,
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      <MessageCircle size={16} strokeWidth={1.5} aria-hidden />
+      {t("staff.shareSalary")}
+    </button>
+  );
 }
 
 function PayoutBreakdown({ row }: { row: StaffPayoutRow }) {
@@ -148,7 +214,12 @@ function SettleButton({ row }: { row: StaffPayoutRow }) {
   );
 }
 
-export function StaffPayouts({ payouts }: StaffPayoutsProps) {
+export function StaffPayouts({
+  payouts,
+  staffContacts = [],
+  salonName = "",
+  monthLabel = "",
+}: StaffPayoutsProps) {
   const { t } = useT();
   const {
     rows,
@@ -157,6 +228,14 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
     totalAdvanceOutstanding,
     totalNetPayable,
   } = payouts;
+
+  const phoneByName = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const contact of staffContacts) {
+      map.set(contact.name.trim().toLowerCase(), contact.phone);
+    }
+    return map;
+  }, [staffContacts]);
 
   return (
     <section
@@ -230,7 +309,23 @@ export function StaffPayouts({ payouts }: StaffPayoutsProps) {
                 </p>
                 <PayoutBreakdown row={row} />
               </div>
-              <SettleButton row={row} />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 6,
+                  flexShrink: 0,
+                }}
+              >
+                <SettleButton row={row} />
+                <ShareSalaryButton
+                  row={row}
+                  phone={phoneByName.get(row.staffName.trim().toLowerCase()) ?? null}
+                  salonName={salonName}
+                  monthLabel={monthLabel}
+                />
+              </div>
             </article>
           ))}
         </div>

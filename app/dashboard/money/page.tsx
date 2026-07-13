@@ -10,7 +10,8 @@ import {
   getInventorySummary,
 } from "@/lib/inventory/queries";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
-import { getDayBoundsIso } from "@/lib/payments/date-utils";
+import { getDayBoundsIso, SALON_TIMEZONE } from "@/lib/payments/date-utils";
+import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import {
   getCashUpiSplit,
   getMoneyDashboardStats,
@@ -60,11 +61,18 @@ export default async function MoneyPage() {
     redirect("/dashboard");
   }
 
-  const [stats, businessId] = await Promise.all([
+  const [stats, businessId, business] = await Promise.all([
     getMoneyDashboardStats(),
     getOwnerBusinessId(),
+    getOwnerBusiness(),
   ]);
   const appRole = membership.appRole;
+  const salonName = business?.name ?? "";
+  const monthLabel = new Date().toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+    timeZone: SALON_TIMEZONE,
+  });
   const showInventorySpend = canManageFinance(appRole);
   const { year, month } = currentIstYearMonth();
 
@@ -102,6 +110,11 @@ export default async function MoneyPage() {
     .filter((member) => member.is_active)
     .map((member) => ({ id: member.id, name: member.name }));
 
+  const staffContacts = staffMembers.map((member) => ({
+    name: member.name,
+    phone: member.phone,
+  }));
+
   return (
     <MoneyView
       businessId={businessId}
@@ -114,7 +127,12 @@ export default async function MoneyPage() {
         <>
           <MissingCommissionRetries items={missingCommissions} />
           <StaffAdvances advances={staffAdvances} staffMembers={activeStaff} />
-          <StaffPayouts payouts={staffPayouts} />
+          <StaffPayouts
+            payouts={staffPayouts}
+            staffContacts={staffContacts}
+            salonName={salonName}
+            monthLabel={monthLabel}
+          />
         </>
       }
     />
