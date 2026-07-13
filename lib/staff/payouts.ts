@@ -22,16 +22,28 @@ type UnpaidEarningRow = {
 };
 
 export async function getStaffPayouts(
-  businessId: string
+  businessId: string,
+  startIso?: string,
+  endIsoExclusive?: string
 ): Promise<StaffPayoutsSummary> {
   const supabase = createClient();
 
+  // Commission earned within the selected range (when bounds provided);
+  // advances and fines remain outstanding balances (all-time).
+  let earningsQuery = supabase
+    .from("staff_earnings")
+    .select("staff_name, commission_amount")
+    .eq("business_id", businessId)
+    .eq("status", "unpaid");
+
+  if (startIso && endIsoExclusive) {
+    earningsQuery = earningsQuery
+      .gte("earned_at", startIso)
+      .lt("earned_at", endIsoExclusive);
+  }
+
   const [{ data, error }, advanceByStaff, fineByStaff] = await Promise.all([
-    supabase
-      .from("staff_earnings")
-      .select("staff_name, commission_amount")
-      .eq("business_id", businessId)
-      .eq("status", "unpaid"),
+    earningsQuery,
     getOutstandingAdvancesByStaff(businessId),
     getOutstandingFinesByStaff(businessId),
   ]);

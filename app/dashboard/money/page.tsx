@@ -10,7 +10,11 @@ import {
   getInventorySummary,
 } from "@/lib/inventory/queries";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
-import { getDayBoundsIso, SALON_TIMEZONE } from "@/lib/payments/date-utils";
+import {
+  getMoneyRangeBounds,
+  normalizeMoneyRange,
+  SALON_TIMEZONE,
+} from "@/lib/payments/date-utils";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import {
   getCashUpiSplit,
@@ -50,7 +54,11 @@ const EMPTY_INVENTORY_SUMMARY: InventorySummary = {
   low_stock_count: 0,
 };
 
-export default async function MoneyPage() {
+type MoneyPageProps = {
+  searchParams?: { range?: string };
+};
+
+export default async function MoneyPage({ searchParams }: MoneyPageProps) {
   const membership = await getUserMembership();
 
   if (!membership?.businessId) {
@@ -61,8 +69,11 @@ export default async function MoneyPage() {
     redirect("/dashboard");
   }
 
+  const range = normalizeMoneyRange(searchParams?.range);
+  const { startIso, endIsoExclusive } = getMoneyRangeBounds(range);
+
   const [stats, businessId, business] = await Promise.all([
-    getMoneyDashboardStats(),
+    getMoneyDashboardStats(startIso, endIsoExclusive),
     getOwnerBusinessId(),
     getOwnerBusiness(),
   ]);
@@ -74,9 +85,10 @@ export default async function MoneyPage() {
     timeZone: SALON_TIMEZONE,
   });
   const showInventorySpend = canManageFinance(appRole);
+  // TODO: Inventory spend is still month-scoped (current IST month). Range-aware
+  // inventory reporting can reuse startIso/endIsoExclusive in a follow-up.
   const { year, month } = currentIstYearMonth();
 
-  const { startIso, endIsoExclusive } = getDayBoundsIso();
   const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend, missingCommissions] =
     businessId
       ? await Promise.all([
@@ -85,7 +97,7 @@ export default async function MoneyPage() {
             new Date(startIso),
             new Date(endIsoExclusive)
           ),
-          getStaffPayouts(businessId),
+          getStaffPayouts(businessId, startIso, endIsoExclusive),
           listStaffAdvances(businessId),
           listStaffMembers(businessId),
           showInventorySpend
@@ -118,6 +130,7 @@ export default async function MoneyPage() {
   return (
     <MoneyView
       businessId={businessId}
+      range={range}
       stats={stats}
       cashUpiSplit={cashUpiSplit}
       showInventorySpend={showInventorySpend}

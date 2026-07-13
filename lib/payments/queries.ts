@@ -2,7 +2,6 @@ import { getOwnerBusinessId } from "@/lib/customers/queries";
 import {
   calendarDayInTimezone,
   getDayBoundsIso,
-  mondayOfWeekCalendarDay,
   todayCalendarDay,
 } from "@/lib/payments/date-utils";
 import type {
@@ -71,10 +70,12 @@ async function sumPaidToday(businessId: string): Promise<number> {
   return sumAmounts(ranged);
 }
 
-async function sumPaidSinceWeekStart(businessId: string): Promise<number> {
+async function sumPaidInRange(
+  businessId: string,
+  startIso: string,
+  endIsoExclusive: string
+): Promise<number> {
   const supabase = createClient();
-  const weekStart = mondayOfWeekCalendarDay();
-  const { startIso } = getDayBoundsIso(weekStart);
 
   const { data, error } = await supabase
     .from("payments")
@@ -82,10 +83,11 @@ async function sumPaidSinceWeekStart(businessId: string): Promise<number> {
     .eq("business_id", businessId)
     .eq("status", "paid")
     .not("paid_at", "is", null)
-    .gte("paid_at", startIso);
+    .gte("paid_at", startIso)
+    .lt("paid_at", endIsoExclusive);
 
   if (error) {
-    console.error("sumPaidSinceWeekStart:", error.message);
+    console.error("sumPaidInRange:", error.message);
     return 0;
   }
 
@@ -115,12 +117,26 @@ async function sumUnpaid(businessId: string): Promise<{
   };
 }
 
-async function fetchPaymentMethodCounts(businessId: string) {
+async function fetchPaymentMethodCounts(
+  businessId: string,
+  startIso?: string,
+  endIsoExclusive?: string
+) {
   const supabase = createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("payments")
     .select("method")
     .eq("business_id", businessId);
+
+  if (startIso && endIsoExclusive) {
+    query = query
+      .eq("status", "paid")
+      .not("paid_at", "is", null)
+      .gte("paid_at", startIso)
+      .lt("paid_at", endIsoExclusive);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("fetchPaymentMethodCounts:", error.message);
@@ -195,10 +211,13 @@ export async function getCashUpiSplit(
   return { cash, upi, total, cashPercent, upiPercent };
 }
 
-export async function getMoneyDashboardStats(): Promise<MoneyDashboardStats> {
+export async function getMoneyDashboardStats(
+  startIso: string,
+  endIsoExclusive: string
+): Promise<MoneyDashboardStats> {
   const empty: MoneyDashboardStats = {
     revenueToday: 0,
-    revenueWeek: 0,
+    revenueRange: 0,
     pendingAmount: 0,
     pendingCount: 0,
     cashCount: 0,
@@ -211,23 +230,23 @@ export async function getMoneyDashboardStats(): Promise<MoneyDashboardStats> {
   const businessId = await getOwnerBusinessId();
   if (!businessId) return empty;
 
-  const [revenueToday, revenueWeek, unpaid, methodCounts] = await Promise.all([
+  const [revenueToday, revenueRange, unpaid, methodCounts] = await Promise.all([
     sumPaidToday(businessId),
-    sumPaidSinceWeekStart(businessId),
+    sumPaidInRange(businessId, startIso, endIsoExclusive),
     sumUnpaid(businessId),
-    fetchPaymentMethodCounts(businessId),
+    fetchPaymentMethodCounts(businessId, startIso, endIsoExclusive),
   ]);
 
   const expensesPlaceholder = 0;
 
   return {
     revenueToday,
-    revenueWeek,
+    revenueRange,
     pendingAmount: unpaid.pendingAmount,
     pendingCount: unpaid.pendingCount,
     ...methodCounts,
     expensesPlaceholder,
-    netProfit: revenueWeek - expensesPlaceholder,
+    netProfit: revenueRange - expensesPlaceholder,
   };
 }
 

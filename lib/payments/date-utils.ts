@@ -71,3 +71,69 @@ export function getDayBoundsIso(
   ).toISOString();
   return { startIso, endIsoExclusive, day };
 }
+
+/** Money page date-range presets. */
+export const MONEY_RANGES = [
+  "today",
+  "week",
+  "month",
+  "3months",
+  "6months",
+] as const;
+
+export type MoneyRange = (typeof MONEY_RANGES)[number];
+
+/** Coerce an arbitrary search-param value into a valid range (default: week). */
+export function normalizeMoneyRange(value?: string | null): MoneyRange {
+  return (MONEY_RANGES as readonly string[]).includes(value ?? "")
+    ? (value as MoneyRange)
+    : "week";
+}
+
+/** Calendar day (YYYY-MM-DD) `months` before `day`, in salon timezone. */
+function monthsAgoCalendarDay(
+  day: string,
+  months: number,
+  timeZone = SALON_TIMEZONE
+): string {
+  const [year, month, dayNum] = day.split("-").map(Number);
+  // Anchor at noon IST (06:30 UTC) so DST-free IST never rolls the date.
+  const utc = Date.UTC(year, month - 1 - months, dayNum, 6, 30, 0);
+  return calendarDayInTimezone(new Date(utc), timeZone);
+}
+
+function moneyRangeStartDay(range: MoneyRange, today: string): string {
+  switch (range) {
+    case "today":
+      return today;
+    case "week":
+      return mondayOfWeekCalendarDay();
+    case "month": {
+      const [year, month] = today.split("-").map(Number);
+      return `${year}-${String(month).padStart(2, "0")}-01`;
+    }
+    case "3months":
+      return monthsAgoCalendarDay(today, 3);
+    case "6months":
+      return monthsAgoCalendarDay(today, 6);
+    default:
+      return mondayOfWeekCalendarDay();
+  }
+}
+
+/**
+ * Inclusive-start / exclusive-end ISO bounds for a money range.
+ * End is always the exclusive end of today (tomorrow 00:00 IST) so the
+ * current day's payments are always included.
+ */
+export function getMoneyRangeBounds(range: MoneyRange): {
+  startIso: string;
+  endIsoExclusive: string;
+  startDay: string;
+} {
+  const today = todayCalendarDay();
+  const { endIsoExclusive } = getDayBoundsIso(today);
+  const startDay = moneyRangeStartDay(range, today);
+  const { startIso } = getDayBoundsIso(startDay);
+  return { startIso, endIsoExclusive, startDay };
+}

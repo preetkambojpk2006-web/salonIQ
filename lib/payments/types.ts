@@ -25,7 +25,7 @@ export type CashUpiSplit = {
 
 export type MoneyDashboardStats = {
   revenueToday: number;
-  revenueWeek: number;
+  revenueRange: number;
   pendingAmount: number;
   pendingCount: number;
   cashCount: number;
