@@ -20,21 +20,29 @@ export const getUserMembership = cache(async (): Promise<UserMembership | null> 
     return null;
   }
 
-  const { data: ownedBusiness } = await supabase
+  // Deterministic: oldest membership wins if user has multiple (should not happen in normal flow)
+  const { data: ownedRows } = await supabase
     .from("businesses")
     .select("id")
     .eq("owner_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  const ownedBusiness = ownedRows?.[0] ?? null;
 
   if (ownedBusiness?.id) {
     return { businessId: ownedBusiness.id, appRole: "owner" };
   }
 
-  const { data: membership } = await supabase
+  // Deterministic: oldest membership wins if user has multiple (should not happen in normal flow)
+  const { data: membershipRows } = await supabase
     .from("business_members")
     .select("business_id, app_role")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  const membership = membershipRows?.[0] ?? null;
 
   if (!membership?.business_id) {
     return null;

@@ -31,21 +31,29 @@ export const getOnboardingStep = cache(async (): Promise<OnboardingStep> => {
     return "business";
   }
 
-  const { data: member } = await supabase
+  // Deterministic: oldest membership wins if user has multiple (should not happen in normal flow)
+  const { data: memberRows } = await supabase
     .from("business_members")
     .select("business_id, app_role")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  const member = memberRows?.[0] ?? null;
 
   if (member?.app_role === "staff" || member?.app_role === "admin") {
     return "complete";
   }
 
-  const { data: business } = await supabase
+  // Deterministic: oldest membership wins if user has multiple (should not happen in normal flow)
+  const { data: businessRows } = await supabase
     .from("businesses")
     .select("id, opening_hours, onboarding_completed")
     .eq("owner_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  const business = businessRows?.[0] ?? null;
 
   if (!business) {
     return "business";
