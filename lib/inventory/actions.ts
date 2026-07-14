@@ -1,5 +1,6 @@
 "use server";
 
+import { recordAuditLog } from "@/lib/audit/log";
 import {
   getUserMembership,
   isOwnerOrAdmin,
@@ -277,7 +278,7 @@ export async function toggleProductActive(
     .update({ is_active: isActive })
     .eq("id", productId)
     .eq("business_id", access.businessId)
-    .select("id")
+    .select("id, name")
     .maybeSingle();
 
   if (error) {
@@ -285,6 +286,16 @@ export async function toggleProductActive(
   }
   if (!data) {
     return { ok: false, error: "Product update nahi ho paya." };
+  }
+
+  if (!isActive) {
+    void recordAuditLog({
+      businessId: access.businessId,
+      action: "inventory.deleted",
+      entityType: "inventory_product",
+      entityId: productId,
+      entityLabel: data.name as string,
+    });
   }
 
   revalidateInventoryPaths();

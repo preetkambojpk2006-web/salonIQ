@@ -23,6 +23,7 @@ type SettingsViewProps = {
   gstPanel?: ReactNode;
   commissionPanel?: ReactNode;
   languagePanel?: ReactNode;
+  auditLogPanel?: ReactNode;
   bookingSlug?: string | null;
   onlineBookingPanel?: ReactNode;
   reviewsSocialPanel?: ReactNode;
@@ -40,6 +41,7 @@ export function SettingsView({
   gstPanel,
   commissionPanel,
   languagePanel,
+  auditLogPanel,
   bookingSlug = null,
   onlineBookingPanel,
   reviewsSocialPanel,
@@ -157,6 +159,7 @@ export function SettingsView({
         {gstPanel}
         {commissionPanel}
         {languagePanel}
+        {auditLogPanel}
 
         <section className="panel">
           <div className="panel-header">

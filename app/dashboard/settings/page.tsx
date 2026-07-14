@@ -1,3 +1,4 @@
+import { AuditLogPanel } from "@/components/settings/audit-log-panel";
 import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
 import { CommissionSettingsPanel } from "@/components/settings/commission-settings-panel";
 import { GstSettingsPanel } from "@/components/settings/gst-settings-panel";
@@ -6,6 +7,7 @@ import { OnlineBookingSettingsPanel } from "@/components/settings/online-booking
 import { ReviewsSocialSettingsPanel } from "@/components/settings/reviews-social-settings-panel";
 import { SettingsView } from "@/components/settings/settings-view";
 import { LoyaltySettingsPanel } from "@/components/settings/loyalty-settings-panel";
+import { getAuditLogs } from "@/lib/audit/queries";
 import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
@@ -35,10 +37,11 @@ export default async function SettingsPage() {
   }
 
   const businessId = membership.businessId;
-  const [business, rewardConfig, commissionConfig] = await Promise.all([
+  const [business, rewardConfig, commissionConfig, auditLogs] = await Promise.all([
     getOwnerBusiness(),
     getBusinessRewardConfig(businessId),
     getCommissionConfig(),
+    getAuditLogs(businessId),
   ]);
 
   const bookingSlug =
@@ -74,6 +77,7 @@ export default async function SettingsPage() {
           : ""
       }
       languagePanel={<LanguageSettingsPanel />}
+      auditLogPanel={<AuditLogPanel entries={auditLogs} />}
       attendancePanel={
         <AttendanceSettingsPanel
           initialLateFineAmount={

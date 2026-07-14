@@ -1,5 +1,6 @@
 "use server";
 
+import { recordAuditLog } from "@/lib/audit/log";
 import {
   getUserMembership,
   isOwnerOrAdmin,
@@ -168,7 +169,7 @@ export async function toggleSalonServiceActive(
     .update({ is_active: isActive })
     .eq("id", serviceId)
     .eq("business_id", access.businessId)
-    .select("id")
+    .select("id, name")
     .maybeSingle();
 
   if (error) {
@@ -177,6 +178,16 @@ export async function toggleSalonServiceActive(
 
   if (!data) {
     return { ok: false, error: "Service update nahi ho payi." };
+  }
+
+  if (!isActive) {
+    void recordAuditLog({
+      businessId: access.businessId,
+      action: "service.deleted",
+      entityType: "service",
+      entityId: serviceId,
+      entityLabel: data.name as string,
+    });
   }
 
   revalidateSalonPaths();
@@ -325,7 +336,7 @@ export async function toggleSalonStaffActive(
     .update({ is_active: isActive })
     .eq("id", staffId)
     .eq("business_id", access.businessId)
-    .select("id")
+    .select("id, name")
     .maybeSingle();
 
   if (error) {
@@ -334,6 +345,16 @@ export async function toggleSalonStaffActive(
 
   if (!data) {
     return { ok: false, error: "Staff update nahi ho paya." };
+  }
+
+  if (!isActive) {
+    void recordAuditLog({
+      businessId: access.businessId,
+      action: "staff.deactivated",
+      entityType: "staff",
+      entityId: staffId,
+      entityLabel: data.name as string,
+    });
   }
 
   revalidateSalonPaths();

@@ -1,5 +1,7 @@
 "use server";
 
+import { formatAppointmentEntityLabel } from "@/lib/audit/format";
+import { recordAuditLog } from "@/lib/audit/log";
 import { recordCustomerLoyaltyForPayment } from "@/lib/customers/loyalty";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { PaymentMethod } from "@/lib/payments/types";
@@ -73,7 +75,7 @@ export async function recordAppointmentPayment(
   const { data: appointment, error: fetchError } = await supabase
     .from("appointments")
     .select(
-      "id, business_id, status, payment_status, total_amount, staff_name, service_name, customer_id, loyalty_counted_at, customers ( name )"
+      "id, business_id, status, payment_status, total_amount, staff_name, service_name, customer_id, start_time, loyalty_counted_at, customers ( name )"
     )
     .eq("id", appointmentId)
     .eq("business_id", businessId)
@@ -105,7 +107,8 @@ export async function recordAppointmentPayment(
     : customers?.name ?? null;
 
   const amountOverrideRaw = (formData.get("amount") as string)?.trim();
-  let amount = Number(appointment.total_amount ?? 0);
+  const originalAmount = Number(appointment.total_amount ?? 0);
+  let amount = originalAmount;
 
   if (amountOverrideRaw) {
     const parsed = Number(amountOverrideRaw);
@@ -172,6 +175,22 @@ export async function recordAppointmentPayment(
   if (rpcError) {
     console.error("recordAppointmentPayment rpc:", rpcError.message);
     return { ok: false, error: mapPaymentRpcError(rpcError.message) };
+  }
+
+  if (amountOverrideRaw && amount !== originalAmount) {
+    void recordAuditLog({
+      businessId: rowBusinessId,
+      action: "payment.edited",
+      entityType: "payment",
+      entityId: appointmentId,
+      entityLabel: formatAppointmentEntityLabel({
+        customerName,
+        serviceName: appointment.service_name as string | null,
+        startTime: appointment.start_time as string | null,
+      }),
+      oldValue: { amount: originalAmount },
+      newValue: { amount },
+    });
   }
 
   revalidatePath("/dashboard/calendar");

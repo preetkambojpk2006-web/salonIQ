@@ -16,6 +16,8 @@ import { incrementCustomerNoShowCount } from "@/lib/customers/reliability";
 import { getOwnerBusinessId } from "@/lib/customers/queries";
 import type { AppointmentStatus } from "@/lib/appointments/types";
 import { getOwnerBranches } from "@/lib/onboarding/queries";
+import { formatAppointmentEntityLabel } from "@/lib/audit/format";
+import { recordAuditLog } from "@/lib/audit/log";
 import { calendarDayInTimezone } from "@/lib/payments/date-utils";
 import {
   recordAppointmentPayment,
@@ -407,6 +409,37 @@ async function setAppointmentStatus(
   return null;
 }
 
+function customerNameFromJoin(
+  customers: { name: string } | { name: string }[] | null | undefined
+): string | null {
+  if (!customers) return null;
+  if (Array.isArray(customers)) {
+    return customers[0]?.name ?? null;
+  }
+  return customers.name ?? null;
+}
+
+function logAppointmentAudit(params: {
+  businessId: string;
+  appointmentId: string;
+  action: "appointment.cancelled" | "appointment.noshow";
+  customerName?: string | null;
+  serviceName?: string | null;
+  startTime?: string | null;
+}) {
+  void recordAuditLog({
+    businessId: params.businessId,
+    action: params.action,
+    entityType: "appointment",
+    entityId: params.appointmentId,
+    entityLabel: formatAppointmentEntityLabel({
+      customerName: params.customerName,
+      serviceName: params.serviceName,
+      startTime: params.startTime,
+    }),
+  });
+}
+
 export async function confirmAppointment(formData: FormData) {
   const supabase = createClient();
   const {
@@ -474,7 +507,9 @@ export async function rejectAppointment(formData: FormData) {
   const { data: appointment } = businessId
     ? await supabase
         .from("appointments")
-        .select("id, business_id, status")
+        .select(
+          "id, business_id, status, service_name, start_time, customers ( name )"
+        )
         .eq("id", appointmentId)
         .eq("business_id", businessId)
         .maybeSingle()
@@ -496,6 +531,21 @@ export async function rejectAppointment(formData: FormData) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
   }
 
+  logAppointmentAudit({
+    businessId: appointment.business_id,
+    appointmentId,
+    action: "appointment.cancelled",
+    customerName: customerNameFromJoin(
+      appointment.customers as
+        | { name: string }
+        | { name: string }[]
+        | null
+        | undefined
+    ),
+    serviceName: appointment.service_name as string | null,
+    startTime: appointment.start_time as string | null,
+  });
+
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard");
   redirect("/dashboard/calendar");
@@ -515,7 +565,9 @@ export async function markNoShow(formData: FormData) {
   const { data: appointment } = businessId
     ? await supabase
         .from("appointments")
-        .select("id, status, customer_id, business_id")
+        .select(
+          "id, status, customer_id, business_id, service_name, start_time, customers ( name )"
+        )
         .eq("id", appointmentId)
         .eq("business_id", businessId)
         .maybeSingle()
@@ -538,6 +590,21 @@ export async function markNoShow(formData: FormData) {
   if (error) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
   }
+
+  logAppointmentAudit({
+    businessId: appointment.business_id,
+    appointmentId,
+    action: "appointment.noshow",
+    customerName: customerNameFromJoin(
+      appointment.customers as
+        | { name: string }
+        | { name: string }[]
+        | null
+        | undefined
+    ),
+    serviceName: appointment.service_name as string | null,
+    startTime: appointment.start_time as string | null,
+  });
 
   if (appointment.customer_id) {
     void incrementCustomerNoShowCount(
@@ -577,7 +644,9 @@ export async function updateAppointmentStatus(formData: FormData) {
 
   const { data: appointment } = await supabase
     .from("appointments")
-    .select("status, customer_id, business_id")
+    .select(
+      "status, customer_id, business_id, service_name, start_time, customers ( name )"
+    )
     .eq("id", appointmentId)
     .maybeSingle();
 
@@ -585,6 +654,7 @@ export async function updateAppointmentStatus(formData: FormData) {
     redirect("/dashboard/calendar?error=Could not update booking");
   }
 
+  const previousStatus = appointment.status as AppointmentStatus;
   const error = await setAppointmentStatus(appointmentId, status);
 
   if (error) {
@@ -593,9 +663,43 @@ export async function updateAppointmentStatus(formData: FormData) {
     );
   }
 
+  if (status === "cancelled" && previousStatus !== "cancelled") {
+    logAppointmentAudit({
+      businessId: appointment.business_id,
+      appointmentId,
+      action: "appointment.cancelled",
+      customerName: customerNameFromJoin(
+        appointment.customers as
+          | { name: string }
+          | { name: string }[]
+          | null
+          | undefined
+      ),
+      serviceName: appointment.service_name as string | null,
+      startTime: appointment.start_time as string | null,
+    });
+  }
+
+  if (status === "no_show" && previousStatus !== "no_show") {
+    logAppointmentAudit({
+      businessId: appointment.business_id,
+      appointmentId,
+      action: "appointment.noshow",
+      customerName: customerNameFromJoin(
+        appointment.customers as
+          | { name: string }
+          | { name: string }[]
+          | null
+          | undefined
+      ),
+      serviceName: appointment.service_name as string | null,
+      startTime: appointment.start_time as string | null,
+    });
+  }
+
   if (
     status === "no_show" &&
-    appointment.status !== "no_show" &&
+    previousStatus !== "no_show" &&
     appointment.customer_id
   ) {
     void incrementCustomerNoShowCount(
