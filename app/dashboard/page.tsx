@@ -1,6 +1,7 @@
 import { TodayView } from "@/components/command-center/today/today-view";
 import { BusinessPulseAsync } from "@/components/command-center/today/business-pulse-async";
 import { BusinessPulseSkeleton } from "@/components/command-center/today/business-pulse-skeleton";
+import { StaffIncentivesAsync } from "@/components/command-center/today/staff-incentives-async";
 import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { listOnlinePendingAppointments } from "@/lib/appointments/queries";
@@ -73,6 +74,13 @@ export default async function DashboardPage() {
       })()}
       lowStockProducts={lowStockProducts}
       initialWalkinQueue={walkinQueue}
+      staffIncentivesPanel={
+        canManageFinance(appRole) && businessId ? (
+          <Suspense fallback={null}>
+            <StaffIncentivesAsync businessId={businessId} />
+          </Suspense>
+        ) : null
+      }
       analyticsPanel={
         canManageFinance(appRole) && businessId ? (
           <Suspense fallback={<BusinessPulseSkeleton />}>

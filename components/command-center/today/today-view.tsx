@@ -34,6 +34,7 @@ type TodayViewProps = {
   dailyRevenueTarget?: number | null;
   lowStockProducts?: InventoryProductWithBrand[];
   initialWalkinQueue?: WalkinQueueRow[];
+  staffIncentivesPanel?: ReactNode;
   analyticsPanel?: ReactNode;
 };
 
@@ -49,6 +50,7 @@ export function TodayView({
   dailyRevenueTarget = null,
   lowStockProducts = [],
   initialWalkinQueue = [],
+  staffIncentivesPanel = null,
   analyticsPanel = null,
 }: TodayViewProps) {
   useBusinessRealtimeRefresh({
@@ -83,6 +85,7 @@ export function TodayView({
     <div className="view-stack">
       <WelcomeBanner hasActivity={hasActivity} />
       <SummaryGrid metrics={metrics} showFinance={showOwnerInsights} />
+      {staffIncentivesPanel}
       <OsHero
         nextAppointment={heroNext}
         bookingsToday={metrics.bookingsToday}
