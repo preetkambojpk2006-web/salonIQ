@@ -2,11 +2,36 @@
 
 import dynamic from "next/dynamic";
 import { TrendingUp } from "lucide-react";
-import { RevenueTrendChart } from "@/components/command-center/today/revenue-trend-chart";
-import { TopServicesChart } from "@/components/command-center/today/top-services-chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { HeatmapSkeleton } from "@/components/ui/page-skeletons";
 import type { DashboardAnalyticsData } from "@/lib/dashboard/analytics-queries";
 import { useT } from "@/lib/i18n/LanguageContext";
+
+function ChartSkeleton() {
+  return <Skeleton className="business-pulse-chart h-[220px] w-full rounded-[12px]" />;
+}
+
+const RevenueTrendChart = dynamic(
+  () =>
+    import("@/components/command-center/today/revenue-trend-chart").then(
+      (module) => module.RevenueTrendChart
+    ),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false,
+  }
+);
+
+const TopServicesChart = dynamic(
+  () =>
+    import("@/components/command-center/today/top-services-chart").then(
+      (module) => module.TopServicesChart
+    ),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false,
+  }
+);
 
 const InsightsHeatmap = dynamic(
   () =>
