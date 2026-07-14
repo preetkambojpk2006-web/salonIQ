@@ -8,6 +8,7 @@ import type {
   CashUpiSplit,
   MoneyDashboardStats,
   Payment,
+  PaymentExportRow,
 } from "@/lib/payments/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -295,4 +296,100 @@ export async function listRecentPayments(limit = 10): Promise<Payment[]> {
     ...row,
     amount: Number(row.amount ?? 0),
   }));
+}
+
+type PaymentRangeRow = {
+  amount: number | string;
+  method: PaymentExportRow["method"];
+  status: PaymentExportRow["status"];
+  paid_at: string | null;
+  created_at: string;
+  customer_name: string | null;
+  appointments:
+    | {
+        service_name: string | null;
+        staff_name: string | null;
+        customers: { name: string } | { name: string }[] | null;
+      }
+    | {
+        service_name: string | null;
+        staff_name: string | null;
+        customers: { name: string } | { name: string }[] | null;
+      }[]
+    | null;
+};
+
+function normalizeAppointmentJoin(
+  appointments: PaymentRangeRow["appointments"]
+): {
+  service_name: string | null;
+  staff_name: string | null;
+  customers: { name: string } | { name: string }[] | null;
+} | null {
+  if (!appointments) return null;
+  if (Array.isArray(appointments)) {
+    return appointments[0] ?? null;
+  }
+  return appointments;
+}
+
+function customerNameFromPaymentJoin(
+  customers: { name: string } | { name: string }[] | null | undefined
+): string | null {
+  if (!customers) return null;
+  if (Array.isArray(customers)) {
+    return customers[0]?.name ?? null;
+  }
+  return customers.name ?? null;
+}
+
+export async function listPaymentsInRange(
+  businessId: string,
+  startIso: string,
+  endIsoExclusive: string
+): Promise<PaymentExportRow[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      `
+      amount,
+      method,
+      status,
+      paid_at,
+      created_at,
+      customer_name,
+      appointments ( service_name, staff_name, customers ( name ) )
+    `
+    )
+    .eq("business_id", businessId)
+    .or(
+      `and(paid_at.gte.${startIso},paid_at.lt.${endIsoExclusive}),and(paid_at.is.null,created_at.gte.${startIso},created_at.lt.${endIsoExclusive})`
+    )
+    .order("paid_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("listPaymentsInRange:", error.message);
+    return [];
+  }
+
+  return ((data as PaymentRangeRow[] | null) ?? []).map((row) => {
+    const appointment = normalizeAppointmentJoin(row.appointments);
+    const joinedCustomer = customerNameFromPaymentJoin(
+      appointment?.customers ?? null
+    );
+
+    return {
+      paidAt: row.paid_at,
+      createdAt: row.created_at,
+      customerName: row.customer_name ?? joinedCustomer,
+      serviceName: appointment?.service_name ?? null,
+      staffName: appointment?.staff_name ?? null,
+      amount: Number(row.amount ?? 0),
+      method: row.method,
+      status: row.status,
+    };
+  });
 }

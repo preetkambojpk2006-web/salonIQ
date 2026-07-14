@@ -15,6 +15,17 @@ export type Payment = {
   created_at: string;
 };
 
+export type PaymentExportRow = {
+  paidAt: string | null;
+  createdAt: string;
+  customerName: string | null;
+  serviceName: string | null;
+  staffName: string | null;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentRecordStatus;
+};
+
 export type CashUpiSplit = {
   cash: number;
   upi: number;

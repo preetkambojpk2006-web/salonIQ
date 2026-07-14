@@ -19,8 +19,9 @@ import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import {
   getCashUpiSplit,
   getMoneyDashboardStats,
+  listPaymentsInRange,
 } from "@/lib/payments/queries";
-import type { CashUpiSplit } from "@/lib/payments/types";
+import type { CashUpiSplit, PaymentExportRow } from "@/lib/payments/types";
 import { listStaffMembers } from "@/lib/salon/queries";
 import { listStaffAdvances } from "@/lib/staff/advances";
 import { getStaffPayouts } from "@/lib/staff/payouts";
@@ -89,7 +90,7 @@ export default async function MoneyPage({ searchParams }: MoneyPageProps) {
   // inventory reporting can reuse startIso/endIsoExclusive in a follow-up.
   const { year, month } = currentIstYearMonth();
 
-  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend, missingCommissions] =
+  const [cashUpiSplit, staffPayouts, staffAdvances, staffMembers, inventorySummary, brandSpend, missingCommissions, paymentsForExport] =
     businessId
       ? await Promise.all([
           getCashUpiSplit(
@@ -107,6 +108,7 @@ export default async function MoneyPage({ searchParams }: MoneyPageProps) {
             ? getBrandSpendSummary(businessId, year, month)
             : Promise.resolve([] as BrandSpendSummary[]),
           getPaidAppointmentsMissingCommission(businessId),
+          listPaymentsInRange(businessId, startIso, endIsoExclusive),
         ])
       : [
           EMPTY_SPLIT,
@@ -116,6 +118,7 @@ export default async function MoneyPage({ searchParams }: MoneyPageProps) {
           EMPTY_INVENTORY_SUMMARY,
           [] as BrandSpendSummary[],
           [],
+          [] as PaymentExportRow[],
         ];
 
   const activeStaff = staffMembers
@@ -133,6 +136,7 @@ export default async function MoneyPage({ searchParams }: MoneyPageProps) {
       range={range}
       stats={stats}
       cashUpiSplit={cashUpiSplit}
+      paymentsForExport={paymentsForExport}
       showInventorySpend={showInventorySpend}
       inventorySummary={inventorySummary}
       brandSpend={brandSpend}

@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomerCard } from "@/components/command-center/customers/customer-card";
 import { AddCustomerForm } from "@/components/command-center/customers/add-customer-form";
+import { CsvDownloadButton } from "@/components/export/csv-download-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Toast } from "@/components/ui/toast";
 import type { BusinessRewardConfig } from "@/lib/customers/loyalty-types";
 import type { Customer } from "@/lib/customers/types";
+import { csvFilename } from "@/lib/export/csv-filename";
+import {
+  buildCustomerCsvRows,
+  CUSTOMER_CSV_HEADERS,
+} from "@/lib/export/customers-csv";
 import { useT } from "@/lib/i18n/LanguageContext";
 
 type CustomersViewProps = {
@@ -87,6 +93,11 @@ export function CustomersView({
     router.refresh();
   };
 
+  const customerCsvRows = useMemo(
+    () => buildCustomerCsvRows(initialCustomers, rewardConfig),
+    [initialCustomers, rewardConfig]
+  );
+
   return (
     <>
       <div className="view-stack">
@@ -103,6 +114,12 @@ export function CustomersView({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t("customers.searchPlaceholder")}
                 aria-label={t("customers.searchPlaceholder")}
+              />
+              <CsvDownloadButton
+                label={t("customers.exportCsv")}
+                filename={csvFilename("customers")}
+                headers={CUSTOMER_CSV_HEADERS}
+                rows={customerCsvRows}
               />
               <button
                 type="button"

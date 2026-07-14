@@ -2,21 +2,32 @@
 
 import { useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { CsvDownloadButton } from "@/components/export/csv-download-button";
 import { CashUpiSplit } from "@/components/money/CashUpiSplit";
 import { InventorySpendSummary } from "@/components/money/InventorySpendSummary";
 import { EmptyState } from "@/components/ui/empty-state";
+import { csvFilename } from "@/lib/export/csv-filename";
+import {
+  buildPaymentCsvRows,
+  PAYMENT_CSV_HEADERS,
+} from "@/lib/export/payments-csv";
 import { formatInr } from "@/lib/format/currency";
 import { useT } from "@/lib/i18n/LanguageContext";
 import { useBusinessRealtimeRefresh } from "@/lib/supabase/use-business-realtime";
 import { MONEY_RANGES, type MoneyRange } from "@/lib/payments/date-utils";
 import type { BrandSpendSummary, InventorySummary } from "@/lib/inventory/types";
-import type { CashUpiSplit as CashUpiSplitData, MoneyDashboardStats } from "@/lib/payments/types";
+import type {
+  CashUpiSplit as CashUpiSplitData,
+  MoneyDashboardStats,
+  PaymentExportRow,
+} from "@/lib/payments/types";
 
 type MoneyViewProps = {
   businessId?: string | null;
   range?: MoneyRange;
   stats: MoneyDashboardStats;
   cashUpiSplit: CashUpiSplitData;
+  paymentsForExport?: PaymentExportRow[];
   showInventorySpend?: boolean;
   inventorySummary?: InventorySummary;
   brandSpend?: BrandSpendSummary[];
@@ -62,11 +73,42 @@ function MoneyRangePicker({ range }: { range: MoneyRange }) {
   );
 }
 
+function MoneyToolbar({
+  range,
+  paymentsForExport,
+}: {
+  range: MoneyRange;
+  paymentsForExport: PaymentExportRow[];
+}) {
+  const { t } = useT();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <MoneyRangePicker range={range} />
+      <CsvDownloadButton
+        label={t("money.exportCsv")}
+        filename={csvFilename("payments")}
+        headers={PAYMENT_CSV_HEADERS}
+        rows={buildPaymentCsvRows(paymentsForExport)}
+      />
+    </div>
+  );
+}
+
 export function MoneyView({
   businessId = null,
   range = "week",
   stats,
   cashUpiSplit,
+  paymentsForExport = [],
   showInventorySpend = false,
   inventorySummary,
   brandSpend = [],
@@ -136,7 +178,7 @@ export function MoneyView({
   if (isEmptySalon) {
     return (
       <div className="view-stack view-stack-fill">
-        <MoneyRangePicker range={range} />
+        <MoneyToolbar range={range} paymentsForExport={paymentsForExport} />
         <section className="panel empty-state-panel">
           <EmptyState
             icon="money"
@@ -154,7 +196,7 @@ export function MoneyView({
 
   return (
     <div className="view-stack">
-      <MoneyRangePicker range={range} />
+      <MoneyToolbar range={range} paymentsForExport={paymentsForExport} />
       <div className="summary-grid stagger-metrics">
         {summaryCards.map((card) => (
           <article key={card.key} className={card.className}>

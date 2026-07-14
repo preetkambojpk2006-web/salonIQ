@@ -3,8 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Clock, MessageCircle } from "lucide-react";
+import { CsvDownloadButton } from "@/components/export/csv-download-button";
 import { Toast } from "@/components/ui/toast";
 import { SettlementHistoryModal } from "@/components/money/SettlementHistoryModal";
+import { csvFilename } from "@/lib/export/csv-filename";
+import {
+  buildPayoutCsvRows,
+  PAYOUT_CSV_HEADERS,
+} from "@/lib/export/payouts-csv";
 import { settleStaffPayout } from "@/lib/staff/actions";
 import type { StaffPayoutRow, StaffPayoutsSummary } from "@/lib/staff/types";
 import { openWhatsAppReminder } from "@/lib/whatsapp/sendLink";
@@ -283,28 +289,46 @@ export function StaffPayouts({
           padding: 18,
         }}
       >
-      <p
+      <div
         style={{
-          margin: 0,
-          fontSize: 12,
-          fontWeight: 600,
-          color: TOKENS.textMuted,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        Staff payouts
-      </p>
-      <h2
-        style={{
-          margin: "4px 0 0",
-          fontSize: 18,
-          fontWeight: 800,
-          color: TOKENS.textDark,
-        }}
-      >
-        {t("money.outstandingCommission")}
-      </h2>
+        <div>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 12,
+              fontWeight: 600,
+              color: TOKENS.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
+            Staff payouts
+          </p>
+          <h2
+            style={{
+              margin: "4px 0 0",
+              fontSize: 18,
+              fontWeight: 800,
+              color: TOKENS.textDark,
+            }}
+          >
+            {t("money.outstandingCommission")}
+          </h2>
+        </div>
+        <CsvDownloadButton
+          label={t("staff.exportPayouts")}
+          filename={csvFilename("staff-payouts")}
+          headers={PAYOUT_CSV_HEADERS}
+          rows={buildPayoutCsvRows(rows)}
+        />
+      </div>
 
       {rows.length === 0 ? (
         <p
