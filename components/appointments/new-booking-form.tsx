@@ -65,6 +65,7 @@ export function NewBookingForm({
     activeStaff[0]?.id ?? ""
   );
   const [amountInput, setAmountInput] = useState("");
+  const [happyHourLabel, setHappyHourLabel] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(today);
 
   const timeSlots = useMemo(
@@ -95,6 +96,13 @@ export function NewBookingForm({
     (member) => member.id === selectedStaffId
   );
 
+  const selectedSlotIso = useMemo(() => {
+    const slot = timeSlots.find(
+      (entry) => slotIsoToFormTime(entry.iso) === selectedTime
+    );
+    return slot?.iso ?? null;
+  }, [timeSlots, selectedTime]);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -111,6 +119,7 @@ export function NewBookingForm({
   useEffect(() => {
     if (!selectedServiceId) {
       setAmountInput("");
+      setHappyHourLabel(null);
       return;
     }
 
@@ -118,16 +127,26 @@ export function NewBookingForm({
 
     void getResolvedServicePrice(
       selectedStaffId || null,
-      selectedServiceId
+      selectedServiceId,
+      selectedSlotIso
     ).then((result) => {
       if (cancelled || !result.ok) return;
       setAmountInput(String(result.price));
+      if (result.happyHour) {
+        setHappyHourLabel(
+          t("booking.happyHoursBadge", {
+            percent: String(result.happyHour.discountPercent),
+          })
+        );
+      } else {
+        setHappyHourLabel(null);
+      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [selectedServiceId, selectedStaffId]);
+  }, [selectedServiceId, selectedStaffId, selectedSlotIso, t]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -314,6 +333,24 @@ export function NewBookingForm({
               <label htmlFor="booking-amount" className="field-label">
                 {t("booking.amountLabel")}
               </label>
+              {happyHourLabel ? (
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "4px 10px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#1A1A1A",
+                    background: "#D4E8DD",
+                    border: "1px solid #1FA873",
+                  }}
+                >
+                  {happyHourLabel}
+                </p>
+              ) : null}
               <input
                 id="booking-amount"
                 name="amount"

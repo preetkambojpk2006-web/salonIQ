@@ -16,6 +16,14 @@ export type PublicStaffServicePrice = {
   price: number;
 };
 
+export type PublicHappyHourRule = {
+  name: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  discount_percent: number;
+};
+
 export type PublicBookingGate = {
   salon_name: string;
   branch_name: string;
@@ -30,4 +38,5 @@ export type PublicBookingContext = {
   services: PublicBookingService[];
   staff: PublicBookingStaff[];
   staff_service_prices?: PublicStaffServicePrice[];
+  happy_hours?: PublicHappyHourRule[];
 };

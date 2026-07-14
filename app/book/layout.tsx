@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 export const metadata: Metadata = {
   title: "Book appointment | SalonIQ",
@@ -6,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function BookLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <LanguageProvider initialLocale="hi">{children}</LanguageProvider>;
 }

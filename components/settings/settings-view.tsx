@@ -26,6 +26,7 @@ type SettingsViewProps = {
   auditLogPanel?: ReactNode;
   bookingSlug?: string | null;
   onlineBookingPanel?: ReactNode;
+  happyHoursPanel?: ReactNode;
   reviewsSocialPanel?: ReactNode;
   salonName: string;
 };
@@ -44,6 +45,7 @@ export function SettingsView({
   auditLogPanel,
   bookingSlug = null,
   onlineBookingPanel,
+  happyHoursPanel,
   reviewsSocialPanel,
   salonName,
 }: SettingsViewProps) {
@@ -151,6 +153,7 @@ export function SettingsView({
         ) : null}
 
         {onlineBookingPanel}
+        {happyHoursPanel}
 
         {reviewsSocialPanel}
 

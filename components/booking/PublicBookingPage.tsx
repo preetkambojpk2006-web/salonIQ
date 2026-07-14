@@ -17,9 +17,15 @@ import type {
   PublicBookingGate,
   PublicBookingService,
   PublicBookingStaff,
+  PublicHappyHourRule,
   PublicStaffServicePrice,
 } from "@/lib/booking/types";
+import {
+  applyHappyHourDiscount,
+  matchHappyHourRule,
+} from "@/lib/pricing/happy-hours";
 import { resolvePublicServicePrice } from "@/lib/staff/service-price";
+import { useT } from "@/lib/i18n/LanguageContext";
 import { createClient } from "@/lib/supabase/client";
 
 const TOKENS = {
@@ -41,6 +47,7 @@ function formatInr(amount: number): string {
 }
 
 export function PublicBookingPage({ slug }: PublicBookingPageProps) {
+  const { t } = useT();
   const [gate, setGate] = useState<PublicBookingGate | null>(null);
   const [context, setContext] = useState<PublicBookingContext | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,6 +125,7 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
         staff_service_prices: Array.isArray(raw.staff_service_prices)
           ? raw.staff_service_prices
           : [],
+        happy_hours: Array.isArray(raw.happy_hours) ? raw.happy_hours : [],
         opening_hours:
           raw.opening_hours && typeof raw.opening_hours === "object"
             ? (raw.opening_hours as Record<string, unknown>)
@@ -139,6 +147,11 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
     [context?.staff_service_prices]
   );
 
+  const happyHourRules = useMemo(
+    () => (context?.happy_hours ?? []) as PublicHappyHourRule[],
+    [context?.happy_hours]
+  );
+
   const displayPriceForService = useCallback(
     (service: PublicBookingService) =>
       resolvePublicServicePrice({
@@ -149,6 +162,24 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
       }),
     [priceOverrides, selectedStaff?.name]
   );
+
+  const selectedBasePrice = selectedService
+    ? displayPriceForService(selectedService)
+    : 0;
+
+  const activeHappyHour = useMemo(() => {
+    if (!selectedSlot || !happyHourRules.length) {
+      return null;
+    }
+    return matchHappyHourRule(happyHourRules, selectedSlot);
+  }, [happyHourRules, selectedSlot]);
+
+  const selectedDisplayPrice = useMemo(() => {
+    if (!activeHappyHour) {
+      return selectedBasePrice;
+    }
+    return applyHappyHourDiscount(selectedBasePrice, activeHappyHour.discountPercent);
+  }, [activeHappyHour, selectedBasePrice]);
 
   useEffect(() => {
     if (!context || !date) return;
@@ -532,6 +563,64 @@ export function PublicBookingPage({ slug }: PublicBookingPageProps) {
                   })}
                 </div>
               )}
+              {selectedSlot && selectedService ? (
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: "12px 14px",
+                    borderRadius: 16,
+                    border: `1px solid ${TOKENS.borderSubtle}`,
+                    background: "#F9F8F3",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    {activeHappyHour ? (
+                      <>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            color: TOKENS.textMuted,
+                            textDecoration: "line-through",
+                          }}
+                        >
+                          {formatInr(selectedBasePrice)}
+                        </span>
+                        <strong style={{ fontSize: 16, color: TOKENS.textDark }}>
+                          {formatInr(selectedDisplayPrice)}
+                        </strong>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "4px 10px",
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "#1A1A1A",
+                            background: TOKENS.accentGreenSoft,
+                            border: `1px solid ${TOKENS.accentGreen}`,
+                          }}
+                        >
+                          {t("booking.happyHoursBadge", {
+                            percent: String(activeHappyHour.discountPercent),
+                          })}
+                        </span>
+                      </>
+                    ) : (
+                      <strong style={{ fontSize: 16, color: TOKENS.textDark }}>
+                        {formatInr(selectedBasePrice)}
+                      </strong>
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </Section>
 
             <Section title="4. Aapka detail">

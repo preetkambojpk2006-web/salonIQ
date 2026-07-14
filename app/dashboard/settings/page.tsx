@@ -1,3 +1,4 @@
+import { HappyHoursSettingsPanel } from "@/components/settings/happy-hours-settings-panel";
 import { AuditLogPanel } from "@/components/settings/audit-log-panel";
 import { AttendanceSettingsPanel } from "@/components/settings/attendance-settings-panel";
 import { CommissionSettingsPanel } from "@/components/settings/commission-settings-panel";
@@ -12,6 +13,7 @@ import { ensureBusinessBookingSlug } from "@/lib/booking/ensure-slug";
 import { getUserMembership, isOwnerOrAdmin } from "@/lib/auth/membership";
 import { getBusinessRewardConfig } from "@/lib/customers/loyalty";
 import { getCommissionConfig } from "@/lib/commission/actions";
+import { listHappyHours } from "@/lib/happy-hours/queries";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { redirect } from "next/navigation";
 
@@ -37,11 +39,13 @@ export default async function SettingsPage() {
   }
 
   const businessId = membership.businessId;
-  const [business, rewardConfig, commissionConfig, auditLogs] = await Promise.all([
+  const [business, rewardConfig, commissionConfig, auditLogs, happyHours] =
+    await Promise.all([
     getOwnerBusiness(),
     getBusinessRewardConfig(businessId),
     getCommissionConfig(),
     getAuditLogs(businessId),
+    listHappyHours(businessId),
   ]);
 
   const bookingSlug =
@@ -122,6 +126,9 @@ export default async function SettingsPage() {
         <OnlineBookingSettingsPanel
           initialEnabled={businessWithExtras?.online_booking_enabled ?? true}
         />
+      }
+      happyHoursPanel={
+        <HappyHoursSettingsPanel initialRules={happyHours} />
       }
       reviewsSocialPanel={
         <ReviewsSocialSettingsPanel
