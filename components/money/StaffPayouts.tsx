@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { MessageCircle } from "lucide-react";
+import { Clock, MessageCircle } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
+import { SettlementHistoryModal } from "@/components/money/SettlementHistoryModal";
 import { settleStaffPayout } from "@/lib/staff/actions";
 import type { StaffPayoutRow, StaffPayoutsSummary } from "@/lib/staff/types";
 import { openWhatsAppReminder } from "@/lib/whatsapp/sendLink";
@@ -37,6 +38,40 @@ function formatInr(amount: number): string {
 /** Plain grouped number (no ₹) — the message templates already include ₹. */
 function formatAmount(amount: number): string {
   return amount.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
+function HistoryButton({
+  staffName,
+  onOpen,
+}: {
+  staffName: string;
+  onOpen: (staffName: string) => void;
+}) {
+  const { t } = useT();
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(staffName)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        minHeight: 36,
+        padding: "0 12px",
+        borderRadius: 10,
+        border: `1px solid ${TOKENS.borderSubtle}`,
+        background: "#fff",
+        color: TOKENS.textDark,
+        fontSize: 13,
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      <Clock size={16} strokeWidth={1.5} aria-hidden />
+      {t("staff.history")}
+    </button>
+  );
 }
 
 function ShareSalaryButton({
@@ -221,6 +256,7 @@ export function StaffPayouts({
   monthLabel = "",
 }: StaffPayoutsProps) {
   const { t } = useT();
+  const [historyStaffName, setHistoryStaffName] = useState<string | null>(null);
   const {
     rows,
     totalGrossUnpaid,
@@ -238,14 +274,15 @@ export function StaffPayouts({
   }, [staffContacts]);
 
   return (
-    <section
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${TOKENS.borderSubtle}`,
-        background: TOKENS.bgMain,
-        padding: 18,
-      }}
-    >
+    <>
+      <section
+        style={{
+          borderRadius: 16,
+          border: `1px solid ${TOKENS.borderSubtle}`,
+          background: TOKENS.bgMain,
+          padding: 18,
+        }}
+      >
       <p
         style={{
           margin: 0,
@@ -319,6 +356,10 @@ export function StaffPayouts({
                 }}
               >
                 <SettleButton row={row} />
+                <HistoryButton
+                  staffName={row.staffName}
+                  onOpen={setHistoryStaffName}
+                />
                 <ShareSalaryButton
                   row={row}
                   phone={phoneByName.get(row.staffName.trim().toLowerCase()) ?? null}
@@ -391,6 +432,16 @@ export function StaffPayouts({
           </strong>
         </div>
       </div>
-    </section>
+      </section>
+
+      {historyStaffName ? (
+        <SettlementHistoryModal
+          staffName={historyStaffName}
+          salonName={salonName}
+          phone={phoneByName.get(historyStaffName.trim().toLowerCase()) ?? null}
+          onClose={() => setHistoryStaffName(null)}
+        />
+      ) : null}
+    </>
   );
 }

@@ -12,10 +12,15 @@ import {
 } from "@/lib/staff/advances";
 import { recordStaffCommissionForPayment } from "@/lib/staff/commission";
 import { getGrossUnpaidCommissionForStaff } from "@/lib/staff/payouts";
+import {
+  listStaffSettlementHistory,
+  recordSettlementHistory,
+} from "@/lib/staff/settlement-history";
 import type {
   RecordStaffAdvanceResult,
   RetryCommissionResult,
   SettleStaffPayoutResult,
+  StaffSettlementRecord,
 } from "@/lib/staff/types";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -165,15 +170,59 @@ export async function settleStaffPayout(
     net_paid?: number | string;
   };
 
+  const grossUnpaidResult = roundMoney(Number(result.gross_unpaid ?? grossUnpaid));
+  const fineApplied = roundMoney(Number(result.fine_applied ?? 0));
+  const advanceApplied = roundMoney(Number(result.advance_applied ?? 0));
+  const netPaid = roundMoney(Number(result.net_paid ?? 0));
+
+  try {
+    await recordSettlementHistory({
+      businessId,
+      staffName,
+      settledAt,
+      grossCommission: grossUnpaidResult,
+      finesDeducted: fineApplied,
+      advancesDeducted: advanceApplied,
+      netPaid,
+      createdBy: user.id,
+    });
+  } catch (historyError) {
+    console.warn(
+      "settleStaffPayout history insert failed:",
+      historyError instanceof Error ? historyError.message : historyError
+    );
+  }
+
   revalidatePath("/dashboard/money");
   revalidatePath("/dashboard/attendance");
   return {
     ok: true,
-    grossUnpaid: roundMoney(Number(result.gross_unpaid ?? grossUnpaid)),
-    fineApplied: roundMoney(Number(result.fine_applied ?? 0)),
-    advanceApplied: roundMoney(Number(result.advance_applied ?? 0)),
-    netPaid: roundMoney(Number(result.net_paid ?? 0)),
+    grossUnpaid: grossUnpaidResult,
+    fineApplied,
+    advanceApplied,
+    netPaid,
   };
+}
+
+export async function getStaffSettlementHistory(
+  staffName: string
+): Promise<StaffSettlementRecord[]> {
+  const businessId = await getOwnerBusinessId();
+  if (!businessId) {
+    return [];
+  }
+
+  const membership = await getUserMembership();
+  if (!membership?.businessId || !isOwnerOrAdmin(membership.appRole)) {
+    return [];
+  }
+
+  const trimmed = staffName?.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  return listStaffSettlementHistory(businessId, trimmed);
 }
 
 /** Idempotent retry — delegates to recordStaffCommissionForPayment (duplicate-safe). */

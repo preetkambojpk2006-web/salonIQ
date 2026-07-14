@@ -61,6 +61,20 @@ export type SettleStaffPayoutResult =
     }
   | { ok: false; error: string };
 
+export type StaffSettlementRecord = {
+  id: string;
+  businessId: string;
+  staffName: string;
+  settledAt: string;
+  grossCommission: number;
+  finesDeducted: number;
+  advancesDeducted: number;
+  netPaid: number;
+  note: string | null;
+  createdBy: string | null;
+  createdAt: string;
+};
+
 export type MissingCommissionAppointment = {
   appointmentId: string;
   staffName: string;
