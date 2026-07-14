@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { GettingStartedPanel } from "@/components/command-center/today/getting-started-panel";
 import { NextAppointments } from "@/components/command-center/today/next-appointments";
 import { OsHero } from "@/components/command-center/today/os-hero";
@@ -33,6 +34,7 @@ type TodayViewProps = {
   dailyRevenueTarget?: number | null;
   lowStockProducts?: InventoryProductWithBrand[];
   initialWalkinQueue?: WalkinQueueRow[];
+  analyticsPanel?: ReactNode;
 };
 
 export function TodayView({
@@ -47,6 +49,7 @@ export function TodayView({
   dailyRevenueTarget = null,
   lowStockProducts = [],
   initialWalkinQueue = [],
+  analyticsPanel = null,
 }: TodayViewProps) {
   useBusinessRealtimeRefresh({
     businessId,
@@ -108,6 +111,7 @@ export function TodayView({
       {showOwnerInsights && lowStockProducts.length > 0 ? (
         <LowStockAlerts lowStockProducts={lowStockProducts} />
       ) : null}
+      {analyticsPanel}
     </div>
   );
 }

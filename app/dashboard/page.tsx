@@ -1,4 +1,6 @@
 import { TodayView } from "@/components/command-center/today/today-view";
+import { BusinessPulseAsync } from "@/components/command-center/today/business-pulse-async";
+import { BusinessPulseSkeleton } from "@/components/command-center/today/business-pulse-skeleton";
 import { canManageFinance, getUserMembership } from "@/lib/auth/membership";
 import { getCoachInsights, type Insight } from "@/lib/coach/insights";
 import { listOnlinePendingAppointments } from "@/lib/appointments/queries";
@@ -9,6 +11,7 @@ import type { InventoryProductWithBrand } from "@/lib/inventory/types";
 import { getOwnerBusiness } from "@/lib/onboarding/queries";
 import { getStaffLeaderboard } from "@/lib/staff/leaderboard";
 import { listTodayWalkinQueue } from "@/lib/walkin/queries";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +73,13 @@ export default async function DashboardPage() {
       })()}
       lowStockProducts={lowStockProducts}
       initialWalkinQueue={walkinQueue}
+      analyticsPanel={
+        canManageFinance(appRole) && businessId ? (
+          <Suspense fallback={<BusinessPulseSkeleton />}>
+            <BusinessPulseAsync businessId={businessId} />
+          </Suspense>
+        ) : null
+      }
     />
   );
 }

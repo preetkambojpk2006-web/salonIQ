@@ -204,7 +204,7 @@ async function getTodayStaffLoad(businessId: string): Promise<StaffLoad> {
   return { busyStaff, busyCount, freeStaff, freeCount };
 }
 
-async function buildDemandHeatmap(businessId: string): Promise<{
+export async function buildDemandHeatmap(businessId: string): Promise<{
   rows: HeatmapRow[];
   showHeatmap: boolean;
 }> {
