@@ -91,7 +91,8 @@ export function CascadePreviewModal({
       const result = await applyAppointmentTimeCascade(
         appointment.id,
         newStart.toISOString(),
-        newEnd.toISOString()
+        newEnd.toISOString(),
+        preview.has_clash_warning
       );
 
       if (!result.ok) {
@@ -111,6 +112,7 @@ export function CascadePreviewModal({
     newStart,
     onConfirm,
     onConfirmed,
+    preview.has_clash_warning,
     preview.has_hard_error,
     t,
   ]);
@@ -202,6 +204,32 @@ export function CascadePreviewModal({
               </p>
             )}
 
+            {preview.has_clash_warning ? (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #C9A96E",
+                  background: "#E8D9C0",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#1A1A1A",
+                  lineHeight: 1.4,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                }}
+              >
+                <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0" aria-hidden />
+                <span>
+                  {t("cascade.clashWarning", {
+                    time: preview.clash_times[0] ?? "",
+                  })}
+                </span>
+              </div>
+            ) : null}
+
             {preview.warnings.length > 0 ? (
               <div style={{ display: "grid", gap: 8 }}>
                 {preview.warnings.map((warning) => (
@@ -267,7 +295,11 @@ export function CascadePreviewModal({
               onClick={() => void handleApply()}
               disabled={loading || preview.has_hard_error}
             >
-              {loading ? t("cascade.saving") : t("cascade.confirmApply")}
+              {loading
+                ? t("cascade.saving")
+                : preview.has_clash_warning
+                  ? t("cascade.proceedAnyway")
+                  : t("cascade.confirmApply")}
             </button>
           </div>
         </div>

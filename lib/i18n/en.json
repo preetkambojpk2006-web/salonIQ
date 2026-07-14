@@ -310,6 +310,8 @@
   "cascade.noShift": "No other appointments will shift.",
   "cascade.blocked": "Blocked due to overlap or limit. Adjust the time.",
   "cascade.confirmApply": "Confirm & Apply",
+  "cascade.proceedAnyway": "Proceed anyway?",
+  "cascade.clashWarning": "Shifting will cause a clash at {time}. Proceed anyway?",
   "cascade.saving": "Saving…",
   "cascade.saveFailed": "Could not save time change. Please try again.",
   "whatsapp.delayEyebrow": "WhatsApp",

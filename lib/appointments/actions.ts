@@ -31,7 +31,7 @@ export type PreviewTimeChangeResult =
 
 export type ApplyTimeCascadeResult =
   | { ok: true; success: true; shifted_count: number; preview: CascadePreview }
-  | { ok: false; error: string };
+  | { ok: false; error: string; requires_confirmation?: boolean };
 
 async function requireOwnerOrAdmin(): Promise<
   { ok: true; businessId: string } | { ok: false; error: string }
@@ -137,7 +137,8 @@ export async function previewAppointmentTimeChange(
 export async function applyAppointmentTimeCascade(
   appointmentId: string,
   newStartISO: string,
-  newEndISO: string
+  newEndISO: string,
+  force = false
 ): Promise<ApplyTimeCascadeResult> {
   const previewResult = await buildTimeChangePreview(
     appointmentId,
@@ -155,6 +156,14 @@ export async function applyAppointmentTimeCascade(
       error:
         previewResult.preview.warnings[0] ??
         "Overlap ki wajah se time change apply nahi ho sakta.",
+    };
+  }
+
+  if (previewResult.preview.has_clash_warning && !force) {
+    return {
+      ok: false,
+      error: "Cascade clash requires owner confirmation.",
+      requires_confirmation: true,
     };
   }
 

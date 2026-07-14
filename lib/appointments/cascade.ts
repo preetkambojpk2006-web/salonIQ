@@ -34,6 +34,8 @@ export type CascadePreview = {
   shifted: CascadeShifted[];
   warnings: string[];
   has_hard_error: boolean;
+  has_clash_warning: boolean;
+  clash_times: string[];
 };
 
 export function effectiveEndTime(start: Date, end: Date | null): Date {
@@ -119,16 +121,23 @@ function buildShiftedRow(
   };
 }
 
-function collectForwardShifted(
+function formatClashTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: SALON_TIMEZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(iso));
+}
+
+function collectForwardShiftedChain(
   anchor: Appointment,
   allDayAppointments: Appointment[],
   anchorStaff: string,
   oldEnd: Date,
-  forwardDeltaMs: number
+  newEnd: Date
 ): CascadeShifted[] {
-  if (forwardDeltaMs === 0) return [];
-
-  return allDayAppointments
+  const subsequent = allDayAppointments
     .filter((appointment) => {
       if (appointment.id === anchor.id) return false;
       if (!isActiveAppointment(appointment)) return false;
@@ -139,20 +148,34 @@ function collectForwardShifted(
 
       return start.getTime() >= oldEnd.getTime();
     })
-    .sort((a, b) => a.start_time.localeCompare(b.start_time))
-    .map((appointment) => buildShiftedRow(appointment, forwardDeltaMs));
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  const shifted: CascadeShifted[] = [];
+  let chainEnd = newEnd;
+
+  for (const appointment of subsequent) {
+    const oldStart = parseInstant(appointment.start_time)!;
+    if (oldStart.getTime() >= chainEnd.getTime()) {
+      break;
+    }
+
+    const shiftMs = chainEnd.getTime() - oldStart.getTime();
+    const row = buildShiftedRow(appointment, shiftMs);
+    shifted.push(row);
+    chainEnd = parseInstant(row.new_end)!;
+  }
+
+  return shifted;
 }
 
-function collectBackwardShifted(
+function collectBackwardShiftedChain(
   anchor: Appointment,
   allDayAppointments: Appointment[],
   anchorStaff: string,
   oldStart: Date,
-  backwardDeltaMs: number
+  newStart: Date
 ): CascadeShifted[] {
-  if (backwardDeltaMs === 0) return [];
-
-  return allDayAppointments
+  const prior = allDayAppointments
     .filter((appointment) => {
       if (appointment.id === anchor.id) return false;
       if (!isActiveAppointment(appointment)) return false;
@@ -163,8 +186,29 @@ function collectBackwardShifted(
 
       return start.getTime() < oldStart.getTime();
     })
-    .sort((a, b) => b.start_time.localeCompare(a.start_time))
-    .map((appointment) => buildShiftedRow(appointment, backwardDeltaMs));
+    .sort((a, b) => b.start_time.localeCompare(a.start_time));
+
+  const shifted: CascadeShifted[] = [];
+  let chainStart = newStart;
+
+  for (const appointment of prior) {
+    const oldStartAppt = parseInstant(appointment.start_time)!;
+    const oldEndAppt = effectiveEndTime(
+      oldStartAppt,
+      appointment.end_time ? parseInstant(appointment.end_time) : null
+    );
+
+    if (oldEndAppt.getTime() <= chainStart.getTime()) {
+      break;
+    }
+
+    const shiftMs = chainStart.getTime() - oldEndAppt.getTime();
+    const row = buildShiftedRow(appointment, shiftMs);
+    shifted.push(row);
+    chainStart = parseInstant(row.new_start)!;
+  }
+
+  return shifted;
 }
 
 export function computeCascadePreview(
@@ -174,7 +218,9 @@ export function computeCascadePreview(
   newEnd: Date
 ): CascadePreview {
   const warnings: string[] = [];
+  const clash_times: string[] = [];
   let has_hard_error = false;
+  let has_clash_warning = false;
 
   const oldStart = parseInstant(anchor.start_time)!;
   const oldEnd = effectiveEndTime(
@@ -182,7 +228,6 @@ export function computeCascadePreview(
     anchor.end_time ? parseInstant(anchor.end_time) : null
   );
   const forwardDeltaMs = newEnd.getTime() - oldEnd.getTime();
-  const backwardDeltaMs = newStart.getTime() - oldStart.getTime();
   const shouldBackwardCascade =
     newEnd.getTime() < oldEnd.getTime() ||
     newStart.getTime() < oldStart.getTime();
@@ -202,21 +247,21 @@ export function computeCascadePreview(
     delta_minutes,
   };
 
-  const forwardShifted = collectForwardShifted(
+  const forwardShifted = collectForwardShiftedChain(
     anchor,
     allDayAppointments,
     anchorStaff,
     oldEnd,
-    forwardDeltaMs
+    newEnd
   );
 
   const backwardShifted = shouldBackwardCascade
-    ? collectBackwardShifted(
+    ? collectBackwardShiftedChain(
         anchor,
         allDayAppointments,
         anchorStaff,
         oldStart,
-        backwardDeltaMs
+        newStart
       )
     : [];
 
@@ -278,14 +323,10 @@ export function computeCascadePreview(
   for (const moved of finalSlots) {
     for (const other of unchangedSlots) {
       if (rangesOverlap(moved.start, moved.end, other.start, other.end)) {
-        has_hard_error = true;
-        warnings.push(
-          "Shift ke baad staff ke do appointments overlap ho rahe hain — time adjust karein."
-        );
-        break;
+        has_clash_warning = true;
+        clash_times.push(formatClashTime(toIso(other.start)));
       }
     }
-    if (has_hard_error) break;
   }
 
   for (let i = 0; i < finalSlots.length; i++) {
@@ -303,6 +344,12 @@ export function computeCascadePreview(
     if (has_hard_error) break;
   }
 
+  const largestShiftMs = shifted.reduce((max, row) => {
+    const oldStartMs = parseInstant(row.old_start)!.getTime();
+    const newStartMs = parseInstant(row.new_start)!.getTime();
+    return Math.max(max, Math.abs(newStartMs - oldStartMs));
+  }, 0);
+
   const slotsToCheckClosing = [
     { label: "anchor", end: newEnd },
     ...shifted.map((row) => ({
@@ -318,11 +365,6 @@ export function computeCascadePreview(
       );
     }
   }
-
-  const largestShiftMs = Math.max(
-    Math.abs(forwardDeltaMs),
-    shouldBackwardCascade ? Math.abs(backwardDeltaMs) : 0
-  );
 
   if (largestShiftMs > TWO_HOURS_MS) {
     warnings.push(
@@ -349,5 +391,7 @@ export function computeCascadePreview(
     shifted,
     warnings: Array.from(new Set(warnings)),
     has_hard_error,
+    has_clash_warning,
+    clash_times: Array.from(new Set(clash_times)),
   };
 }
