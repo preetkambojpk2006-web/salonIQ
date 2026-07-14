@@ -38,7 +38,7 @@ export const commandNavItems: CommandNavItem[] = [
   { id: "inventory", label: "Inventory", href: "/dashboard/inventory" },
   { id: "insights", label: "Insights", href: "/dashboard/insights" },
   { id: "automations", label: "Automations", href: "/dashboard/automations" },
-  { id: "coach", label: "AI Coach", href: "/dashboard/coach" },
+  { id: "coach", label: "Business Tips", href: "/dashboard/coach" },
   { id: "branches", label: "Branches", href: "/dashboard/branches" },
   { id: "services", label: "Services & Staff", href: "/dashboard/services" },
   { id: "settings", label: "Settings", href: "/dashboard/settings" },

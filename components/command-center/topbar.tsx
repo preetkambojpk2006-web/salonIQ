@@ -20,7 +20,7 @@ const titleByNav = {
   inventory: "Stock & Inventory",
   insights: "Insights",
   automations: "Automation Engine",
-  coach: "AI Business Coach",
+  coach: "Business Tips",
   branches: "Multi-Branch Control",
   services: "Services & Staff",
   settings: "Salon Settings",
