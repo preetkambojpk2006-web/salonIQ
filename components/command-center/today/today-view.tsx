@@ -107,14 +107,14 @@ export function TodayView({
           initialQueue={initialWalkinQueue}
         />
       ) : null}
-      {showOwnerInsights ? (
-        <CoachTeaser topInsightTitle={coachTeaserTitle} />
-      ) : null}
+      {analyticsPanel}
       {showOwnerInsights ? <LeaderboardCard entries={staffLeaderboard} /> : null}
       {showOwnerInsights && lowStockProducts.length > 0 ? (
         <LowStockAlerts lowStockProducts={lowStockProducts} />
       ) : null}
-      {analyticsPanel}
+      {showOwnerInsights ? (
+        <CoachTeaser topInsightTitle={coachTeaserTitle} />
+      ) : null}
     </div>
   );
 }
