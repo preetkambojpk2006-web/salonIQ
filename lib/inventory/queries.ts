@@ -8,6 +8,7 @@ import type {
   InventorySummary,
   InventoryTransactionWithDetails,
   InventoryTxnType,
+  InventoryProductType,
   StockMutationResult,
 } from "@/lib/inventory/types";
 
@@ -25,6 +26,11 @@ type ProductRow = {
   brand_id: string;
   name: string;
   unit_type: string;
+  product_type: string | null;
+  category: string | null;
+  purchase_unit: string | null;
+  usage_unit: string | null;
+  unit_conversion_factor: number | string | null;
   current_quantity: number | string;
   min_quantity: number | string;
   avg_unit_cost: number | string;
@@ -32,6 +38,10 @@ type ProductRow = {
   created_at: string;
   inventory_brands: { name: string } | { name: string }[] | null;
 };
+
+function normalizeProductType(value: string | null | undefined): InventoryProductType {
+  return value === "retail" ? "retail" : "backbar";
+}
 
 type TransactionRow = {
   id: string;
@@ -81,6 +91,11 @@ function mapProductRow(row: ProductRow): InventoryProductWithBrand {
     brand_id: row.brand_id,
     name: row.name,
     unit_type: row.unit_type,
+    product_type: normalizeProductType(row.product_type),
+    category: row.category?.trim() || null,
+    purchase_unit: row.purchase_unit?.trim() || null,
+    usage_unit: row.usage_unit?.trim() || null,
+    unit_conversion_factor: roundMoney(Number(row.unit_conversion_factor ?? 1)) || 1,
     current_quantity: roundMoney(Number(row.current_quantity ?? 0)),
     min_quantity: roundMoney(Number(row.min_quantity ?? 0)),
     avg_unit_cost: roundMoney(Number(row.avg_unit_cost ?? 0)),
@@ -198,6 +213,11 @@ export async function listProductsWithBrand(
       brand_id,
       name,
       unit_type,
+      product_type,
+      category,
+      purchase_unit,
+      usage_unit,
+      unit_conversion_factor,
       current_quantity,
       min_quantity,
       avg_unit_cost,

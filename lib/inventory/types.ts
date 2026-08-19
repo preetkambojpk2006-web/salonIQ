@@ -1,5 +1,7 @@
 export type InventoryTxnType = "purchase" | "use" | "adjustment";
 
+export type InventoryProductType = "backbar" | "retail";
+
 export type InventoryBrand = {
   id: string;
   business_id: string;
@@ -14,6 +16,11 @@ export type InventoryProduct = {
   brand_id: string;
   name: string;
   unit_type: string;
+  product_type: InventoryProductType;
+  category: string | null;
+  purchase_unit: string | null;
+  usage_unit: string | null;
+  unit_conversion_factor: number;
   current_quantity: number;
   min_quantity: number;
   avg_unit_cost: number;

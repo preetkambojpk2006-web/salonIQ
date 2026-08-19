@@ -11,6 +11,7 @@ import {
 } from "@/lib/inventory/queries";
 import type {
   InventoryActionResult,
+  InventoryProductType,
   StockMutationResult,
 } from "@/lib/inventory/types";
 import { todayCalendarDay } from "@/lib/payments/date-utils";
@@ -62,6 +63,48 @@ function parseRequiredPositive(value: FormDataEntryValue | null): number | null 
     return null;
   }
   return roundMoney(parsed);
+}
+
+type ProductMetadataFields = {
+  product_type: InventoryProductType;
+  category: string | null;
+  purchase_unit: string | null;
+  usage_unit: string | null;
+  unit_conversion_factor: number;
+};
+
+function parseProductMetadata(
+  formData: FormData
+): ProductMetadataFields | { ok: false; error: string } {
+  const productTypeRaw = (formData.get("product_type") as string)?.trim();
+  const product_type: InventoryProductType =
+    productTypeRaw === "retail" ? "retail" : "backbar";
+
+  const categoryRaw = (formData.get("category") as string)?.trim();
+  const category = categoryRaw || null;
+
+  const purchaseRaw = (formData.get("purchase_unit") as string)?.trim();
+  const usageRaw = (formData.get("usage_unit") as string)?.trim();
+  const purchase_unit = purchaseRaw || null;
+  const usage_unit = usageRaw || null;
+
+  const factorRaw = (formData.get("unit_conversion_factor") as string)?.trim();
+  let unit_conversion_factor = 1;
+  if (factorRaw) {
+    const parsed = parseFloat(factorRaw);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return { ok: false, error: "Conversion factor valid positive number hona chahiye." };
+    }
+    unit_conversion_factor = parsed;
+  }
+
+  return {
+    product_type,
+    category,
+    purchase_unit,
+    usage_unit,
+    unit_conversion_factor,
+  };
 }
 
 export async function createBrand(formData: FormData): Promise<InventoryActionResult> {
@@ -179,6 +222,12 @@ export async function createProduct(
     return { ok: false, error: "Min quantity valid honi chahiye." };
   }
 
+  const metadata = parseProductMetadata(formData);
+  if ("ok" in metadata && metadata.ok === false) {
+    return metadata;
+  }
+  const productMetadata = metadata as ProductMetadataFields;
+
   const supabase = createClient();
 
   const { data: brand } = await supabase
@@ -201,6 +250,7 @@ export async function createProduct(
     current_quantity: 0,
     avg_unit_cost: 0,
     is_active: true,
+    ...productMetadata,
   });
 
   if (error) {
@@ -235,6 +285,12 @@ export async function updateProduct(
     return { ok: false, error: "Min quantity valid honi chahiye." };
   }
 
+  const metadata = parseProductMetadata(formData);
+  if ("ok" in metadata && metadata.ok === false) {
+    return metadata;
+  }
+  const productMetadata = metadata as ProductMetadataFields;
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("inventory_products")
@@ -242,6 +298,7 @@ export async function updateProduct(
       name,
       unit_type: unitType,
       min_quantity: minQuantity,
+      ...productMetadata,
     })
     .eq("id", productId)
     .eq("business_id", access.businessId)
