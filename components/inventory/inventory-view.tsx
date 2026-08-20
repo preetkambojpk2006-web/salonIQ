@@ -17,7 +17,6 @@ import {
 import type {
   BrandSpendSummary,
   InventoryBrand,
-  InventoryProductType,
   InventoryProductWithBrand,
   InventorySummary,
   InventoryTransactionWithDetails,
@@ -38,7 +37,6 @@ type InventoryViewProps = {
 
 type TabId = "stock" | "kharcha" | "history";
 
-type ProductTypeFilter = "all" | "backbar" | "retail";
 
 type ModalKind = "stockIn" | "stockUse" | null;
 
