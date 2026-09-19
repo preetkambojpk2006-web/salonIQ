@@ -1,27 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
-  BarChart3,
-  CalendarDays,
-  Clock,
-  IndianRupee,
-  MessageCircle,
-  Receipt,
-  Store,
-  UserRound,
   CalendarCheck,
+  CalendarDays,
+  Check,
+  FileText,
+  MessageCircle,
+  Package,
+  Store,
+  TrendingUp,
+  UserRound,
+  Users,
   Wallet,
 } from "lucide-react";
-
-const TOKENS = {
-  bgMain: "#EDE8DF",
-  bgPanel: "#F9F8F3",
-  textDark: "#1A1A1A",
-  textMuted: "#8A8A8A",
-  borderSubtle: "#E0DAD0",
-  accentGreen: "#1FA873",
-  accentGreenSoft: "#D4E8DD",
-  charcoal: "#1A1A1A",
-};
 
 const HOW_IT_WORKS = [
   {
@@ -52,34 +45,34 @@ const HOW_IT_WORKS = [
 
 const FEATURES = [
   {
-    title: "Smart Booking Calendar",
-    description: "Day view, drag-reschedule, overlap warnings, online requests.",
+    title: "Smart Calendar",
+    description: "Day, week, month view. No double bookings.",
     icon: CalendarDays,
   },
   {
-    title: "WhatsApp Reminders",
-    description: "Confirmations, delays, and customer follow-ups in one tap.",
+    title: "WhatsApp Ready",
+    description: "Send reminders, salary slips, receipts in one tap.",
     icon: MessageCircle,
   },
   {
-    title: "Staff Commission and Payouts",
-    description: "Track earnings, fines, advances, and settle in one place.",
-    icon: IndianRupee,
+    title: "Staff & Commission",
+    description: "Auto-calculate commission. No more month-end fights.",
+    icon: Users,
   },
   {
     title: "GST Billing",
-    description: "GSTIN, inclusive or exclusive pricing, invoice PDFs.",
-    icon: Receipt,
+    description: "Professional invoices with CGST/SGST. Print or PDF.",
+    icon: FileText,
   },
   {
     title: "Business Analytics",
-    description: "Revenue trends, top services, busy hours, and daily pulse.",
-    icon: BarChart3,
+    description: "Revenue trends, busy hours, top services at a glance.",
+    icon: TrendingUp,
   },
   {
-    title: "Attendance Tracking",
-    description: "Mark present, late, absent — with optional late fines.",
-    icon: Clock,
+    title: "Inventory Tracking",
+    description: "Track stock, auto-deduct on service. Low stock alerts.",
+    icon: Package,
   },
 ];
 
@@ -89,69 +82,273 @@ const PRICING = [
     price: "1499",
     branches: "1–2 branches",
     highlight: false,
+    features: [
+      "Smart calendar and bookings",
+      "WhatsApp reminders",
+      "Staff attendance",
+      "GST invoices",
+    ],
   },
   {
     name: "Growth",
     price: "1999",
     branches: "3–4 branches",
     highlight: true,
+    features: [
+      "Everything in Starter",
+      "Commission and payouts",
+      "Inventory tracking",
+      "Business analytics",
+    ],
   },
   {
     name: "Scale",
     price: "2499",
     branches: "5+ branches",
     highlight: false,
+    features: [
+      "Everything in Growth",
+      "Multi-branch control",
+      "Priority onboarding",
+      "Advanced reporting",
+    ],
   },
 ];
 
-const outlineButtonStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: 40,
-  padding: "0 16px",
-  borderRadius: 10,
-  border: `1px solid ${TOKENS.borderSubtle}`,
-  background: "#fff",
-  color: TOKENS.textDark,
-  fontSize: 14,
+function Reveal({
+  className,
+  children,
+  delayMs = 0,
+}: {
+  className: string;
+  children: ReactNode;
+  delayMs?: number;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      node.classList.add("is-visible");
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            window.setTimeout(() => {
+              entry.target.classList.add("is-visible");
+            }, delayMs);
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.16, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [delayMs]);
+
+  return (
+    <article
+      ref={ref}
+      className={className}
+      style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}
+    >
+      {children}
+    </article>
+  );
+}
+
+function DashboardMockup() {
+  const hours = ["10", "11", "12", "1", "2", "3"];
+  const cells = [
+    { staff: "Priya", slots: [true, true, false, true, false, false] },
+    { staff: "Ankit", slots: [false, true, true, false, true, false] },
+    { staff: "Meera", slots: [true, false, false, true, true, false] },
+  ];
+
+  return (
+    <div
+      className="landing-mock"
+      style={{
+        maxWidth: 820,
+        margin: "0 auto",
+        borderRadius: 16,
+        border: "1px solid #E0DAD0",
+        background: "#F9F8F3",
+        boxShadow: "0 24px 60px rgba(26, 26, 26, 0.16)",
+        overflow: "hidden",
+        textAlign: "left",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 14px",
+          background: "#EDE8DF",
+          borderBottom: "1px solid #E0DAD0",
+        }}
+      >
+        <span style={dotStyle("#D94F4F")} />
+        <span style={dotStyle("#C9A96E")} />
+        <span style={dotStyle("#1FA873")} />
+        <span
+          style={{
+            marginLeft: 8,
+            flex: 1,
+            minHeight: 22,
+            borderRadius: 8,
+            background: "#fff",
+            border: "1px solid #E0DAD0",
+            fontSize: 11,
+            color: "#8A8A8A",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 10px",
+          }}
+        >
+          app.saloniq.in/dashboard
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          background: "#1FA873",
+          color: "#fff",
+        }}
+      >
+        <strong style={{ fontSize: 13, letterSpacing: "0.04em" }}>SalonIQ OS</strong>
+        <span style={{ fontSize: 12, opacity: 0.9 }}>Today</span>
+      </div>
+
+      <div style={{ padding: 16, display: "grid", gap: 14 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 10,
+          }}
+        >
+          <MockStat label="Today's Revenue" value="₹4,200" />
+          <MockStat label="Bookings" value="8" />
+          <MockStat label="Staff" value="3" />
+        </div>
+
+        <div
+          style={{
+            borderRadius: 12,
+            border: "1px solid #E0DAD0",
+            background: "#fff",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "72px repeat(6, minmax(0, 1fr))",
+              borderBottom: "1px solid #E0DAD0",
+              background: "#F9F8F3",
+            }}
+          >
+            <span style={gridHeadCell} />
+            {hours.map((hour) => (
+              <span key={hour} style={gridHeadCell}>
+                {hour}
+              </span>
+            ))}
+          </div>
+          {cells.map((row) => (
+            <div
+              key={row.staff}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "72px repeat(6, minmax(0, 1fr))",
+                borderBottom: "1px solid #E0DAD0",
+              }}
+            >
+              <span
+                style={{
+                  padding: "10px 8px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#1A1A1A",
+                }}
+              >
+                {row.staff}
+              </span>
+              {row.slots.map((booked, index) => (
+                <span
+                  key={`${row.staff}-${index}`}
+                  style={{
+                    margin: 6,
+                    minHeight: 22,
+                    borderRadius: 6,
+                    background: booked ? "#D4E8DD" : "#F9F8F3",
+                    border: booked ? "1px solid #1FA873" : "1px solid #E0DAD0",
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: "12px 10px",
+        borderRadius: 12,
+        border: "1px solid #E0DAD0",
+        background: "#fff",
+      }}
+    >
+      <p style={{ margin: 0, fontSize: 11, color: "#8A8A8A", fontWeight: 700 }}>
+        {label}
+      </p>
+      <p style={{ margin: "6px 0 0", fontSize: 18, fontWeight: 800, color: "#1A1A1A" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+const gridHeadCell: React.CSSProperties = {
+  padding: "8px 4px",
+  fontSize: 11,
   fontWeight: 700,
-  textDecoration: "none",
+  color: "#8A8A8A",
+  textAlign: "center",
 };
 
-const primaryButtonStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: 44,
-  padding: "0 20px",
-  borderRadius: 10,
-  border: 0,
-  background: TOKENS.accentGreen,
-  color: "#fff",
-  fontSize: 15,
-  fontWeight: 800,
-  textDecoration: "none",
-};
-
-const darkButtonStyle: React.CSSProperties = {
-  ...primaryButtonStyle,
-  background: TOKENS.charcoal,
-};
+function dotStyle(color: string): React.CSSProperties {
+  return {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    background: color,
+    display: "inline-block",
+  };
+}
 
 export function LandingPage() {
   return (
-    <div style={{ minHeight: "100vh", background: TOKENS.bgMain, color: TOKENS.textDark }}>
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          borderBottom: `1px solid ${TOKENS.borderSubtle}`,
-          background: "rgba(249, 248, 243, 0.92)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
+    <div className="landing-page">
+      <header className="landing-nav">
         <div
           style={{
             maxWidth: 1120,
@@ -161,26 +358,25 @@ export function LandingPage() {
             alignItems: "center",
             justifyContent: "space-between",
             gap: 16,
-            flexWrap: "wrap",
           }}
         >
           <Link
             href="/"
             style={{
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: 800,
-              color: TOKENS.textDark,
+              color: "#1A1A1A",
               textDecoration: "none",
-              letterSpacing: "0.04em",
+              letterSpacing: "-0.02em",
             }}
           >
             SalonIQ OS
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Link href="/login" style={outlineButtonStyle}>
+            <Link href="/login" className="landing-btn-outline">
               Sign in
             </Link>
-            <Link href="/get-started" style={primaryButtonStyle}>
+            <Link href="/get-started" className="landing-btn-green">
               Get Started
             </Link>
           </div>
@@ -188,66 +384,106 @@ export function LandingPage() {
       </header>
 
       <main>
-        <section
-          style={{
-            maxWidth: 1120,
-            margin: "0 auto",
-            padding: "56px 20px 48px",
-            display: "grid",
-            gap: 24,
-            textAlign: "center",
-          }}
-        >
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontWeight: 700,
-                color: TOKENS.textMuted,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}
-            >
-              SalonIQ OS
-            </p>
-            <h1
-              style={{
-                margin: "12px 0 0",
-                fontSize: "clamp(32px, 6vw, 48px)",
-                fontWeight: 800,
-                lineHeight: 1.08,
-              }}
-            >
-              Your salon, on autopilot
-            </h1>
-            <p
-              style={{
-                margin: "16px auto 0",
-                maxWidth: 560,
-                fontSize: 17,
-                lineHeight: 1.55,
-                color: TOKENS.textMuted,
-              }}
-            >
-              Bookings, customers, payments aur daily reports — sab ek jagah.
-              WhatsApp-first, India ke liye bana.
-            </p>
-          </div>
+        <section style={{ position: "relative", overflow: "hidden" }}>
+          <div className="landing-hero-wash" aria-hidden />
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 12,
-              justifyContent: "center",
+              position: "relative",
+              maxWidth: 1120,
+              margin: "0 auto",
+              padding: "64px 20px 72px",
+              display: "grid",
+              gap: 36,
+              textAlign: "center",
             }}
           >
-            <Link href="/get-started" style={darkButtonStyle}>
-              Get Started
-            </Link>
-            <a href="#how-it-works" style={outlineButtonStyle}>
-              See how it works
-            </a>
+            <div style={{ maxWidth: 780, margin: "0 auto" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#8A8A8A",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                SalonIQ OS
+              </p>
+              <h1
+                style={{
+                  margin: "14px 0 0",
+                  fontSize: "clamp(48px, 8vw, 72px)",
+                  fontWeight: 800,
+                  lineHeight: 0.98,
+                  letterSpacing: "-0.04em",
+                  color: "#1A1A1A",
+                }}
+              >
+                Your salon, on autopilot
+              </h1>
+              <p
+                style={{
+                  margin: "18px auto 0",
+                  maxWidth: 560,
+                  fontSize: 17,
+                  lineHeight: 1.55,
+                  color: "#8A8A8A",
+                }}
+              >
+                Bookings, customers, payments aur daily reports — sab ek jagah.
+                WhatsApp-first, India ke liye bana.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                justifyContent: "center",
+              }}
+            >
+              <Link href="/get-started" className="landing-btn-green large">
+                Get Started
+              </Link>
+              <a href="#how-it-works" className="landing-btn-ghost">
+                See how it works
+              </a>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              {["7-day free trial", "No credit card", "Setup in 10 minutes"].map(
+                (badge) => (
+                  <span
+                    key={badge}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      minHeight: 32,
+                      padding: "0 12px",
+                      borderRadius: 999,
+                      border: "1px solid #E0DAD0",
+                      background: "rgba(249, 248, 243, 0.8)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#1A1A1A",
+                    }}
+                  >
+                    {badge}
+                  </span>
+                )
+              )}
+            </div>
+
+            <DashboardMockup />
           </div>
         </section>
 
@@ -256,23 +492,30 @@ export function LandingPage() {
           style={{
             maxWidth: 1120,
             margin: "0 auto",
-            padding: "24px 20px 56px",
+            padding: "24px 20px 64px",
           }}
         >
-          <div style={{ marginBottom: 24, textAlign: "center" }}>
+          <div style={{ marginBottom: 28, textAlign: "center" }}>
             <p
               style={{
                 margin: 0,
                 fontSize: 12,
                 fontWeight: 700,
-                color: TOKENS.textMuted,
+                color: "#8A8A8A",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
               }}
             >
               How it works
             </p>
-            <h2 style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 800 }}>
+            <h2
+              style={{
+                margin: "8px 0 0",
+                fontSize: "clamp(24px, 4vw, 32px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+              }}
+            >
               Setup se settlement tak
             </h2>
           </div>
@@ -283,24 +526,20 @@ export function LandingPage() {
               gap: 14,
             }}
           >
-            {HOW_IT_WORKS.map((item) => {
+            {HOW_IT_WORKS.map((item, index) => {
               const Icon = item.icon;
               return (
-                <article
+                <Reveal
                   key={item.step}
-                  style={{
-                    padding: "18px 16px",
-                    borderRadius: 16,
-                    border: `1px solid ${TOKENS.borderSubtle}`,
-                    background: "#fff",
-                  }}
+                  className="landing-step-card"
+                  delayMs={index * 80}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
-                      marginBottom: 10,
+                      marginBottom: 12,
                     }}
                   >
                     <span
@@ -308,18 +547,18 @@ export function LandingPage() {
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         borderRadius: 999,
-                        background: TOKENS.accentGreenSoft,
-                        color: TOKENS.accentGreen,
+                        background: "linear-gradient(180deg, #2EC98A, #1FA873)",
+                        color: "#fff",
                         fontSize: 13,
                         fontWeight: 800,
                       }}
                     >
                       {item.step}
                     </span>
-                    <Icon size={16} strokeWidth={1.5} aria-hidden />
+                    <Icon size={16} strokeWidth={1.5} color="#1A1A1A" aria-hidden />
                   </div>
                   <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
                     {item.title}
@@ -329,12 +568,12 @@ export function LandingPage() {
                       margin: "8px 0 0",
                       fontSize: 14,
                       lineHeight: 1.5,
-                      color: TOKENS.textMuted,
+                      color: "#8A8A8A",
                     }}
                   >
                     {item.description}
                   </p>
-                </article>
+                </Reveal>
               );
             })}
           </div>
@@ -343,53 +582,50 @@ export function LandingPage() {
         <section
           id="features"
           style={{
-            background: TOKENS.bgPanel,
-            borderTop: `1px solid ${TOKENS.borderSubtle}`,
-            borderBottom: `1px solid ${TOKENS.borderSubtle}`,
+            background: "#F9F8F3",
+            borderTop: "1px solid #E0DAD0",
+            borderBottom: "1px solid #E0DAD0",
           }}
         >
           <div
             style={{
               maxWidth: 1120,
               margin: "0 auto",
-              padding: "56px 20px",
+              padding: "64px 20px",
             }}
           >
-            <div style={{ marginBottom: 24, textAlign: "center" }}>
+            <div style={{ marginBottom: 28, textAlign: "center" }}>
               <p
                 style={{
                   margin: 0,
                   fontSize: 12,
                   fontWeight: 700,
-                  color: TOKENS.textMuted,
+                  color: "#8A8A8A",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                 }}
               >
                 Features
               </p>
-              <h2 style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 800 }}>
+              <h2
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: "clamp(24px, 4vw, 32px)",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                }}
+              >
                 Everything your salon needs
               </h2>
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: 14,
-              }}
-            >
-              {FEATURES.map((feature) => {
+            <div className="landing-feature-grid">
+              {FEATURES.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
-                  <article
+                  <Reveal
                     key={feature.title}
-                    style={{
-                      padding: "18px 16px",
-                      borderRadius: 16,
-                      border: `1px solid ${TOKENS.borderSubtle}`,
-                      background: "#fff",
-                    }}
+                    className="landing-feature-card"
+                    delayMs={index * 70}
                   >
                     <div
                       style={{
@@ -398,9 +634,9 @@ export function LandingPage() {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        borderRadius: 10,
-                        background: TOKENS.accentGreenSoft,
-                        color: TOKENS.accentGreen,
+                        borderRadius: 999,
+                        background: "#D4E8DD",
+                        color: "#1FA873",
                         marginBottom: 12,
                       }}
                     >
@@ -414,12 +650,12 @@ export function LandingPage() {
                         margin: "8px 0 0",
                         fontSize: 14,
                         lineHeight: 1.5,
-                        color: TOKENS.textMuted,
+                        color: "#8A8A8A",
                       }}
                     >
                       {feature.description}
                     </p>
-                  </article>
+                  </Reveal>
                 );
               })}
             </div>
@@ -431,23 +667,30 @@ export function LandingPage() {
           style={{
             maxWidth: 1120,
             margin: "0 auto",
-            padding: "56px 20px",
+            padding: "64px 20px",
           }}
         >
-          <div style={{ marginBottom: 24, textAlign: "center" }}>
+          <div style={{ marginBottom: 28, textAlign: "center" }}>
             <p
               style={{
                 margin: 0,
                 fontSize: 12,
                 fontWeight: 700,
-                color: TOKENS.textMuted,
+                color: "#8A8A8A",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
               }}
             >
               Pricing
             </p>
-            <h2 style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 800 }}>
+            <h2
+              style={{
+                margin: "8px 0 0",
+                fontSize: "clamp(24px, 4vw, 32px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+              }}
+            >
               Simple monthly plans
             </h2>
             <p
@@ -455,112 +698,172 @@ export function LandingPage() {
                 margin: "10px auto 0",
                 maxWidth: 480,
                 fontSize: 14,
-                color: TOKENS.textMuted,
+                color: "#8A8A8A",
               }}
             >
-              15-day free trial, no credit card required.
+              7-day free trial, no credit card required.
             </p>
           </div>
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 14,
+              gap: 16,
               alignItems: "stretch",
             }}
           >
-            {PRICING.map((tier) => (
-              <article
+            {PRICING.map((tier, index) => (
+              <Reveal
                 key={tier.name}
-                style={{
-                  padding: "22px 18px",
-                  borderRadius: 16,
-                  border: `1px solid ${tier.highlight ? TOKENS.accentGreen : TOKENS.borderSubtle}`,
-                  background: tier.highlight ? "#fff" : TOKENS.bgPanel,
-                  boxShadow: tier.highlight
-                    ? "0 8px 24px rgba(31, 168, 115, 0.08)"
-                    : "none",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 14,
-                }}
+                className={
+                  tier.highlight
+                    ? "landing-price-card featured"
+                    : "landing-price-card"
+                }
+                delayMs={index * 80}
               >
-                <div>
+                {tier.highlight ? (
                   <p
                     style={{
-                      margin: 0,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: TOKENS.textMuted,
+                      margin: "0 0 12px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      minHeight: 26,
+                      padding: "0 10px",
+                      borderRadius: 999,
+                      background: "#D4E8DD",
+                      color: "#1A1A1A",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: "0.04em",
                       textTransform: "uppercase",
-                      letterSpacing: "0.06em",
                     }}
                   >
-                    {tier.name}
+                    Most Popular
                   </p>
-                  <p style={{ margin: "10px 0 0", fontSize: 34, fontWeight: 800 }}>
-                    ₹{tier.price}
-                    <span
+                ) : null}
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#8A8A8A",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {tier.name}
+                </p>
+                <p style={{ margin: "10px 0 0", fontSize: 34, fontWeight: 800 }}>
+                  ₹{tier.price}
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#8A8A8A",
+                    }}
+                  >
+                    /mo
+                  </span>
+                </p>
+                <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8A8A8A" }}>
+                  {tier.branches}
+                </p>
+                <ul
+                  style={{
+                    margin: "16px 0 0",
+                    padding: 0,
+                    listStyle: "none",
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  {tier.features.map((feature) => (
+                    <li
+                      key={feature}
                       style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 8,
                         fontSize: 14,
-                        fontWeight: 700,
-                        color: TOKENS.textMuted,
+                        color: "#1A1A1A",
                       }}
                     >
-                      /mo
-                    </span>
-                  </p>
-                  <p style={{ margin: "8px 0 0", fontSize: 14, color: TOKENS.textMuted }}>
-                    {tier.branches}
-                  </p>
-                </div>
+                      <Check size={16} strokeWidth={1.5} color="#1FA873" aria-hidden />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
                 <Link
                   href="/get-started"
-                  style={{
-                    ...primaryButtonStyle,
-                    width: "100%",
-                    marginTop: "auto",
-                  }}
+                  className="landing-btn-green"
+                  style={{ width: "100%", marginTop: 20 }}
                 >
                   Get Started
                 </Link>
-              </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        <section
-          style={{
-            maxWidth: 920,
-            margin: "0 auto",
-            padding: "0 20px 56px",
-          }}
-        >
+        <section style={{ background: "#1A1A1A", color: "#fff" }}>
           <div
             style={{
-              padding: "28px 24px",
-              borderRadius: 16,
-              border: `1px solid ${TOKENS.borderSubtle}`,
-              background: "#fff",
+              maxWidth: 920,
+              margin: "0 auto",
+              padding: "64px 20px",
               textAlign: "center",
             }}
           >
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "clamp(26px, 4vw, 36px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                color: "#fff",
+              }}
+            >
               Ready to put your salon on autopilot?
             </h2>
             <p
               style={{
-                margin: "10px 0 0",
-                fontSize: 15,
-                color: TOKENS.textMuted,
+                margin: "12px auto 0",
+                maxWidth: 480,
+                fontSize: 16,
+                color: "rgba(255,255,255,0.72)",
               }}
             >
-              Start your free trial today — setup takes minutes.
+              Join salons across India already using SalonIQ OS.
             </p>
-            <div style={{ marginTop: 18 }}>
-              <Link href="/get-started" style={darkButtonStyle}>
-                Get Started
+            <div style={{ marginTop: 24 }}>
+              <Link href="/get-started" className="landing-btn-green large">
+                Start Free Trial
               </Link>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 18,
+                marginTop: 28,
+              }}
+            >
+              {["7-day free trial", "Setup in minutes", "Cancel anytime"].map(
+                (stat) => (
+                  <span
+                    key={stat}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.78)",
+                    }}
+                  >
+                    {stat}
+                  </span>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -568,8 +871,8 @@ export function LandingPage() {
 
       <footer
         style={{
-          borderTop: `1px solid ${TOKENS.borderSubtle}`,
-          background: TOKENS.bgPanel,
+          borderTop: "1px solid #E0DAD0",
+          background: "#F9F8F3",
         }}
       >
         <div
@@ -584,14 +887,11 @@ export function LandingPage() {
             justifyContent: "space-between",
           }}
         >
-          <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>SalonIQ OS</p>
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: TOKENS.textMuted }}>
-              Simple salon software for India.
-            </p>
-          </div>
-          <p style={{ margin: 0, fontSize: 13, color: TOKENS.textMuted }}>
-            © {new Date().getFullYear()} SalonIQ OS
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#1A1A1A" }}>
+            SalonIQ OS
+          </p>
+          <p style={{ margin: 0, fontSize: 13, color: "#8A8A8A" }}>
+            © 2026 SalonIQ. All rights reserved.
           </p>
         </div>
       </footer>
