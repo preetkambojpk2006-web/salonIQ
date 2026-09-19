@@ -18,27 +18,31 @@ import {
 
 const HOW_IT_WORKS = [
   {
-    step: "1",
-    title: "Add your salon details",
-    description: "Name, hours, branches — setup in minutes.",
+    step: "01",
+    title: "Set Up Your Salon",
+    description:
+      "Add your services, staff, branches and business details in minutes.",
     icon: Store,
   },
   {
-    step: "2",
-    title: "Set up staff and services",
-    description: "Team, services, prices, commission rules.",
+    step: "02",
+    title: "Manage Your Business",
+    description:
+      "Handle bookings, customers, billing and daily operations from one dashboard.",
     icon: UserRound,
   },
   {
-    step: "3",
-    title: "Start taking bookings",
-    description: "Calendar, walk-ins, and online booking link.",
+    step: "03",
+    title: "Automate Customer Communication",
+    description:
+      "Send booking confirmations, reminders and updates without manual follow-ups.",
     icon: CalendarCheck,
   },
   {
-    step: "4",
-    title: "Get paid, track everything",
-    description: "Payments, payouts, GST bills, daily reports.",
+    step: "04",
+    title: "Grow With Better Insights",
+    description:
+      "Track revenue, services, staff performance and customer trends in real time.",
     icon: Wallet,
   },
 ];
@@ -46,32 +50,38 @@ const HOW_IT_WORKS = [
 const FEATURES = [
   {
     title: "Smart Calendar",
-    description: "Day, week, month view. No double bookings.",
+    description:
+      "Manage day, week and month views with intelligent scheduling and no double bookings.",
     icon: CalendarDays,
   },
   {
     title: "WhatsApp Ready",
-    description: "Send reminders, salary slips, receipts in one tap.",
+    description:
+      "Send reminders, receipts, updates and customer messages directly through WhatsApp.",
     icon: MessageCircle,
   },
   {
     title: "Staff & Commission",
-    description: "Auto-calculate commission. No more month-end fights.",
+    description:
+      "Automatically calculate staff commissions and simplify monthly payouts.",
     icon: Users,
   },
   {
     title: "GST Billing",
-    description: "Professional invoices with CGST/SGST. Print or PDF.",
+    description:
+      "Create professional GST invoices with CGST and SGST. Print or download as PDF.",
     icon: FileText,
   },
   {
     title: "Business Analytics",
-    description: "Revenue trends, busy hours, top services at a glance.",
+    description:
+      "Understand revenue trends, peak hours, top services and business performance at a glance.",
     icon: TrendingUp,
   },
   {
     title: "Inventory Tracking",
-    description: "Track stock, auto-deduct on service. Low stock alerts.",
+    description:
+      "Track stock levels, automatically deduct inventory after services and receive low-stock alerts.",
     icon: Package,
   },
 ];
@@ -79,7 +89,7 @@ const FEATURES = [
 const PRICING = [
   {
     name: "Starter",
-    price: "1499",
+    price: "1,499",
     branches: "1–2 branches",
     highlight: false,
     features: [
@@ -91,7 +101,7 @@ const PRICING = [
   },
   {
     name: "Growth",
-    price: "1999",
+    price: "1,999",
     branches: "3–4 branches",
     highlight: true,
     features: [
@@ -103,7 +113,7 @@ const PRICING = [
   },
   {
     name: "Scale",
-    price: "2499",
+    price: "2,499",
     branches: "5+ branches",
     highlight: false,
     features: [
@@ -178,10 +188,11 @@ function DashboardMockup() {
       style={{
         maxWidth: 820,
         margin: "0 auto",
+        width: "100%",
         borderRadius: 16,
         border: "1px solid #E0DAD0",
         background: "#F9F8F3",
-        boxShadow: "0 24px 60px rgba(26, 26, 26, 0.16)",
+        boxShadow: "0 18px 40px rgba(26, 26, 26, 0.08)",
         overflow: "hidden",
         textAlign: "left",
       }}
@@ -239,6 +250,7 @@ function DashboardMockup() {
             gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
             gap: 10,
           }}
+          className="landing-mock-stats"
         >
           <MockStat label="Today's Revenue" value="₹4,200" />
           <MockStat label="Bookings" value="8" />
@@ -351,7 +363,7 @@ export function LandingPage() {
       <header className="landing-nav">
         <div
           style={{
-            maxWidth: 1120,
+            maxWidth: 1080,
             margin: "0 auto",
             padding: "14px 20px",
             display: "flex",
@@ -374,7 +386,7 @@ export function LandingPage() {
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Link href="/login" className="landing-btn-outline">
-              Sign in
+              Sign In
             </Link>
             <Link href="/get-started" className="landing-btn-green">
               Get Started
@@ -389,15 +401,15 @@ export function LandingPage() {
           <div
             style={{
               position: "relative",
-              maxWidth: 1120,
+              maxWidth: 1080,
               margin: "0 auto",
-              padding: "64px 20px 72px",
+              padding: "72px 20px 80px",
               display: "grid",
-              gap: 36,
+              gap: 32,
               textAlign: "center",
             }}
           >
-            <div style={{ maxWidth: 780, margin: "0 auto" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto" }}>
               <p
                 style={{
                   margin: 0,
@@ -405,18 +417,18 @@ export function LandingPage() {
                   fontWeight: 700,
                   color: "#8A8A8A",
                   textTransform: "uppercase",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.12em",
                 }}
               >
                 SalonIQ OS
               </p>
               <h1
                 style={{
-                  margin: "14px 0 0",
-                  fontSize: "clamp(48px, 8vw, 72px)",
+                  margin: "16px 0 0",
+                  fontSize: "clamp(36px, 7.5vw, 64px)",
                   fontWeight: 800,
-                  lineHeight: 0.98,
-                  letterSpacing: "-0.04em",
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.035em",
                   color: "#1A1A1A",
                 }}
               >
@@ -425,14 +437,14 @@ export function LandingPage() {
               <p
                 style={{
                   margin: "18px auto 0",
-                  maxWidth: 560,
+                  maxWidth: 580,
                   fontSize: 17,
-                  lineHeight: 1.55,
+                  lineHeight: 1.65,
                   color: "#8A8A8A",
                 }}
               >
-                Bookings, customers, payments aur daily reports — sab ek jagah.
-                WhatsApp-first, India ke liye bana.
+                Manage bookings, customers, staff, billing and business
+                performance — all from one powerful platform.
               </p>
             </div>
 
@@ -448,7 +460,7 @@ export function LandingPage() {
                 Get Started
               </Link>
               <a href="#how-it-works" className="landing-btn-ghost">
-                See how it works
+                See How It Works
               </a>
             </div>
 
@@ -460,7 +472,11 @@ export function LandingPage() {
                 gap: 8,
               }}
             >
-              {["7-day free trial", "No credit card", "Setup in 10 minutes"].map(
+              {[
+                "7-day free trial",
+                "No credit card required",
+                "Setup in 10 minutes",
+              ].map(
                 (badge) => (
                   <span
                     key={badge}
@@ -483,19 +499,21 @@ export function LandingPage() {
               )}
             </div>
 
-            <DashboardMockup />
+            <div className="landing-mock-wrap">
+              <DashboardMockup />
+            </div>
           </div>
         </section>
 
         <section
           id="how-it-works"
           style={{
-            maxWidth: 1120,
+            maxWidth: 1080,
             margin: "0 auto",
-            padding: "24px 20px 64px",
+            padding: "32px 20px 80px",
           }}
         >
-          <div style={{ marginBottom: 28, textAlign: "center" }}>
+          <div style={{ marginBottom: 36, textAlign: "center" }}>
             <p
               style={{
                 margin: 0,
@@ -503,20 +521,21 @@ export function LandingPage() {
                 fontWeight: 700,
                 color: "#8A8A8A",
                 textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.1em",
               }}
             >
-              How it works
+              How It Works
             </p>
             <h2
               style={{
-                margin: "8px 0 0",
-                fontSize: "clamp(24px, 4vw, 32px)",
+                margin: "10px 0 0",
+                fontSize: "clamp(24px, 4vw, 34px)",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
+                lineHeight: 1.15,
               }}
             >
-              Setup se settlement tak
+              From setup to daily operations
             </h2>
           </div>
           <div
@@ -547,12 +566,13 @@ export function LandingPage() {
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: 32,
-                        height: 32,
-                        borderRadius: 999,
-                        background: "linear-gradient(180deg, #2EC98A, #1FA873)",
-                        color: "#fff",
-                        fontSize: 13,
+                        width: 36,
+                        height: 28,
+                        borderRadius: 8,
+                        background: "#D4E8DD",
+                        color: "#1A1A1A",
+                        fontSize: 12,
+                        letterSpacing: "0.04em",
                         fontWeight: 800,
                       }}
                     >
@@ -589,12 +609,12 @@ export function LandingPage() {
         >
           <div
             style={{
-              maxWidth: 1120,
+              maxWidth: 1080,
               margin: "0 auto",
-              padding: "64px 20px",
+              padding: "80px 20px",
             }}
           >
-            <div style={{ marginBottom: 28, textAlign: "center" }}>
+            <div style={{ marginBottom: 36, textAlign: "center" }}>
               <p
                 style={{
                   margin: 0,
@@ -602,17 +622,18 @@ export function LandingPage() {
                   fontWeight: 700,
                   color: "#8A8A8A",
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.1em",
                 }}
               >
                 Features
               </p>
               <h2
                 style={{
-                  margin: "8px 0 0",
-                  fontSize: "clamp(24px, 4vw, 32px)",
+                  margin: "10px 0 0",
+                  fontSize: "clamp(24px, 4vw, 34px)",
                   fontWeight: 800,
                   letterSpacing: "-0.03em",
+                  lineHeight: 1.15,
                 }}
               >
                 Everything your salon needs
@@ -665,12 +686,12 @@ export function LandingPage() {
         <section
           id="pricing"
           style={{
-            maxWidth: 1120,
+            maxWidth: 1080,
             margin: "0 auto",
-            padding: "64px 20px",
+            padding: "80px 20px",
           }}
         >
-          <div style={{ marginBottom: 28, textAlign: "center" }}>
+          <div style={{ marginBottom: 36, textAlign: "center" }}>
             <p
               style={{
                 margin: 0,
@@ -678,30 +699,32 @@ export function LandingPage() {
                 fontWeight: 700,
                 color: "#8A8A8A",
                 textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.1em",
               }}
             >
               Pricing
             </p>
             <h2
               style={{
-                margin: "8px 0 0",
-                fontSize: "clamp(24px, 4vw, 32px)",
+                margin: "10px 0 0",
+                fontSize: "clamp(24px, 4vw, 34px)",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
+                lineHeight: 1.15,
               }}
             >
               Simple monthly plans
             </h2>
             <p
               style={{
-                margin: "10px auto 0",
+                margin: "12px auto 0",
                 maxWidth: 480,
-                fontSize: 14,
+                fontSize: 15,
+                lineHeight: 1.6,
                 color: "#8A8A8A",
               }}
             >
-              7-day free trial, no credit card required.
+              Start with a 7-day free trial. No credit card required.
             </p>
           </div>
           <div
@@ -809,9 +832,9 @@ export function LandingPage() {
         <section style={{ background: "#1A1A1A", color: "#fff" }}>
           <div
             style={{
-              maxWidth: 920,
+              maxWidth: 720,
               margin: "0 auto",
-              padding: "64px 20px",
+              padding: "80px 20px",
               textAlign: "center",
             }}
           >
@@ -821,6 +844,7 @@ export function LandingPage() {
                 fontSize: "clamp(26px, 4vw, 36px)",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
+                lineHeight: 1.15,
                 color: "#fff",
               }}
             >
@@ -828,13 +852,15 @@ export function LandingPage() {
             </h2>
             <p
               style={{
-                margin: "12px auto 0",
-                maxWidth: 480,
+                margin: "16px auto 0",
+                maxWidth: 560,
                 fontSize: 16,
+                lineHeight: 1.65,
                 color: "rgba(255,255,255,0.72)",
               }}
             >
-              Join salons across India already using SalonIQ OS.
+              Join modern salons using SalonIQ to simplify operations, automate
+              routine tasks and make better business decisions.
             </p>
             <div style={{ marginTop: 24 }}>
               <Link href="/get-started" className="landing-btn-green large">
@@ -877,9 +903,9 @@ export function LandingPage() {
       >
         <div
           style={{
-            maxWidth: 1120,
+            maxWidth: 1080,
             margin: "0 auto",
-            padding: "24px 20px 32px",
+            padding: "22px 20px 28px",
             display: "flex",
             flexWrap: "wrap",
             gap: 12,

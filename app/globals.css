@@ -3015,45 +3015,19 @@
   }
 }
 
-/* Marketing landing — scoped animations only */
-@keyframes landing-hero-wash {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes landing-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
+/* Marketing landing — scoped styles only */
 
 .landing-page {
   min-height: 100vh;
   color: #1a1a1a;
   background: #ede8df;
+  overflow-x: clip;
 }
 
 .landing-hero-wash {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    120deg,
-    #f9f8f3 0%,
-    #ede8df 40%,
-    #f9f8f3 70%,
-    #e8f6ef 100%
-  );
-  background-size: 220% 220%;
-  animation: landing-hero-wash 8s ease-in-out infinite;
+  background: linear-gradient(180deg, #f9f8f3 0%, #ede8df 100%);
   pointer-events: none;
 }
 
@@ -3061,7 +3035,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(249, 248, 243, 0.72);
+  background: rgba(249, 248, 243, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -3084,9 +3058,9 @@
 }
 
 .landing-btn-green:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(31, 168, 115, 0.28);
+  box-shadow: 0 6px 16px rgba(31, 168, 115, 0.22);
 }
 
 .landing-btn-green:active {
@@ -3142,8 +3116,16 @@
   font-size: 16px;
 }
 
+.landing-mock-wrap {
+  width: 100%;
+  max-width: 820px;
+  margin: 8px auto 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .landing-mock {
-  animation: landing-float 6s ease-in-out infinite;
+  min-width: 520px;
 }
 
 .landing-step-card,
@@ -3151,8 +3133,8 @@
 .landing-price-card,
 .landing-reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.55s ease, transform 0.55s ease, box-shadow 0.2s ease,
+  transform: translateY(12px);
+  transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
 
@@ -3168,24 +3150,25 @@
   background: #fff;
   border: 1px solid #e0dad0;
   border-radius: 16px;
-  padding: 20px 18px;
-  box-shadow: 0 8px 24px rgba(26, 26, 26, 0.05);
+  padding: 22px 20px;
+  box-shadow: 0 4px 16px rgba(26, 26, 26, 0.04);
 }
 
 .landing-step-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 32px rgba(26, 26, 26, 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(26, 26, 26, 0.06);
 }
 
 .landing-step-card.is-visible:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 .landing-feature-card {
   background: #fff;
   border: 1px solid #e0dad0;
   border-radius: 16px;
-  padding: 20px 18px;
+  padding: 22px 20px;
+  min-width: 0;
 }
 
 .landing-feature-card:hover,
@@ -3197,24 +3180,25 @@
   background: #f9f8f3;
   border: 1px solid #e0dad0;
   border-radius: 16px;
-  padding: 24px 20px;
+  padding: 28px 22px;
+  min-width: 0;
 }
 
 .landing-price-card.featured {
   background: #fff;
   border-color: #1fa873;
-  transform: scale(1.03);
-  box-shadow: 0 16px 36px rgba(31, 168, 115, 0.12);
+  transform: scale(1.02);
+  box-shadow: 0 12px 28px rgba(31, 168, 115, 0.1);
 }
 
 .landing-price-card.featured.is-visible {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .landing-feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 @media (max-width: 860px) {
@@ -3228,9 +3212,18 @@
   }
 }
 
+@media (max-width: 420px) {
+  .landing-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-mock-stats {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .landing-hero-wash,
-  .landing-mock {
+  .landing-hero-wash {
     animation: none;
   }
 
